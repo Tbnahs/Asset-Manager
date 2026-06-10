@@ -1,0 +1,100 @@
+Use the provided screen as the base design.
+
+IMPORTANT REQUIREMENTS:
+
+- Keep the existing visual style exactly as it is.
+- Do NOT redesign the UI.
+- Do NOT change colors, typography, spacing, border radius, icon style, card style, navigation style, or component appearance.
+- Reuse existing design patterns and components.
+- Only extend and improve functionality while maintaining the same design language.
+- The final result should look like it belongs to the same application.
+
+PROJECT:
+Parent Mobile Application for School Food Safety & Traceability.
+
+Based on the existing Weekly Menu screen, redesign and expand the application with the following updates:
+
+1. Home / Weekly Menu
+- Keep current weekly menu layout.
+- Add summary cards:
+- Meals being monitored.
+- Sample meals currently stored.
+- Food safety notifications.
+- Number of submitted feedbacks.
+- Add quick access shortcuts.
+
+2. Meal Detail
+When a parent taps a meal:
+- Dish image.
+- Ingredients list.
+- Nutritional information.
+- Calories.
+- Preparation information.
+- Food safety status.
+
+3. Food Traceability
+Add a traceability screen showing:
+- Ingredient origins.
+- Supplier information.
+- Production batch.
+- Manufacturing date.
+- Expiry date.
+- Certifications.
+- Processing history timeline.
+- Origin map.
+- QR verification result.
+
+4. Sample Retention Monitoring
+Add a screen displaying:
+- Meals currently retained as samples.
+- Sample storage date.
+- Retention expiration date.
+- Retention status.
+- Sample history.
+
+5. Feedback & Complaints
+Allow parents to:
+- Submit feedback.
+- Select meal.
+- Select complaint type.
+- Upload photos.
+- Enter symptoms.
+- Track processing status.
+- View complaint history.
+
+6. Notifications
+Add:
+- Menu updates.
+- Food safety announcements.
+- Complaint status updates.
+- School notifications.
+
+7. Parent Profile
+Display:
+- Parent information.
+- Student information.
+- Class information.
+- School information.
+
+8. Navigation
+Update bottom navigation to:
+- Thực đơn
+- Truy xuất
+- Phản ánh
+- Thông báo
+- Cá nhân
+
+9. UX Requirements
+- Mobile-first.
+- Easy for parents to use.
+- Clear hierarchy.
+- Focus on transparency and food safety.
+- Friendly and trustworthy experience.
+
+STRICT RULE:
+Only add new functionality.
+Do not introduce a new design style.
+Keep the UI consistent with the provided screen.
+Pixel-perfect extension of the existing design system.
+Maintain 100% visual consistency with the provided reference.
+No redesign unless explicitly requested.

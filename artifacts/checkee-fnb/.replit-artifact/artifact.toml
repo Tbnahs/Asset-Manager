@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "CHECKEE F&B"
+version = "1.0.0"
+id = "artifacts/checkee-fnb"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 18359
+
+[services.development]
+run = "pnpm --filter @workspace/checkee-fnb run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/checkee-fnb", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/checkee-fnb", "run", "serve" ]
+
+[services.env]
+PORT = "18359"
+BASE_PATH = "/"

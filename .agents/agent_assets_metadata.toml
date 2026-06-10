@@ -1,0 +1,44 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "GtI9tH2hYZIRGcmQWdM7F"
+uri = "file://artifacts/checkee-fnb/assets/images/icon.png"
+type = "image"
+title = "checkee fnb app icon"
+
+[[generated]]
+id = "v9tvDf_T9h_0b-5JC8yMZ"
+uri = "file://artifacts/checkee-fnb/assets/images/meal-noodle.png"
+type = "image"
+title = "seafood noodle bowl"
+
+[[generated]]
+id = "z_2BHMy42dKEaNSl0K0VU"
+uri = "file://artifacts/checkee-fnb/assets/images/meal-chicken-rice.png"
+type = "image"
+title = "hoi an chicken rice"
+
+[[generated]]
+id = "sJ6ux-SXKzQ2VSA_pnlj7"
+uri = "file://artifacts/checkee-fnb/assets/images/meal-fruit.png"
+type = "image"
+title = "watermelon mango dessert"
+
+[[generated]]
+id = "cx0XiN-WYDMtZyWCGIWZH"
+uri = "file://artifacts/checkee-fnb/assets/images/meal-yogurt.png"
+type = "image"
+title = "black rice yogurt"
+
+[[generated]]
+id = "vuwd1aN4ViGkREx3G_DK1"
+uri = "file://artifacts/checkee-fnb/assets/images/meal-fried-rice.png"
+type = "image"
+title = "fried rice bowl"
+
+[[generated]]
+id = "lbt42koJCgrfo9n_j5oCn"
+uri = "file://artifacts/checkee-fnb/assets/images/supplier-farm.png"
+type = "image"
+title = "fresh vegetables supplier"
