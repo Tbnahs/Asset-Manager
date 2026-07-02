@@ -420,9 +420,9 @@ const styles = StyleSheet.create({
   fieldLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#364153', lineHeight: 20 },
 
   /* Time + Date row */
-  timeRow: { flexDirection: 'row', gap: 10 },
+  timeRow: { flexDirection: 'row', gap: 10, overflow: 'hidden' },
   timeInput: {
-    width: 94,
+    flex: 1,
     height: 47,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     color: '#1E1E1E',
   },
   dateInput: {
-    flex: 1,
+    flex: 2,
     height: 47,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
