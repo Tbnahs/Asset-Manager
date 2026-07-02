@@ -38,11 +38,28 @@ export interface ProcessingStep {
   responsible: string;
 }
 
+export interface TraceIngredient {
+  name: string;
+  supplier: string;
+  batchNo: string;
+  unit: string;
+}
+
 export interface TraceabilityRecord {
   id: string;
   mealId: string;
   mealName: string;
   image: number;
+  traceCode: string;
+  isMonitored: boolean;
+  mealTypeCategory: string;
+  mealTypeDesc: string;
+  chefName: string;
+  processCode: string;
+  cookTime: string;
+  traceIngredients: TraceIngredient[];
+  totalScans: number;
+  todayScans: number;
   ingredient: string;
   supplier: string;
   supplierAddress: string;

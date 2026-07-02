@@ -16,18 +16,15 @@ export default function TraceabilityScreen() {
       <Header />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: isWeb ? 118 : 120 },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}
       >
         <Text style={[styles.pageTitle, { color: colors.text }]}>Truy xuất nguồn gốc</Text>
         <Text style={[styles.pageSubtitle, { color: colors.mutedForeground }]}>
-          Thông tin nguồn gốc nguyên liệu thực phẩm
+          Thông tin nguồn gốc & quy trình chế biến thực phẩm
         </Text>
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          DANH SÁCH TRUY XUẤT
+          DANH SÁCH TRUY XUẤT ({TRACEABILITY_RECORDS.length})
         </Text>
 
         {TRACEABILITY_RECORDS.map((record) => (
@@ -37,63 +34,82 @@ export default function TraceabilityScreen() {
             style={[styles.card, { backgroundColor: colors.card }]}
             activeOpacity={0.72}
           >
-            <View style={styles.cardTop}>
+            {/* Orange top stripe with trace code */}
+            <View style={[styles.cardStripe, { backgroundColor: colors.primary }]}>
+              <Feather name="home" size={11} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.stripeCode} numberOfLines={1}>{record.traceCode}</Text>
+              <View style={[styles.monitoredBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <View style={[styles.monitoredDot, { backgroundColor: '#34C759' }]} />
+                <Text style={styles.monitoredText}>Đang theo dõi</Text>
+              </View>
+            </View>
+
+            {/* Card body */}
+            <View style={styles.cardBody}>
               <Image source={record.image} style={styles.mealImage} resizeMode="cover" />
-              <View style={styles.cardMain}>
+              <View style={styles.cardInfo}>
                 <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={1}>
                   {record.mealName}
                 </Text>
-                <View style={[styles.ingredientBadge, { backgroundColor: colors.accent }]}>
-                  <Text style={[styles.ingredientText, { color: colors.primary }]}>
-                    {record.ingredient}
-                  </Text>
+                <Text style={[styles.mealType, { color: colors.mutedForeground }]}>
+                  {record.mealTypeCategory}
+                </Text>
+
+                {/* Chef + process row */}
+                <View style={styles.metaRow}>
+                  <View style={[styles.metaItem, { backgroundColor: colors.muted }]}>
+                    <Feather name="user" size={10} color={colors.mutedForeground} />
+                    <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                      {record.chefName}
+                    </Text>
+                  </View>
+                  <View style={[styles.metaItem, { backgroundColor: colors.muted }]}>
+                    <Feather name="hash" size={10} color={colors.mutedForeground} />
+                    <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                      {record.processCode}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Ingredients preview */}
+                <View style={styles.ingRow}>
+                  {record.traceIngredients.slice(0, 3).map((ing) => (
+                    <View key={ing.name} style={[styles.ingChip, { backgroundColor: colors.accent }]}>
+                      <Text style={[styles.ingChipText, { color: colors.primary }]}>
+                        {ing.name}
+                      </Text>
+                    </View>
+                  ))}
+                  {record.traceIngredients.length > 3 && (
+                    <View style={[styles.ingChip, { backgroundColor: colors.muted }]}>
+                      <Text style={[styles.ingChipText, { color: colors.mutedForeground }]}>
+                        +{record.traceIngredients.length - 3}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
-              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
             </View>
 
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            <View style={styles.infoGrid}>
-              <View style={styles.infoItem}>
-                <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Nhà cung cấp</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>
-                  {record.supplier}
+            {/* Footer stats */}
+            <View style={[styles.cardFooter, { backgroundColor: colors.muted, borderTopColor: colors.border }]}>
+              <View style={styles.statItem}>
+                <Feather name="eye" size={11} color={colors.mutedForeground} />
+                <Text style={[styles.statText, { color: colors.mutedForeground }]}>
+                  Tổng quét: <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.text }}>{record.totalScans}</Text>
                 </Text>
               </View>
-              <View style={styles.infoItem}>
-                <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Mã lô hàng</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>
-                  {record.productionBatch}
+              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.statItem}>
+                <Feather name="clock" size={11} color={colors.mutedForeground} />
+                <Text style={[styles.statText, { color: colors.mutedForeground }]}>
+                  Hôm nay: <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.text }}>{record.todayScans}</Text>
                 </Text>
               </View>
-              <View style={styles.infoItem}>
-                <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Sản xuất</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {record.manufacturingDate}
-                </Text>
+              <View style={styles.viewMore}>
+                <Text style={[styles.viewMoreText, { color: colors.primary }]}>Chi tiết</Text>
+                <Feather name="chevron-right" size={12} color={colors.primary} />
               </View>
-              <View style={styles.infoItem}>
-                <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Hết hạn</Text>
-                <Text style={[styles.infoValue, { color: colors.text }]}>
-                  {record.expiryDate}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.certs}>
-              {record.certifications.slice(0, 3).map((cert) => (
-                <View key={cert} style={[styles.certBadge, { backgroundColor: colors.safeGreenLight }]}>
-                  <Text style={[styles.certText, { color: colors.safeGreen }]}>{cert}</Text>
-                </View>
-              ))}
-              {record.certifications.length > 3 && (
-                <View style={[styles.certBadge, { backgroundColor: colors.muted }]}>
-                  <Text style={[styles.certText, { color: colors.mutedForeground }]}>
-                    +{record.certifications.length - 3}
-                  </Text>
-                </View>
-              )}
             </View>
           </TouchableOpacity>
         ))}
@@ -107,57 +123,81 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 16 },
   pageTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
   pageSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginBottom: 20 },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
+  sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 12 },
+
   card: {
     borderRadius: 14,
-    marginBottom: 12,
-    padding: 14,
+    marginBottom: 14,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-    gap: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  cardTop: {
+
+  /* Stripe */
+  cardStripe: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  mealImage: {
-    width: 52,
-    height: 52,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+  stripeCode: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 13,
+    fontFamily: 'Inter_600SemiBold',
+    letterSpacing: 0.4,
   },
-  cardMain: { flex: 1, gap: 4 },
-  mealName: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  ingredientBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  ingredientText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  divider: { height: StyleSheet.hairlineWidth },
-  infoGrid: {
+  monitoredBadge: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  infoItem: { width: '47%' },
-  infoLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', marginBottom: 2 },
-  infoValue: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  certs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  certBadge: {
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 20,
   },
-  certText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  monitoredDot: { width: 6, height: 6, borderRadius: 3 },
+  monitoredText: { color: '#fff', fontSize: 10, fontFamily: 'Inter_500Medium' },
+
+  /* Body */
+  cardBody: { flexDirection: 'row', padding: 12, gap: 12, alignItems: 'flex-start' },
+  mealImage: { width: 72, height: 72, borderRadius: 10, backgroundColor: '#f0f0f0', flexShrink: 0 },
+  cardInfo: { flex: 1, gap: 5 },
+  mealName: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  mealType: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  metaItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5,
+  },
+  metaText: { fontSize: 10, fontFamily: 'Inter_400Regular' },
+
+  ingRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  ingChip: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
+  ingChipText: { fontSize: 10, fontFamily: 'Inter_500Medium' },
+
+  /* Footer */
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+  },
+  statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statText: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  statDivider: { width: 1, height: 14, marginHorizontal: 4 },
+  viewMore: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 2,
+  },
+  viewMoreText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
 });

@@ -43,21 +43,22 @@ export default function TraceabilityDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Custom header */}
+      {/* Orange header bar */}
       <View
         style={[
-          styles.header,
-          {
-            backgroundColor: colors.card,
-            borderBottomColor: colors.border,
-            paddingTop: isWeb ? 67 : insets.top,
-          },
+          styles.topBar,
+          { paddingTop: isWeb ? 67 : insets.top, backgroundColor: colors.primary },
         ]}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
-          <Feather name="arrow-left" size={22} color={colors.text} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.topBackBtn}>
+          <Feather name="arrow-left" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Truy xuất nguồn gốc</Text>
+        <View style={styles.topBarCenter}>
+          <Feather name="home" size={14} color="rgba(255,255,255,0.8)" />
+          <Text style={styles.topBarCode} numberOfLines={1}>
+            {record.traceCode}
+          </Text>
+        </View>
         <View style={{ width: 36 }} />
       </View>
 
@@ -68,219 +69,302 @@ export default function TraceabilityDetailScreen() {
           { paddingBottom: isWeb ? 34 : insets.bottom + 24 },
         ]}
       >
-        {/* Hero */}
-        <View style={[styles.hero, { backgroundColor: colors.card }]}>
-          <Image source={record.image} style={styles.heroImage} resizeMode="cover" />
-          <View style={styles.heroInfo}>
-            <Text style={[styles.heroMeal, { color: colors.text }]}>{record.mealName}</Text>
-            <View style={[styles.ingPill, { backgroundColor: colors.accent }]}>
-              <Text style={[styles.ingPillText, { color: colors.primary }]}>
-                Nguyên liệu: {record.ingredient}
+        {/* Centered food image */}
+        <View style={styles.imageSection}>
+          <Image source={record.image} style={styles.foodImage} resizeMode="cover" />
+        </View>
+
+        {/* Status + basic info */}
+        <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+          {/* Status row */}
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Trạng thái:</Text>
+            <View style={[styles.statusPill, { backgroundColor: colors.safeGreenLight }]}>
+              <View style={[styles.statusDot, { backgroundColor: colors.safeGreen }]} />
+              <Text style={[styles.statusText, { color: colors.safeGreen }]}>
+                {record.isMonitored ? 'Đang theo dõi' : 'Không theo dõi'}
               </Text>
             </View>
-            <View style={[styles.batchRow, { backgroundColor: colors.muted }]}>
-              <Feather name="hash" size={12} color={colors.mutedForeground} />
-              <Text style={[styles.batchText, { color: colors.mutedForeground }]}>
-                {record.productionBatch}
+          </View>
+
+          {/* Tên thực đơn */}
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Tên thực đơn:</Text>
+            <Text style={[styles.infoValueOrange, { color: colors.primary }]} numberOfLines={1}>
+              {record.mealName}
+            </Text>
+          </View>
+
+          {/* Mã truy vết */}
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Mã truy vết:</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>{record.traceCode}</Text>
+          </View>
+
+          {/* Loại thực đơn */}
+          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Loại thực đơn:</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>{record.mealTypeCategory}</Text>
+          </View>
+
+          {/* Mô tả loại thực đơn — full width */}
+          <View style={[styles.descRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Mô tả loại thực đơn:</Text>
+            <Text style={[styles.descValue, { color: colors.text }]}>{record.mealTypeDesc}</Text>
+          </View>
+        </View>
+
+        {/* Processing section */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Quy trình chế biến (lưu vết)
+          </Text>
+
+          <View style={[styles.processingBox, { backgroundColor: colors.muted }]}>
+            {/* Chef */}
+            <View style={[styles.processRow, { borderBottomColor: colors.border }]}>
+              <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                <Feather name="user" size={16} color={colors.text} />
+              </View>
+              <View style={styles.processContent}>
+                <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Đầu bếp</Text>
+                <Text style={[styles.processValue, { color: colors.text }]}>{record.chefName}</Text>
+              </View>
+            </View>
+
+            {/* Process code */}
+            <View style={[styles.processRow, { borderBottomColor: colors.border }]}>
+              <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                <Feather name="shopping-cart" size={16} color={colors.text} />
+              </View>
+              <View style={styles.processContent}>
+                <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Mã quy trình</Text>
+                <Text style={[styles.processValue, { color: colors.text }]}>{record.processCode}</Text>
+              </View>
+            </View>
+
+            {/* Cook time */}
+            <View style={styles.processRow}>
+              <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                <Feather name="clock" size={16} color={colors.text} />
+              </View>
+              <View style={styles.processContent}>
+                <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Chế biến lúc</Text>
+                <Text style={[styles.processValue, { color: colors.text }]}>{record.cookTime}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Ingredients table */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.card }]}>
+          {/* Table header */}
+          <View style={[styles.tableHeader, { backgroundColor: colors.muted, borderBottomColor: colors.border }]}>
+            <Text style={[styles.thNguyenLieu, { color: colors.mutedForeground }]}>Nguyên liệu</Text>
+            <Text style={[styles.thNguonCung, { color: colors.mutedForeground }]}>Nguồn cung cấp</Text>
+            <Text style={[styles.thSoLo, { color: colors.mutedForeground }]}>Số lô/mẻ</Text>
+            <Text style={[styles.thDonVi, { color: colors.mutedForeground }]}>Đơn vị tính</Text>
+          </View>
+
+          {/* Table rows */}
+          {record.traceIngredients.map((ing, i) => (
+            <View
+              key={i}
+              style={[
+                styles.tableRow,
+                i < record.traceIngredients.length - 1 && {
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.tdNguyenLieu, { color: colors.text }]}>{ing.name}</Text>
+              <Text style={[styles.tdNguonCung, { color: colors.mutedForeground }]} numberOfLines={3}>
+                {ing.supplier}
               </Text>
-              <View style={[styles.qrBadge, { backgroundColor: colors.safeGreenLight }]}>
-                <Feather name="check" size={10} color={colors.safeGreen} />
-                <Text style={[styles.qrText, { color: colors.safeGreen }]}>QR OK</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Supplier info */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: colors.accent }]}>
-              <Feather name="truck" size={15} color={colors.primary} />
-            </View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Thông tin nhà cung cấp</Text>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          {[
-            { label: 'Nhà cung cấp', value: record.supplier },
-            { label: 'Địa chỉ', value: record.supplierAddress },
-            { label: 'Xuất xứ', value: record.origin },
-          ].map((row) => (
-            <View key={row.label} style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{row.label}</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{row.value}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Batch info */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: '#E5F1FF' }]}>
-              <Feather name="package" size={15} color="#007AFF" />
-            </View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Thông tin lô hàng</Text>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          {[
-            { label: 'Mã lô hàng', value: record.productionBatch },
-            { label: 'Ngày sản xuất', value: record.manufacturingDate },
-            { label: 'Hạn sử dụng', value: record.expiryDate },
-          ].map((row) => (
-            <View key={row.label} style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{row.label}</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>{row.value}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Certifications */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: '#E8F9ED' }]}>
-              <Feather name="award" size={15} color="#34C759" />
-            </View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Chứng nhận</Text>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <View style={styles.certGrid}>
-            {record.certifications.map((cert) => (
-              <View key={cert} style={[styles.certCard, { backgroundColor: '#E8F9ED' }]}>
-                <Feather name="check-circle" size={14} color="#34C759" />
-                <Text style={[styles.certText, { color: '#34C759' }]}>{cert}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Processing timeline */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: '#FFF4E5' }]}>
-              <Feather name="git-branch" size={15} color="#FF9500" />
-            </View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Lịch sử xử lý</Text>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          {record.processingHistory.map((step, i) => (
-            <View key={step.id} style={styles.timelineItem}>
-              {/* Line */}
-              <View style={styles.timelineLeft}>
-                <View style={[styles.timelineDot, { backgroundColor: colors.primary, borderColor: colors.background }]} />
-                {i < record.processingHistory.length - 1 && (
-                  <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />
-                )}
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineTopRow}>
-                  <Text style={[styles.timelineDate, { color: colors.primary }]}>{step.date}</Text>
-                </View>
-                <Text style={[styles.timelineLocation, { color: colors.text }]}>
-                  {step.location}
-                </Text>
-                <Text style={[styles.timelineAction, { color: colors.mutedForeground }]}>
-                  {step.action}
-                </Text>
-                <View style={styles.timelinePersonRow}>
-                  <Feather name="user" size={10} color={colors.mutedForeground} />
-                  <Text style={[styles.timelinePerson, { color: colors.mutedForeground }]}>
-                    {step.responsible}
-                  </Text>
-                </View>
-              </View>
+              <Text style={[styles.tdSoLo, { color: colors.text }]}>{ing.batchNo}</Text>
+              <Text style={[styles.tdDonVi, { color: colors.text }]}>{ing.unit}</Text>
             </View>
           ))}
         </View>
       </ScrollView>
+
+      {/* Footer stats bar */}
+      <View style={[styles.footer, { backgroundColor: colors.primary, paddingBottom: isWeb ? 8 : insets.bottom + 8 }]}>
+        <View style={styles.footerItem}>
+          <Text style={styles.footerNum}>{record.totalScans}</Text>
+          <Text style={styles.footerLabel}>Tổng số lượt quét</Text>
+        </View>
+        <View style={[styles.footerDivider]} />
+        <View style={styles.footerItem}>
+          <Text style={styles.footerNum}>{record.todayScans}</Text>
+          <Text style={styles.footerLabel}>Số lượt quét hôm nay</Text>
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
+  backBtn: { paddingHorizontal: 16, paddingBottom: 12 },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular' },
+
+  /* Orange top bar */
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: 14,
+    gap: 8,
   },
-  headerBack: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold' },
+  topBackBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  topBarCenter: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  topBarCode: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+    letterSpacing: 0.5,
+  },
+
+  /* Scroll content */
   content: { padding: 16, gap: 12 },
-  hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
+
+  /* Centered image */
+  imageSection: { alignItems: 'center', paddingVertical: 8 },
+  foodImage: {
+    width: 130,
+    height: 130,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  },
+
+  /* Info card */
+  infoCard: {
     borderRadius: 14,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 1,
   },
-  heroImage: { width: 70, height: 70, borderRadius: 10, backgroundColor: '#f0f0f0' },
-  heroInfo: { flex: 1, gap: 6 },
-  heroMeal: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  ingPill: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  ingPillText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
-  batchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  batchText: { fontSize: 11, fontFamily: 'Inter_400Regular', flex: 1 },
-  qrBadge: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  qrText: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
-  section: {
-    borderRadius: 14,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  sectionIcon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  sectionTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
-  divider: { height: StyleSheet.hairlineWidth, marginBottom: 4 },
   infoRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 12,
   },
-  infoLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', flex: 1 },
-  infoValue: { fontSize: 13, fontFamily: 'Inter_500Medium', flex: 1.5, textAlign: 'right' },
-  certGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 4 },
-  certCard: {
+  descRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 0,
+    gap: 4,
+  },
+  infoLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', flexShrink: 0 },
+  infoValue: { fontSize: 13, fontFamily: 'Inter_500Medium', flex: 1, textAlign: 'right' },
+  infoValueOrange: { fontSize: 13, fontFamily: 'Inter_600SemiBold', flex: 1, textAlign: 'right' },
+  descValue: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19, color: '#333' },
+  statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
-  certText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-  timelineItem: { flexDirection: 'row', gap: 12, paddingVertical: 6 },
-  timelineLeft: { alignItems: 'center', width: 18 },
-  timelineDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, flexShrink: 0, marginTop: 2 },
-  timelineLine: { width: 2, flex: 1, marginTop: 4, marginBottom: -4 },
-  timelineContent: { flex: 1, paddingBottom: 8, gap: 3 },
-  timelineTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  timelineDate: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-  timelineLocation: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  timelineAction: { fontSize: 12, fontFamily: 'Inter_400Regular', lineHeight: 17 },
-  timelinePersonRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  timelinePerson: { fontSize: 11, fontFamily: 'Inter_400Regular' },
-  backBtn: { paddingHorizontal: 16, paddingBottom: 12 },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular' },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+
+  /* Sections */
+  sectionCard: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 10,
+  },
+
+  /* Processing box */
+  processingBox: { marginHorizontal: 14, marginBottom: 14, borderRadius: 10, overflow: 'hidden' },
+  processRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  processIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  processContent: { flex: 1 },
+  processLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', marginBottom: 1 },
+  processValue: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+
+  /* Table */
+  tableHeader: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 6,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 6,
+    alignItems: 'flex-start',
+  },
+  thNguyenLieu: { width: 70, fontSize: 10, fontFamily: 'Inter_600SemiBold', flexShrink: 0 },
+  thNguonCung: { flex: 1, fontSize: 10, fontFamily: 'Inter_600SemiBold' },
+  thSoLo: { width: 76, fontSize: 10, fontFamily: 'Inter_600SemiBold', textAlign: 'right' },
+  thDonVi: { width: 48, fontSize: 10, fontFamily: 'Inter_600SemiBold', textAlign: 'right' },
+  tdNguyenLieu: { width: 70, fontSize: 12, fontFamily: 'Inter_500Medium', flexShrink: 0 },
+  tdNguonCung: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', lineHeight: 16 },
+  tdSoLo: { width: 76, fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'right' },
+  tdDonVi: { width: 48, fontSize: 11, fontFamily: 'Inter_500Medium', textAlign: 'right' },
+
+  /* Footer */
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 12,
+    gap: 0,
+  },
+  footerItem: { flex: 1, alignItems: 'center', gap: 2, paddingBottom: 4 },
+  footerDivider: { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' },
+  footerNum: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#fff' },
+  footerLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)' },
 });
