@@ -423,7 +423,7 @@ export default function HomeScreen() {
             <SummaryCard
               icon="search"
               count={tracedMealCount}
-              label={'Món có\ntruy xuất'}
+              label={'Món ăn lưu mẫu\nhôm nay'}
               iconColor="#007AFF"
               iconBg="#E5F1FF"
               onPress={() => router.push('/(tabs)/traceability')}
