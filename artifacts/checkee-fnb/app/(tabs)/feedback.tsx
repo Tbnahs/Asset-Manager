@@ -179,7 +179,12 @@ export default function FeedbackScreen() {
 
               {/* Header — also draggable */}
               <View style={styles.sheetHeader} {...panResponder.panHandlers}>
-                <Text style={styles.sheetTitle}>Gửi phản ánh</Text>
+                <View style={styles.sheetTitleRow}>
+                  <View style={styles.sheetTitleIcon}>
+                    <Feather name="message-square" size={16} color="#FF6535" />
+                  </View>
+                  <Text style={styles.sheetTitle}>Gửi phản ánh</Text>
+                </View>
                 <TouchableOpacity onPress={() => setShowForm(false)} style={styles.closeBtn} activeOpacity={0.7}>
                   <Feather name="x" size={18} color="#364153" />
                 </TouchableOpacity>
@@ -190,38 +195,46 @@ export default function FeedbackScreen() {
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={styles.sheetContent}
               >
-                {/* Inner gradient card */}
-                <View style={styles.innerCard}>
-                  {/* Time + Date row */}
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.fieldLabel}>Thời gian có triệu chứng *</Text>
-                    <View style={styles.timeRow}>
-                      {/* Time picker button */}
-                      <TouchableOpacity
-                        style={styles.timeInput}
-                        activeOpacity={0.7}
-                        onPress={() => setPickerMode('time')}
-                      >
-                        <Feather name="clock" size={15} color={formattedTime ? '#1E1E1E' : '#B0B0B0'} />
-                        <Text style={[styles.pickerBtnText, { color: formattedTime ? '#1E1E1E' : '#B0B0B0' }]}>
-                          {formattedTime || '18:30'}
-                        </Text>
-                      </TouchableOpacity>
-                      {/* Date picker button */}
-                      <TouchableOpacity
-                        style={styles.dateInput}
-                        activeOpacity={0.7}
-                        onPress={() => setPickerMode('date')}
-                      >
-                        <Feather name="calendar" size={15} color={formattedDate ? '#1E1E1E' : '#B0B0B0'} />
-                        <Text style={[styles.pickerBtnText, { color: formattedDate ? '#1E1E1E' : '#B0B0B0' }]}>
-                          {formattedDate || 'Ngày/tháng/năm'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                {/* ── Time + Date ── */}
+                <View style={styles.fieldBlock}>
+                  <View style={styles.fieldLabelRow}>
+                    <Feather name="clock" size={13} color="#FF6535" />
+                    <Text style={styles.fieldLabel}>Thời gian có triệu chứng <Text style={styles.required}>*</Text></Text>
+                  </View>
+                  <View style={styles.timeRow}>
+                    <TouchableOpacity
+                      style={[styles.timeChip, pickerMode === 'time' && styles.timeChipActive]}
+                      activeOpacity={0.7}
+                      onPress={() => setPickerMode(pickerMode === 'time' ? null : 'time')}
+                    >
+                      <Feather name="clock" size={14} color={formattedTime ? '#FF6535' : '#8E8E93'} />
+                      <Text style={[styles.chipText, { color: formattedTime ? '#1E1E1E' : '#8E8E93' }]}>
+                        {formattedTime || '18:30'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.dateChip, pickerMode === 'date' && styles.timeChipActive]}
+                      activeOpacity={0.7}
+                      onPress={() => setPickerMode(pickerMode === 'date' ? null : 'date')}
+                    >
+                      <Feather name="calendar" size={14} color={formattedDate ? '#FF6535' : '#8E8E93'} />
+                      <Text style={[styles.chipText, { color: formattedDate ? '#1E1E1E' : '#8E8E93' }]}>
+                        {formattedDate || 'Ngày / Tháng / Năm'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
-                    {/* DateTimePicker — iOS: inline below, Android: modal on open */}
-                    {pickerMode !== null && (
+                  {/* DateTimePicker with visible container */}
+                  {pickerMode !== null && (
+                    <View style={styles.pickerContainer}>
+                      <View style={styles.pickerHeader}>
+                        <Text style={styles.pickerHeaderText}>
+                          {pickerMode === 'time' ? 'Chọn giờ' : 'Chọn ngày'}
+                        </Text>
+                        <TouchableOpacity onPress={() => setPickerMode(null)} style={styles.pickerDoneBtn}>
+                          <Text style={styles.pickerDoneText}>Xong</Text>
+                        </TouchableOpacity>
+                      </View>
                       <DateTimePicker
                         value={symptomDateTime ?? new Date()}
                         mode={pickerMode}
@@ -229,75 +242,84 @@ export default function FeedbackScreen() {
                         onChange={onPickerChange}
                         maximumDate={new Date()}
                         locale="vi-VN"
+                        themeVariant="light"
                       />
-                    )}
-                  </View>
-
-                  {/* Symptoms textarea */}
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.fieldLabel}>Triệu chứng *</Text>
-                    <TextInput
-                      value={symptoms}
-                      onChangeText={setSymptoms}
-                      placeholder="Mô tả chi tiết triệu chứng, sự cố, thời điểm phát hiện và thông tin liên quan..."
-                      placeholderTextColor="#6A7282"
-                      multiline
-                      style={styles.symptomsInput}
-                      textAlignVertical="top"
-                    />
-                  </View>
-
-                  {/* Image upload */}
-                  <View style={styles.fieldGroup}>
-                    <Text style={styles.uploadLabel}>Tải ảnh lên (tuỳ chọn)</Text>
-                    <TouchableOpacity
-                      onPress={pickImage}
-                      style={[styles.uploadBox, photos.length > 0 && { borderColor: '#FF6535' }]}
-                      activeOpacity={0.75}
-                    >
-                      <View style={styles.uploadInner}>
-                        <View style={styles.cameraBox}>
-                          <Text style={styles.cameraEmoji}>📷</Text>
-                        </View>
-                        <View style={styles.uploadTextCol}>
-                          <Text style={styles.uploadMainText}>
-                            {photos.length > 0 ? `Đã chọn ${photos.length} ảnh` : 'Thêm hình ảnh minh hoạ'}
-                          </Text>
-                          <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC • Tối đa 5 ảnh</Text>
-                        </View>
-                        <Text style={styles.uploadLink}>Tải lên</Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    {photos.length > 0 && (
-                      <View style={styles.thumbnailRow}>
-                        {photos.map((uri) => (
-                          <View key={uri} style={styles.thumbWrap}>
-                            <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
-                            <TouchableOpacity
-                              onPress={() => removePhoto(uri)}
-                              style={styles.thumbRemove}
-                              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                            >
-                              <Feather name="x" size={10} color="#fff" />
-                            </TouchableOpacity>
-                          </View>
-                        ))}
-                        {photos.length < 5 && (
-                          <TouchableOpacity onPress={pickImage} style={styles.thumbAdd} activeOpacity={0.7}>
-                            <Feather name="plus" size={20} color="#B0B0B0" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Submit */}
-                  <TouchableOpacity onPress={handleSubmit} style={styles.submitBtn} activeOpacity={0.8}>
-                    <Feather name="send" size={15} color="#fff" />
-                    <Text style={styles.submitText}>Gửi phản ánh</Text>
-                  </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
+
+                {/* ── Symptoms ── */}
+                <View style={styles.fieldBlock}>
+                  <View style={styles.fieldLabelRow}>
+                    <Feather name="alert-circle" size={13} color="#FF6535" />
+                    <Text style={styles.fieldLabel}>Triệu chứng <Text style={styles.required}>*</Text></Text>
+                  </View>
+                  <TextInput
+                    value={symptoms}
+                    onChangeText={setSymptoms}
+                    placeholder="Mô tả chi tiết triệu chứng, sự cố, thời điểm phát hiện và thông tin liên quan..."
+                    placeholderTextColor="#A0A8B0"
+                    multiline
+                    style={styles.symptomsInput}
+                    textAlignVertical="top"
+                  />
+                </View>
+
+                {/* ── Image upload ── */}
+                <View style={styles.fieldBlock}>
+                  <View style={styles.fieldLabelRow}>
+                    <Feather name="image" size={13} color="#FF6535" />
+                    <Text style={styles.fieldLabel}>Hình ảnh đính kèm <Text style={styles.optional}>(tuỳ chọn)</Text></Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={pickImage}
+                    style={[styles.uploadBox, photos.length > 0 && styles.uploadBoxFilled]}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[styles.uploadIconWrap, photos.length > 0 && styles.uploadIconWrapFilled]}>
+                      <Feather name="camera" size={20} color={photos.length > 0 ? '#FF6535' : '#8E8E93'} />
+                    </View>
+                    <View style={styles.uploadTextCol}>
+                      <Text style={[styles.uploadMainText, photos.length > 0 && { color: '#1E1E1E' }]}>
+                        {photos.length > 0 ? `Đã chọn ${photos.length} ảnh` : 'Thêm hình ảnh minh hoạ'}
+                      </Text>
+                      <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC • Tối đa 5 ảnh</Text>
+                    </View>
+                    <View style={[styles.uploadBadge, photos.length > 0 && styles.uploadBadgeFilled]}>
+                      <Text style={[styles.uploadBadgeText, photos.length > 0 && styles.uploadBadgeTextFilled]}>
+                        Tải lên
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {photos.length > 0 && (
+                    <View style={styles.thumbnailRow}>
+                      {photos.map((uri) => (
+                        <View key={uri} style={styles.thumbWrap}>
+                          <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
+                          <TouchableOpacity
+                            onPress={() => removePhoto(uri)}
+                            style={styles.thumbRemove}
+                            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                          >
+                            <Feather name="x" size={10} color="#fff" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                      {photos.length < 5 && (
+                        <TouchableOpacity onPress={pickImage} style={styles.thumbAdd} activeOpacity={0.7}>
+                          <Feather name="plus" size={20} color="#B0B0B0" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                </View>
+
+                {/* ── Submit ── */}
+                <TouchableOpacity onPress={handleSubmit} style={styles.submitBtn} activeOpacity={0.8}>
+                  <Feather name="send" size={15} color="#fff" />
+                  <Text style={styles.submitText}>Gửi phản ánh</Text>
+                </TouchableOpacity>
               </ScrollView>
             </Animated.View>
           </KeyboardAvoidingView>
@@ -421,95 +443,120 @@ const styles = StyleSheet.create({
   /* Modal */
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalWrapper: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
+    backgroundColor: '#F7F8FA',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '92%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 20,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 24,
   },
   sheetHandleArea: {
     paddingVertical: 10,
     alignItems: 'center',
   },
   sheetHandle: {
-    width: 36, height: 4, borderRadius: 2,
-    backgroundColor: '#D1D5DC',
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: '#C8CBD0',
   },
   sheetHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#EBEBEF',
+    paddingHorizontal: 20, paddingBottom: 14,
+  },
+  sheetTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sheetTitleIcon: {
+    width: 32, height: 32, borderRadius: 10,
+    backgroundColor: '#FFF0EB',
+    alignItems: 'center', justifyContent: 'center',
   },
   sheetTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: '#1C1C1E' },
   closeBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#F5F6FA',
+    backgroundColor: '#EBEBEF',
     alignItems: 'center', justifyContent: 'center',
   },
-  sheetContent: { padding: 16, gap: 0 },
+  sheetContent: { paddingHorizontal: 16, paddingBottom: 8, gap: 16 },
 
-  /* Inner gradient card */
-  innerCard: {
-    backgroundColor: '#FFF7F2',
-    borderWidth: 1,
-    borderColor: '#FFEDD4',
-    borderRadius: 14,
-    padding: 19,
-    gap: 14,
-  },
+  /* Field blocks */
+  fieldBlock: { gap: 8 },
+  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  fieldLabel: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#364153' },
+  required: { color: '#FF3B30' },
+  optional: { color: '#8E8E93', fontFamily: 'Inter_400Regular' },
 
-  /* Field group */
-  fieldGroup: { gap: 8 },
-  fieldLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#364153', lineHeight: 20 },
-
-  /* Time + Date row */
-  timeRow: { flexDirection: 'row', gap: 10, overflow: 'hidden' },
-  timeInput: {
+  /* Time row */
+  timeRow: { flexDirection: 'row', gap: 10 },
+  timeChip: {
     flex: 1,
-    height: 47,
+    height: 48,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
+    borderWidth: 1.5,
+    borderColor: '#E2E5EA',
     borderRadius: 12,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
   },
-  dateInput: {
+  dateChip: {
     flex: 2,
-    height: 47,
+    height: 48,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
+    borderWidth: 1.5,
+    borderColor: '#E2E5EA',
     borderRadius: 12,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
   },
-  pickerBtnText: {
-    fontSize: 14,
-    fontFamily: 'Inter_500Medium',
-    flexShrink: 1,
+  timeChipActive: {
+    borderColor: '#FF6535',
+    backgroundColor: '#FFF5F2',
   },
+  chipText: { fontSize: 14, fontFamily: 'Inter_500Medium', flexShrink: 1 },
 
-  /* Symptoms textarea */
+  /* DateTimePicker container — ensures white bg visible on all platforms */
+  pickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#FF6535',
+    overflow: 'hidden',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#EBEBEF',
+    backgroundColor: '#FFFFFF',
+  },
+  pickerHeaderText: { fontSize: 14, fontFamily: 'Inter_600SemiBold', color: '#1C1C1E' },
+  pickerDoneBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    backgroundColor: '#FF6535',
+    borderRadius: 8,
+  },
+  pickerDoneText: { fontSize: 13, fontFamily: 'Inter_600SemiBold', color: '#fff' },
+
+  /* Symptoms */
   symptomsInput: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DC',
+    borderWidth: 1.5,
+    borderColor: '#E2E5EA',
     borderRadius: 12,
     padding: 14,
     minHeight: 116,
@@ -520,31 +567,48 @@ const styles = StyleSheet.create({
   },
 
   /* Upload */
-  uploadLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#364153', lineHeight: 20 },
   uploadBox: {
-    height: 90,
-    backgroundColor: '#FAFAFA',
-    borderWidth: 1,
-    borderColor: '#D1D5DC',
+    height: 80,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E2E5EA',
     borderRadius: 12,
-    justifyContent: 'center',
-    paddingHorizontal: 15,
+    borderStyle: 'dashed',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    gap: 12,
   },
-  uploadInner: { flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
-  cameraBox: {
-    width: 37,
-    height: 40,
-    backgroundColor: '#FFEDD4',
+  uploadBoxFilled: {
+    borderStyle: 'solid',
+    borderColor: '#FF6535',
+    backgroundColor: '#FFF5F2',
+  },
+  uploadIconWrap: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#F2F3F7',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  cameraEmoji: { fontSize: 17 },
+  uploadIconWrapFilled: {
+    backgroundColor: '#FFEDE6',
+  },
   uploadTextCol: { flex: 1, gap: 2 },
-  uploadMainText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#1E2939', lineHeight: 21 },
-  uploadSubText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6A7282', lineHeight: 18 },
-  uploadLink: { fontSize: 13, fontFamily: 'Inter_700Bold', color: '#F15D22', flexShrink: 0 },
+  uploadMainText: { fontSize: 14, fontFamily: 'Inter_500Medium', color: '#8E8E93' },
+  uploadSubText: { fontSize: 11, fontFamily: 'Inter_400Regular', color: '#A0A8B0' },
+  uploadBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F2F3F7',
+    flexShrink: 0,
+  },
+  uploadBadgeFilled: { backgroundColor: '#FF6535' },
+  uploadBadgeText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: '#8E8E93' },
+  uploadBadgeTextFilled: { color: '#fff' },
 
   thumbnailRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   thumbWrap: { position: 'relative' },
@@ -565,9 +629,14 @@ const styles = StyleSheet.create({
   /* Submit */
   submitBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 13, borderRadius: 10, backgroundColor: '#FF6535',
+    gap: 8, paddingVertical: 15, borderRadius: 14, backgroundColor: '#FF6535',
+    shadowColor: '#FF6535',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  submitText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 15 },
+  submitText: { color: '#fff', fontFamily: 'Inter_700Bold', fontSize: 15 },
 
   /* Section label */
   sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10 },
