@@ -1,12 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
   Image,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -37,6 +39,30 @@ export default function FeedbackScreen() {
 
   const [showForm, setShowForm] = useState(false);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(FEEDBACKS);
+
+  // Swipe-to-dismiss
+  const slideY = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (showForm) slideY.setValue(0);
+  }, [showForm]);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 4,
+      onPanResponderMove: (_, g) => {
+        if (g.dy > 0) slideY.setValue(g.dy);
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 80 || g.vy > 0.5) {
+          Animated.timing(slideY, { toValue: 600, duration: 220, useNativeDriver: true }).start(() =>
+            setShowForm(false)
+          );
+        } else {
+          Animated.spring(slideY, { toValue: 0, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
   const [symptoms, setSymptoms] = useState('');
   const [symptomDateTime, setSymptomDateTime] = useState<Date | null>(null);
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
@@ -145,12 +171,14 @@ export default function FeedbackScreen() {
             style={styles.modalWrapper}
             pointerEvents="box-none"
           >
-            <View style={[styles.sheet, { paddingBottom: isWeb ? 16 : insets.bottom + 8 }]}>
-              {/* Sheet handle */}
-              <View style={styles.sheetHandle} />
+            <Animated.View style={[styles.sheet, { paddingBottom: isWeb ? 16 : insets.bottom + 8, transform: [{ translateY: slideY }] }]}>
+              {/* Sheet handle — drag target */}
+              <View style={styles.sheetHandleArea} {...panResponder.panHandlers}>
+                <View style={styles.sheetHandle} />
+              </View>
 
-              {/* Header */}
-              <View style={styles.sheetHeader}>
+              {/* Header — also draggable */}
+              <View style={styles.sheetHeader} {...panResponder.panHandlers}>
                 <Text style={styles.sheetTitle}>Gửi phản ánh</Text>
                 <TouchableOpacity onPress={() => setShowForm(false)} style={styles.closeBtn} activeOpacity={0.7}>
                   <Feather name="x" size={18} color="#364153" />
@@ -271,7 +299,7 @@ export default function FeedbackScreen() {
                   </TouchableOpacity>
                 </View>
               </ScrollView>
-            </View>
+            </Animated.View>
           </KeyboardAvoidingView>
         </Modal>
 
@@ -356,11 +384,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 20,
   },
+  sheetHandleArea: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
   sheetHandle: {
     width: 36, height: 4, borderRadius: 2,
     backgroundColor: '#D1D5DC',
-    alignSelf: 'center',
-    marginTop: 10, marginBottom: 4,
   },
   sheetHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
