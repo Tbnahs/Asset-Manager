@@ -118,9 +118,11 @@ export default function LoginScreen() {
                   returnKeyType="done"
                   onSubmitEditing={handleLogin}
                 />
-                <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn}>
-                  <Feather name={showPassword ? 'eye-off' : 'eye'} size={16} color={colors.mutedForeground} />
-                </TouchableOpacity>
+                {Platform.OS !== 'web' && (
+                  <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn}>
+                    <Feather name={showPassword ? 'eye-off' : 'eye'} size={16} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
 
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: { marginRight: 8 },
   input: { flex: 1, fontSize: 15, fontFamily: 'Inter_400Regular' },
-  eyeBtn: { padding: 4 },
+  eyeBtn: { paddingHorizontal: 10, paddingVertical: 8 },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10,
