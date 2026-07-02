@@ -1,7 +1,9 @@
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
   Alert,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -41,7 +43,31 @@ export default function FeedbackScreen() {
   const [symptoms, setSymptoms] = useState('');
   const [symptomTime, setSymptomTime] = useState('');
   const [symptomDate, setSymptomDate] = useState('');
-  const [hasPhoto, setHasPhoto] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
+
+  const pickImage = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Cần quyền truy cập', 'Vui lòng cấp quyền truy cập thư viện ảnh để tải ảnh lên.');
+        return;
+      }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: 5,
+    });
+    if (!result.canceled) {
+      const uris = result.assets.map((a) => a.uri);
+      setPhotos((prev) => [...prev, ...uris].slice(0, 5));
+    }
+  };
+
+  const removePhoto = (uri: string) => {
+    setPhotos((prev) => prev.filter((p) => p !== uri));
+  };
 
   const handleSubmit = () => {
     if (!symptoms.trim()) {
@@ -56,7 +82,7 @@ export default function FeedbackScreen() {
       complaintType,
       description: symptoms.trim(),
       symptoms: symptoms.trim(),
-      photos: [],
+      photos,
       status: 'pending',
       submittedAt:
         now.toLocaleDateString('vi-VN') +
@@ -68,7 +94,7 @@ export default function FeedbackScreen() {
     setSymptomTime('');
     setSymptomDate('');
     setComplaintType('quality');
-    setHasPhoto(false);
+    setPhotos([]);
     setShowForm(false);
     Alert.alert('Đã gửi', 'Phản ánh của bạn đã được gửi thành công. Nhà trường sẽ xem xét và phản hồi sớm nhất.');
   };
@@ -174,27 +200,49 @@ export default function FeedbackScreen() {
               {/* Image upload */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.uploadLabel}>Tải ảnh lên (tuỳ chọn)</Text>
+
+                {/* Tap-to-pick box */}
                 <TouchableOpacity
-                  onPress={() => setHasPhoto(true)}
-                  style={[styles.uploadBox, hasPhoto && { borderColor: '#FF6535' }]}
+                  onPress={pickImage}
+                  style={[styles.uploadBox, photos.length > 0 && { borderColor: '#FF6535' }]}
                   activeOpacity={0.75}
                 >
                   <View style={styles.uploadInner}>
-                    {/* Camera icon */}
                     <View style={styles.cameraBox}>
                       <Text style={styles.cameraEmoji}>📷</Text>
                     </View>
-                    {/* Text */}
                     <View style={styles.uploadTextCol}>
                       <Text style={styles.uploadMainText}>
-                        {hasPhoto ? 'Đã chọn ảnh' : 'Thêm hình ảnh minh hoạ'}
+                        {photos.length > 0 ? `Đã chọn ${photos.length} ảnh` : 'Thêm hình ảnh minh hoạ'}
                       </Text>
-                      <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC</Text>
+                      <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC • Tối đa 5 ảnh</Text>
                     </View>
-                    {/* Tải lên link */}
                     <Text style={styles.uploadLink}>Tải lên</Text>
                   </View>
                 </TouchableOpacity>
+
+                {/* Thumbnails */}
+                {photos.length > 0 && (
+                  <View style={styles.thumbnailRow}>
+                    {photos.map((uri) => (
+                      <View key={uri} style={styles.thumbWrap}>
+                        <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
+                        <TouchableOpacity
+                          onPress={() => removePhoto(uri)}
+                          style={styles.thumbRemove}
+                          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                        >
+                          <Feather name="x" size={10} color="#fff" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                    {photos.length < 5 && (
+                      <TouchableOpacity onPress={pickImage} style={styles.thumbAdd} activeOpacity={0.7}>
+                        <Feather name="plus" size={20} color="#B0B0B0" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
               </View>
 
               {/* Submit */}
@@ -389,6 +437,22 @@ const styles = StyleSheet.create({
   uploadMainText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#1E2939', lineHeight: 21 },
   uploadSubText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6A7282', lineHeight: 18 },
   uploadLink: { fontSize: 13, fontFamily: 'Inter_700Bold', color: '#F15D22' },
+
+  thumbnailRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  thumbWrap: { position: 'relative' },
+  thumb: { width: 68, height: 68, borderRadius: 10, backgroundColor: '#f0f0f0' },
+  thumbRemove: {
+    position: 'absolute', top: -6, right: -6,
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: '#FF3B30',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  thumbAdd: {
+    width: 68, height: 68, borderRadius: 10,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1.5, borderColor: '#D1D5DC', borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   /* Submit */
   submitBtn: {
