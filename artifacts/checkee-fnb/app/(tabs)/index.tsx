@@ -106,7 +106,7 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
               {meals.map((meal, i) => (
                 <TouchableOpacity
                   key={meal.id}
-                  onPress={() => router.push(`/sample-retention/${meal.id}` as any)}
+                  onPress={() => router.push(`/meal/${meal.id}` as any)}
                   activeOpacity={0.72}
                   style={[
                     rStyles.mealRow,
