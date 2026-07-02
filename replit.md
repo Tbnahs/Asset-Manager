@@ -1,36 +1,53 @@
-# [Project name]
+# CHECKEE F&B
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A school food-monitoring mobile app (Expo + React Native) that lets parents track weekly meal menus, food safety results, ingredient traceability, and submit feedback — backed by an Express 5 API server.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- **Mobile app (Expo):** workflow `CHECKEE F&B (Mobile)` — runs Metro on port 18359; scan the QR code with Expo Go or open in the web preview
+- **API server:** workflow `API Server` — Express 5 on port 8080 (`/api`)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/db run push` — push DB schema changes to Postgres (dev only)
+- Required env (when DB features are used): `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Mobile: Expo ~54 + Expo Router (file-based routing), React Native
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- DB: PostgreSQL + Drizzle ORM (not yet connected — add `DATABASE_URL` secret when needed)
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- API codegen: Orval (from OpenAPI spec → `@workspace/api-client-react`)
+- Build: esbuild (CJS bundle for API server)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/checkee-fnb/` — Expo mobile app
+  - `app/` — Expo Router screens
+  - `components/` — shared UI components
+  - `constants/colors.ts` — design tokens
+  - `data/mockData.ts` — mock meal/notification data (Vietnamese content)
+  - `types/index.ts` — shared TypeScript types
+- `artifacts/api-server/` — Express API server
+  - `src/routes/` — route handlers (currently: health only)
+  - `src/lib/` — logger and utilities
+- `lib/db/` — Drizzle ORM schema and client
+- `lib/api-spec/` — OpenAPI spec (source of truth for API contracts)
+- `lib/api-client-react/` — generated React Query hooks (from codegen)
+- `lib/api-zod/` — generated Zod schemas (from codegen)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- OpenAPI-first: all API contracts live in `lib/api-spec/openapi.yaml`; frontend hooks are generated via Orval — edit the spec, then run codegen
+- Expo app currently uses mock data (`data/mockData.ts`); real API integration goes through `@workspace/api-client-react`
+- API server builds to a CJS bundle (esbuild) before starting, even in dev mode
+- Vietnamese-language UI content throughout the mobile app
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+School food monitoring for parents: weekly meal menus with nutritional info and ingredient origins, food safety inspection results, traceability records, and a feedback/complaint submission flow.
 
 ## User preferences
 
@@ -38,8 +55,11 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- API server dev mode runs `build` then `start` (no hot-reload; restart the workflow after backend changes)
+- `DATABASE_URL` is not set yet — DB-touching code will fail until a Postgres database is added
+- Port 18359 (Expo Metro) maps to external port 3000 in Replit's proxy config
 
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `expo` skill for Expo/React Native patterns used in this project

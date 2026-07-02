@@ -79,7 +79,7 @@ function buildCalendar(year: number, month: number): (Date | null)[] {
 function SessionRows({ dayMeals, colors, onMealPress }: {
   dayMeals: Meal[];
   colors: ReturnType<typeof useColors>;
-  onMealPress: (meal: Meal) => void;
+  onMealPress?: (meal: Meal) => void;
 }) {
   if (dayMeals.length === 0) {
     return (
