@@ -1,8 +1,10 @@
 import { Feather } from '@expo/vector-icons';
-import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import Header from '@/components/Header';
+import { useAuth } from '@/contexts/AuthContext';
 import { useColors } from '@/hooks/useColors';
 
 interface InfoRowProps {
@@ -47,6 +49,35 @@ function SectionCard({ title, icon, iconColor, iconBg, children }: SectionCardPr
 export default function ProfileScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
+  const { user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      logout().then(() => router.replace('/login'));
+      return;
+    }
+    Alert.alert(
+      'Đăng xuất',
+      'Bạn có chắc muốn đăng xuất khỏi tài khoản?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Đăng xuất',
+          style: 'destructive',
+          onPress: async () => {
+            setLoggingOut(true);
+            await logout();
+            router.replace('/login');
+          },
+        },
+      ]
+    );
+  };
+
+  if (!user) return null;
+
+  const initials = user.name.split(' ').slice(-2).map((w: string) => w[0]).join('').toUpperCase();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -58,10 +89,10 @@ export default function ProfileScreen() {
         {/* Avatar + name */}
         <View style={[styles.profileHero, { backgroundColor: colors.card }]}>
           <View style={[styles.avatar, { backgroundColor: colors.accent, borderColor: colors.primary }]}>
-            <Feather name="user" size={36} color={colors.primary} />
+            <Text style={[styles.avatarInitials, { color: colors.primary }]}>{initials}</Text>
           </View>
-          <Text style={[styles.parentName, { color: colors.text }]}>Nguyễn Thị Hương</Text>
-          <Text style={[styles.parentRole, { color: colors.mutedForeground }]}>Phụ huynh học sinh</Text>
+          <Text style={[styles.parentName, { color: colors.text }]}>{user.name}</Text>
+          <Text style={[styles.parentRole, { color: colors.mutedForeground }]}>{user.role}</Text>
           <View style={[styles.verifiedBadge, { backgroundColor: colors.safeGreenLight }]}>
             <Feather name="check-circle" size={12} color={colors.safeGreen} />
             <Text style={[styles.verifiedText, { color: colors.safeGreen }]}>Đã xác minh</Text>
@@ -70,34 +101,34 @@ export default function ProfileScreen() {
 
         {/* Parent info */}
         <SectionCard title="Thông tin phụ huynh" icon="user" iconColor="#007AFF" iconBg="#E5F1FF">
-          <InfoRow label="Họ và tên" value="Nguyễn Thị Hương" />
-          <InfoRow label="Số điện thoại" value="0912 345 678" />
-          <InfoRow label="Email" value="huong.nguyen@gmail.com" />
-          <InfoRow label="Địa chỉ" value="123 Nguyễn Trãi, Q.5, TP.HCM" />
+          <InfoRow label="Họ và tên" value={user.name} />
+          <InfoRow label="Số điện thoại" value={user.phone} />
+          <InfoRow label="Email" value={user.email} />
+          <InfoRow label="Địa chỉ" value={user.address} />
         </SectionCard>
 
         {/* Student info */}
         <SectionCard title="Thông tin học sinh" icon="book" iconColor="#FF9500" iconBg="#FFF4E5">
-          <InfoRow label="Họ và tên" value="Nguyễn Minh Khoa" />
-          <InfoRow label="Ngày sinh" value="15/03/2019" />
-          <InfoRow label="Mã học sinh" value="HS2024-00234" />
-          <InfoRow label="Dị ứng" value="Không có" />
+          <InfoRow label="Họ và tên" value={user.student.name} />
+          <InfoRow label="Ngày sinh" value={user.student.dob} />
+          <InfoRow label="Mã học sinh" value={user.student.studentId} />
+          <InfoRow label="Dị ứng" value={user.student.allergies} />
         </SectionCard>
 
         {/* Class info */}
         <SectionCard title="Thông tin lớp học" icon="users" iconColor="#34C759" iconBg="#E8F9ED">
-          <InfoRow label="Lớp" value="3A" />
-          <InfoRow label="Giáo viên chủ nhiệm" value="Trần Thị Mai" />
-          <InfoRow label="Phòng học" value="Phòng 301, Tòa A" />
-          <InfoRow label="Sĩ số" value="32 học sinh" />
+          <InfoRow label="Lớp" value={user.student.className} />
+          <InfoRow label="Giáo viên chủ nhiệm" value={user.student.teacher} />
+          <InfoRow label="Phòng học" value={user.student.room} />
+          <InfoRow label="Sĩ số" value={user.student.classSize} />
         </SectionCard>
 
         {/* School info */}
         <SectionCard title="Thông tin trường học" icon="home" iconColor="#8B5CF6" iconBg="#F3EEFF">
-          <InfoRow label="Tên trường" value="Tiểu học Nguyễn Du" />
-          <InfoRow label="Địa chỉ" value="45 Nguyễn Du, Q.1, TP.HCM" />
-          <InfoRow label="Điện thoại" value="028 3822 1122" />
-          <InfoRow label="Phụ trách ATTP" value="Nguyễn Văn Tuấn" />
+          <InfoRow label="Tên trường" value={user.school.name} />
+          <InfoRow label="Địa chỉ" value={user.school.address} />
+          <InfoRow label="Điện thoại" value={user.school.phone} />
+          <InfoRow label="Phụ trách ATTP" value={user.school.foodOfficer} />
         </SectionCard>
 
         {/* App info */}
@@ -111,7 +142,12 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={[styles.logoutBtn, { borderColor: colors.border }]} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={[styles.logoutBtn, { borderColor: colors.border }, loggingOut && { opacity: 0.6 }]}
+          activeOpacity={0.7}
+          onPress={handleLogout}
+          disabled={loggingOut}
+        >
           <Feather name="log-out" size={16} color={colors.destructive} />
           <Text style={[styles.logoutText, { color: colors.destructive }]}>Đăng xuất</Text>
         </TouchableOpacity>
@@ -139,6 +175,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
+  avatarInitials: { fontSize: 28, fontFamily: 'Inter_700Bold' },
   parentName: { fontSize: 20, fontFamily: 'Inter_700Bold' },
   parentRole: { fontSize: 13, fontFamily: 'Inter_400Regular' },
   verifiedBadge: {
