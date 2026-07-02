@@ -24,6 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '@/components/Header';
 import { feedbackStore } from '@/data/feedbackStore';
 import { useColors } from '@/hooks/useColors';
+import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { FeedbackItem } from '@/types';
 
 const STATUS_CONFIG: Record<FeedbackItem['status'], { label: string; color: string; bg: string }> = {
@@ -38,6 +39,7 @@ export default function FeedbackScreen() {
   const isWeb = Platform.OS === 'web';
   const insets = useSafeAreaInsets();
 
+  const child = useSelectedChild();
   const [showForm, setShowForm] = useState(false);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(() => feedbackStore.getAll());
 
@@ -114,7 +116,7 @@ export default function FeedbackScreen() {
     const newFeedback: FeedbackItem = {
       id: `f${Date.now()}`,
       mealId: '',
-      mealName: 'Bữa ăn tại trường',
+      mealName: `Bữa ăn tại trường · ${child.name} (Lớp ${child.className})`,
       complaintType: 'other',
       description: symptoms.trim(),
       symptoms: symptoms.trim(),
@@ -197,6 +199,20 @@ export default function FeedbackScreen() {
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={styles.sheetContent}
               >
+                {/* ── Child context banner ── */}
+                <View style={[styles.childBanner, { backgroundColor: child.avatarColor + '12', borderColor: child.avatarColor + '30' }]}>
+                  <View style={[styles.childBannerAvatar, { backgroundColor: child.avatarColor + '25' }]}>
+                    <Text style={[styles.childBannerInitial, { color: child.avatarColor }]}>{child.initial}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.childBannerName, { color: child.avatarColor }]}>{child.fullName}</Text>
+                    <Text style={[styles.childBannerClass, { color: child.avatarColor + 'CC' }]}>
+                      {child.grade} · Lớp {child.className} · {child.school}
+                    </Text>
+                  </View>
+                  <Feather name="user-check" size={16} color={child.avatarColor} />
+                </View>
+
                 {/* ── Time + Date ── */}
                 <View style={styles.fieldBlock}>
                   <View style={styles.fieldLabelRow}>
@@ -647,6 +663,19 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   submitText: { color: '#fff', fontFamily: 'Inter_700Bold', fontSize: 15 },
+
+  /* Child banner inside form */
+  childBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    padding: 12, borderRadius: 12, borderWidth: 1,
+  },
+  childBannerAvatar: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  childBannerInitial: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  childBannerName: { fontSize: 13, fontFamily: 'Inter_700Bold' },
+  childBannerClass: { fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 1 },
 
   /* Section label */
   sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10 },
