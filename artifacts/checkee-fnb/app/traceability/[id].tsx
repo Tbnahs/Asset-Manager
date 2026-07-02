@@ -66,7 +66,7 @@ export default function TraceabilityDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: isWeb ? 34 : insets.bottom + 24 },
+          { paddingBottom: isWeb ? 20 : insets.bottom + 12 },
         ]}
       >
         {/* Centered food image */}
@@ -187,20 +187,20 @@ export default function TraceabilityDetailScreen() {
             </View>
           ))}
         </View>
-      </ScrollView>
 
-      {/* Footer stats bar */}
-      <View style={[styles.footer, { backgroundColor: colors.primary, paddingBottom: isWeb ? 8 : insets.bottom + 8 }]}>
-        <View style={styles.footerItem}>
-          <Text style={styles.footerNum}>{record.totalScans}</Text>
-          <Text style={styles.footerLabel}>Tổng số lượt quét</Text>
+        {/* Stats card */}
+        <View style={[styles.statsCard, { backgroundColor: colors.card }]}>
+          <View style={styles.statsItem}>
+            <Text style={[styles.statsLabel, { color: colors.mutedForeground }]}>Tổng số lượt quét</Text>
+            <Text style={[styles.statsNum, { color: colors.text }]}>{record.totalScans}</Text>
+          </View>
+          <View style={[styles.statsDivider, { backgroundColor: colors.border }]} />
+          <View style={styles.statsItem}>
+            <Text style={[styles.statsLabel, { color: colors.mutedForeground }]}>Số lượt quét hôm nay</Text>
+            <Text style={[styles.statsNum, { color: colors.text }]}>{record.todayScans}</Text>
+          </View>
         </View>
-        <View style={[styles.footerDivider]} />
-        <View style={styles.footerItem}>
-          <Text style={styles.footerNum}>{record.todayScans}</Text>
-          <Text style={styles.footerLabel}>Số lượt quét hôm nay</Text>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -355,16 +355,23 @@ const styles = StyleSheet.create({
   tdSoLo: { width: 76, fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'right' },
   tdDonVi: { width: 48, fontSize: 11, fontFamily: 'Inter_500Medium', textAlign: 'right' },
 
-  /* Footer */
-  footer: {
+  /* Stats card */
+  statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 12,
-    gap: 0,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 16,
+    paddingVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  footerItem: { flex: 1, alignItems: 'center', gap: 2, paddingBottom: 4 },
-  footerDivider: { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.3)' },
-  footerNum: { fontSize: 20, fontFamily: 'Inter_700Bold', color: '#fff' },
-  footerLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', color: 'rgba(255,255,255,0.85)' },
+  statsItem: { flex: 1, alignItems: 'center', gap: 4 },
+  statsDivider: { width: 1, height: 36 },
+  statsLabel: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  statsNum: { fontSize: 22, fontFamily: 'Inter_700Bold' },
 });
