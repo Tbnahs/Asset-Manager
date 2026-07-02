@@ -4,14 +4,18 @@ import React, { useState } from 'react';
 import {
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Header from '@/components/Header';
 import { FEEDBACKS } from '@/data/mockData';
@@ -36,6 +40,7 @@ const STATUS_CONFIG: Record<FeedbackItem['status'], { label: string; color: stri
 export default function FeedbackScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
+  const insets = useSafeAreaInsets();
 
   const [showForm, setShowForm] = useState(false);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(FEEDBACKS);
@@ -118,145 +123,163 @@ export default function FeedbackScreen() {
           style={[styles.newBtn, { backgroundColor: colors.primary }]}
           activeOpacity={0.8}
         >
-          <Feather name={showForm ? 'x' : 'plus'} size={18} color="#fff" />
-          <Text style={styles.newBtnText}>{showForm ? 'Đóng form' : 'Gửi phản ánh mới'}</Text>
+          <Feather name="plus" size={18} color="#fff" />
+          <Text style={styles.newBtnText}>Gửi phản ánh mới</Text>
         </TouchableOpacity>
 
-        {/* ── Form card ── */}
-        {showForm && (
-          <View style={styles.outerCard}>
-            {/* Inner gradient card */}
-            <View style={styles.innerCard}>
+        {/* ── Form Modal ── */}
+        <Modal
+          visible={showForm}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowForm(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setShowForm(false)}>
+            <View style={styles.modalOverlay} />
+          </TouchableWithoutFeedback>
 
-              {/* Title */}
-              <Text style={styles.formTitle}>Phản ánh sự cố món ăn (nếu có)</Text>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalWrapper}
+            pointerEvents="box-none"
+          >
+            <View style={[styles.sheet, { paddingBottom: isWeb ? 16 : insets.bottom + 8 }]}>
+              {/* Sheet handle */}
+              <View style={styles.sheetHandle} />
 
-              {/* Complaint type chips */}
-              <View style={styles.typeGrid}>
-                {COMPLAINT_TYPES.map((t) => {
-                  const active = complaintType === t.key;
-                  return (
-                    <TouchableOpacity
-                      key={t.key}
-                      onPress={() => setComplaintType(t.key)}
-                      style={[
-                        styles.typeChip,
-                        {
-                          backgroundColor: active ? t.color + '20' : '#fff',
-                          borderColor: active ? t.color : '#D3D3D3',
-                        },
-                      ]}
-                    >
-                      <Feather
-                        name={t.icon as any}
-                        size={13}
-                        color={active ? t.color : '#8E8E93'}
-                      />
-                      <Text style={[styles.typeText, { color: active ? t.color : '#364153' }]}>
-                        {t.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Time + Date row */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Thời gian có triệu chứng *</Text>
-                <View style={styles.timeRow}>
-                  {/* Time input */}
-                  <TextInput
-                    value={symptomTime}
-                    onChangeText={setSymptomTime}
-                    placeholder="18:30"
-                    placeholderTextColor="#B0B0B0"
-                    style={styles.timeInput}
-                  />
-                  {/* Date input */}
-                  <TextInput
-                    value={symptomDate}
-                    onChangeText={setSymptomDate}
-                    placeholder="Ngày/tháng/năm"
-                    placeholderTextColor="#B0B0B0"
-                    style={styles.dateInput}
-                  />
-                </View>
-              </View>
-
-              {/* Symptoms textarea */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Triệu chứng *</Text>
-                <TextInput
-                  value={symptoms}
-                  onChangeText={setSymptoms}
-                  placeholder="Mô tả chi tiết triệu chứng, sự cố, thời điểm phát hiện và thông tin liên quan..."
-                  placeholderTextColor="#6A7282"
-                  multiline
-                  style={styles.symptomsInput}
-                  textAlignVertical="top"
-                />
-              </View>
-
-              {/* Image upload */}
-              <View style={styles.fieldGroup}>
-                <Text style={styles.uploadLabel}>Tải ảnh lên (tuỳ chọn)</Text>
-
-                {/* Tap-to-pick box */}
-                <TouchableOpacity
-                  onPress={pickImage}
-                  style={[styles.uploadBox, photos.length > 0 && { borderColor: '#FF6535' }]}
-                  activeOpacity={0.75}
-                >
-                  <View style={styles.uploadInner}>
-                    <View style={styles.cameraBox}>
-                      <Text style={styles.cameraEmoji}>📷</Text>
-                    </View>
-                    <View style={styles.uploadTextCol}>
-                      <Text style={styles.uploadMainText}>
-                        {photos.length > 0 ? `Đã chọn ${photos.length} ảnh` : 'Thêm hình ảnh minh hoạ'}
-                      </Text>
-                      <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC • Tối đa 5 ảnh</Text>
-                    </View>
-                    <Text style={styles.uploadLink}>Tải lên</Text>
-                  </View>
+              {/* Header */}
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>Gửi phản ánh</Text>
+                <TouchableOpacity onPress={() => setShowForm(false)} style={styles.closeBtn} activeOpacity={0.7}>
+                  <Feather name="x" size={18} color="#364153" />
                 </TouchableOpacity>
+              </View>
 
-                {/* Thumbnails */}
-                {photos.length > 0 && (
-                  <View style={styles.thumbnailRow}>
-                    {photos.map((uri) => (
-                      <View key={uri} style={styles.thumbWrap}>
-                        <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.sheetContent}
+              >
+                {/* Inner gradient card */}
+                <View style={styles.innerCard}>
+                  {/* Title */}
+                  <Text style={styles.formTitle}>Phản ánh sự cố món ăn (nếu có)</Text>
+
+                  {/* Complaint type chips */}
+                  <View style={styles.typeGrid}>
+                    {COMPLAINT_TYPES.map((t) => {
+                      const active = complaintType === t.key;
+                      return (
                         <TouchableOpacity
-                          onPress={() => removePhoto(uri)}
-                          style={styles.thumbRemove}
-                          hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                          key={t.key}
+                          onPress={() => setComplaintType(t.key)}
+                          style={[
+                            styles.typeChip,
+                            {
+                              backgroundColor: active ? t.color + '20' : '#fff',
+                              borderColor: active ? t.color : '#D3D3D3',
+                            },
+                          ]}
                         >
-                          <Feather name="x" size={10} color="#fff" />
+                          <Feather name={t.icon as any} size={13} color={active ? t.color : '#8E8E93'} />
+                          <Text style={[styles.typeText, { color: active ? t.color : '#364153' }]}>
+                            {t.label}
+                          </Text>
                         </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Time + Date row */}
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Thời gian có triệu chứng *</Text>
+                    <View style={styles.timeRow}>
+                      <TextInput
+                        value={symptomTime}
+                        onChangeText={setSymptomTime}
+                        placeholder="18:30"
+                        placeholderTextColor="#B0B0B0"
+                        style={styles.timeInput}
+                      />
+                      <TextInput
+                        value={symptomDate}
+                        onChangeText={setSymptomDate}
+                        placeholder="Ngày/tháng/năm"
+                        placeholderTextColor="#B0B0B0"
+                        style={styles.dateInput}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Symptoms textarea */}
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Triệu chứng *</Text>
+                    <TextInput
+                      value={symptoms}
+                      onChangeText={setSymptoms}
+                      placeholder="Mô tả chi tiết triệu chứng, sự cố, thời điểm phát hiện và thông tin liên quan..."
+                      placeholderTextColor="#6A7282"
+                      multiline
+                      style={styles.symptomsInput}
+                      textAlignVertical="top"
+                    />
+                  </View>
+
+                  {/* Image upload */}
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.uploadLabel}>Tải ảnh lên (tuỳ chọn)</Text>
+                    <TouchableOpacity
+                      onPress={pickImage}
+                      style={[styles.uploadBox, photos.length > 0 && { borderColor: '#FF6535' }]}
+                      activeOpacity={0.75}
+                    >
+                      <View style={styles.uploadInner}>
+                        <View style={styles.cameraBox}>
+                          <Text style={styles.cameraEmoji}>📷</Text>
+                        </View>
+                        <View style={styles.uploadTextCol}>
+                          <Text style={styles.uploadMainText}>
+                            {photos.length > 0 ? `Đã chọn ${photos.length} ảnh` : 'Thêm hình ảnh minh hoạ'}
+                          </Text>
+                          <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC • Tối đa 5 ảnh</Text>
+                        </View>
+                        <Text style={styles.uploadLink}>Tải lên</Text>
                       </View>
-                    ))}
-                    {photos.length < 5 && (
-                      <TouchableOpacity onPress={pickImage} style={styles.thumbAdd} activeOpacity={0.7}>
-                        <Feather name="plus" size={20} color="#B0B0B0" />
-                      </TouchableOpacity>
+                    </TouchableOpacity>
+
+                    {photos.length > 0 && (
+                      <View style={styles.thumbnailRow}>
+                        {photos.map((uri) => (
+                          <View key={uri} style={styles.thumbWrap}>
+                            <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
+                            <TouchableOpacity
+                              onPress={() => removePhoto(uri)}
+                              style={styles.thumbRemove}
+                              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                            >
+                              <Feather name="x" size={10} color="#fff" />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                        {photos.length < 5 && (
+                          <TouchableOpacity onPress={pickImage} style={styles.thumbAdd} activeOpacity={0.7}>
+                            <Feather name="plus" size={20} color="#B0B0B0" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     )}
                   </View>
-                )}
-              </View>
 
-              {/* Submit */}
-              <TouchableOpacity
-                onPress={handleSubmit}
-                style={styles.submitBtn}
-                activeOpacity={0.8}
-              >
-                <Feather name="send" size={15} color="#fff" />
-                <Text style={styles.submitText}>Gửi phản ánh</Text>
-              </TouchableOpacity>
+                  {/* Submit */}
+                  <TouchableOpacity onPress={handleSubmit} style={styles.submitBtn} activeOpacity={0.8}>
+                    <Feather name="send" size={15} color="#fff" />
+                    <Text style={styles.submitText}>Gửi phản ánh</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
             </View>
-          </View>
-        )}
+          </KeyboardAvoidingView>
+        </Modal>
 
         {/* ── History ── */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
@@ -326,18 +349,44 @@ const styles = StyleSheet.create({
   },
   newBtnText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 15 },
 
-  /* Outer card: white, shadow */
-  outerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0.5 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2.5,
-    elevation: 3,
+  /* Modal */
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
+  modalWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 20,
+  },
+  sheetHandle: {
+    width: 36, height: 4, borderRadius: 2,
+    backgroundColor: '#D1D5DC',
+    alignSelf: 'center',
+    marginTop: 10, marginBottom: 4,
+  },
+  sheetHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#EBEBEF',
+  },
+  sheetTitle: { fontSize: 17, fontFamily: 'Inter_700Bold', color: '#1C1C1E' },
+  closeBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#F5F6FA',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sheetContent: { padding: 16, gap: 0 },
 
   /* Inner gradient card */
   innerCard: {
