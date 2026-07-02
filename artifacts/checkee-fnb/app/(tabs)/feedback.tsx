@@ -34,40 +34,43 @@ const STATUS_CONFIG: Record<FeedbackItem['status'], { label: string; color: stri
 export default function FeedbackScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
+
   const [showForm, setShowForm] = useState(false);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(FEEDBACKS);
   const [complaintType, setComplaintType] = useState<FeedbackItem['complaintType']>('quality');
-  const [description, setDescription] = useState('');
   const [symptoms, setSymptoms] = useState('');
+  const [symptomTime, setSymptomTime] = useState('');
+  const [symptomDate, setSymptomDate] = useState('');
+  const [hasPhoto, setHasPhoto] = useState(false);
 
   const handleSubmit = () => {
-    if (!description.trim()) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng nhập mô tả phản ánh.');
+    if (!symptoms.trim()) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng mô tả triệu chứng hoặc sự cố.');
       return;
     }
+    const now = new Date();
     const newFeedback: FeedbackItem = {
       id: `f${Date.now()}`,
       mealId: '',
       mealName: 'Bữa ăn tại trường',
       complaintType,
-      description: description.trim(),
+      description: symptoms.trim(),
       symptoms: symptoms.trim(),
       photos: [],
       status: 'pending',
       submittedAt:
-        new Date().toLocaleDateString('vi-VN') +
+        now.toLocaleDateString('vi-VN') +
         ' ' +
-        new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     };
     setFeedbacks([newFeedback, ...feedbacks]);
-    setDescription('');
     setSymptoms('');
+    setSymptomTime('');
+    setSymptomDate('');
     setComplaintType('quality');
+    setHasPhoto(false);
     setShowForm(false);
-    Alert.alert(
-      'Đã gửi',
-      'Phản ánh của bạn đã được gửi thành công. Nhà trường sẽ xem xét và phản hồi sớm nhất.'
-    );
+    Alert.alert('Đã gửi', 'Phản ánh của bạn đã được gửi thành công. Nhà trường sẽ xem xét và phản hồi sớm nhất.');
   };
 
   return (
@@ -83,7 +86,7 @@ export default function FeedbackScreen() {
           Gửi phản ánh về chất lượng bữa ăn tại trường
         </Text>
 
-        {/* New feedback button */}
+        {/* Toggle button */}
         <TouchableOpacity
           onPress={() => setShowForm(!showForm)}
           style={[styles.newBtn, { backgroundColor: colors.primary }]}
@@ -93,97 +96,121 @@ export default function FeedbackScreen() {
           <Text style={styles.newBtnText}>{showForm ? 'Đóng form' : 'Gửi phản ánh mới'}</Text>
         </TouchableOpacity>
 
-        {/* Form */}
+        {/* ── Form card ── */}
         {showForm && (
-          <View style={[styles.form, { backgroundColor: colors.card }]}>
-            <Text style={[styles.formTitle, { color: colors.text }]}>Thông tin phản ánh</Text>
+          <View style={styles.outerCard}>
+            {/* Inner gradient card */}
+            <View style={styles.innerCard}>
 
-            {/* Complaint type */}
-            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Loại phản ánh *</Text>
-            <View style={styles.typeGrid}>
-              {COMPLAINT_TYPES.map((t) => (
-                <TouchableOpacity
-                  key={t.key}
-                  onPress={() => setComplaintType(t.key)}
-                  style={[
-                    styles.typeChip,
-                    {
-                      backgroundColor: complaintType === t.key ? t.color + '20' : colors.muted,
-                      borderColor: complaintType === t.key ? t.color : 'transparent',
-                      borderWidth: 1.5,
-                    },
-                  ]}
-                >
-                  <Feather
-                    name={t.icon as any}
-                    size={14}
-                    color={complaintType === t.key ? t.color : colors.mutedForeground}
+              {/* Title */}
+              <Text style={styles.formTitle}>Phản ánh sự cố món ăn (nếu có)</Text>
+
+              {/* Complaint type chips */}
+              <View style={styles.typeGrid}>
+                {COMPLAINT_TYPES.map((t) => {
+                  const active = complaintType === t.key;
+                  return (
+                    <TouchableOpacity
+                      key={t.key}
+                      onPress={() => setComplaintType(t.key)}
+                      style={[
+                        styles.typeChip,
+                        {
+                          backgroundColor: active ? t.color + '20' : '#fff',
+                          borderColor: active ? t.color : '#D3D3D3',
+                        },
+                      ]}
+                    >
+                      <Feather
+                        name={t.icon as any}
+                        size={13}
+                        color={active ? t.color : '#8E8E93'}
+                      />
+                      <Text style={[styles.typeText, { color: active ? t.color : '#364153' }]}>
+                        {t.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Time + Date row */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Thời gian có triệu chứng *</Text>
+                <View style={styles.timeRow}>
+                  {/* Time input */}
+                  <TextInput
+                    value={symptomTime}
+                    onChangeText={setSymptomTime}
+                    placeholder="18:30"
+                    placeholderTextColor="#B0B0B0"
+                    style={styles.timeInput}
                   />
-                  <Text
-                    style={[
-                      styles.typeText,
-                      { color: complaintType === t.key ? t.color : colors.mutedForeground },
-                    ]}
-                  >
-                    {t.label}
-                  </Text>
+                  {/* Date input */}
+                  <TextInput
+                    value={symptomDate}
+                    onChangeText={setSymptomDate}
+                    placeholder="Ngày/tháng/năm"
+                    placeholderTextColor="#B0B0B0"
+                    style={styles.dateInput}
+                  />
+                </View>
+              </View>
+
+              {/* Symptoms textarea */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Triệu chứng *</Text>
+                <TextInput
+                  value={symptoms}
+                  onChangeText={setSymptoms}
+                  placeholder="Mô tả chi tiết triệu chứng, sự cố, thời điểm phát hiện và thông tin liên quan..."
+                  placeholderTextColor="#6A7282"
+                  multiline
+                  style={styles.symptomsInput}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              {/* Image upload */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.uploadLabel}>Tải ảnh lên (tuỳ chọn)</Text>
+                <TouchableOpacity
+                  onPress={() => setHasPhoto(true)}
+                  style={[styles.uploadBox, hasPhoto && { borderColor: '#FF6535' }]}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.uploadInner}>
+                    {/* Camera icon */}
+                    <View style={styles.cameraBox}>
+                      <Text style={styles.cameraEmoji}>📷</Text>
+                    </View>
+                    {/* Text */}
+                    <View style={styles.uploadTextCol}>
+                      <Text style={styles.uploadMainText}>
+                        {hasPhoto ? 'Đã chọn ảnh' : 'Thêm hình ảnh minh hoạ'}
+                      </Text>
+                      <Text style={styles.uploadSubText}>PNG, JPG hoặc HEIC</Text>
+                    </View>
+                    {/* Tải lên link */}
+                    <Text style={styles.uploadLink}>Tải lên</Text>
+                  </View>
                 </TouchableOpacity>
-              ))}
+              </View>
+
+              {/* Submit */}
+              <TouchableOpacity
+                onPress={handleSubmit}
+                style={styles.submitBtn}
+                activeOpacity={0.8}
+              >
+                <Feather name="send" size={15} color="#fff" />
+                <Text style={styles.submitText}>Gửi phản ánh</Text>
+              </TouchableOpacity>
             </View>
-
-            {/* Description */}
-            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Mô tả vấn đề *</Text>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Mô tả chi tiết vấn đề bạn gặp phải (tên món, ngày ăn, biểu hiện...)"
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              numberOfLines={4}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.muted,
-                  color: colors.text,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-
-            {/* Symptoms */}
-            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
-              Triệu chứng (nếu có)
-            </Text>
-            <TextInput
-              value={symptoms}
-              onChangeText={setSymptoms}
-              placeholder="Mô tả triệu chứng nếu có (buồn nôn, đau bụng...)"
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              numberOfLines={2}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.muted,
-                  color: colors.text,
-                  borderColor: colors.border,
-                  minHeight: 64,
-                },
-              ]}
-            />
-
-            <TouchableOpacity
-              onPress={handleSubmit}
-              style={[styles.submitBtn, { backgroundColor: colors.primary }]}
-              activeOpacity={0.8}
-            >
-              <Feather name="send" size={16} color="#fff" />
-              <Text style={styles.submitText}>Gửi phản ánh</Text>
-            </TouchableOpacity>
           </View>
         )}
 
-        {/* History */}
+        {/* ── History ── */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           LỊCH SỬ PHẢN ÁNH ({feedbacks.length})
         </Text>
@@ -202,48 +229,34 @@ export default function FeedbackScreen() {
             return (
               <View key={item.id} style={[styles.feedbackCard, { backgroundColor: colors.card }]}>
                 <View style={styles.feedbackTop}>
-                  <View style={styles.feedbackMeta}>
-                    <View style={[styles.typePill, { backgroundColor: (typeInfo?.color ?? '#888') + '18' }]}>
-                      <Feather
-                        name={typeInfo?.icon as any}
-                        size={11}
-                        color={typeInfo?.color ?? colors.mutedForeground}
-                      />
-                      <Text style={[styles.typePillText, { color: typeInfo?.color ?? colors.mutedForeground }]}>
-                        {typeInfo?.label}
-                      </Text>
-                    </View>
+                  <View style={[styles.typePill, { backgroundColor: (typeInfo?.color ?? '#888') + '18' }]}>
+                    <Feather name={typeInfo?.icon as any} size={11} color={typeInfo?.color ?? colors.mutedForeground} />
+                    <Text style={[styles.typePillText, { color: typeInfo?.color ?? colors.mutedForeground }]}>
+                      {typeInfo?.label}
+                    </Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
                     <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
                   </View>
                 </View>
 
-                <Text style={[styles.feedbackDesc, { color: colors.text }]}>
-                  {item.description}
-                </Text>
+                <Text style={[styles.feedbackDesc, { color: colors.text }]}>{item.description}</Text>
 
                 {item.symptoms ? (
                   <View style={[styles.symptomRow, { backgroundColor: colors.muted }]}>
                     <Feather name="activity" size={12} color={colors.mutedForeground} />
-                    <Text style={[styles.feedbackSymptoms, { color: colors.mutedForeground }]}>
-                      {item.symptoms}
-                    </Text>
+                    <Text style={[styles.feedbackSymptoms, { color: colors.mutedForeground }]}>{item.symptoms}</Text>
                   </View>
                 ) : null}
 
                 {item.response ? (
                   <View style={[styles.responseBox, { backgroundColor: colors.safeGreenLight }]}>
-                    <Text style={[styles.responseLabel, { color: colors.safeGreen }]}>
-                      Phản hồi từ nhà trường:
-                    </Text>
+                    <Text style={[styles.responseLabel, { color: colors.safeGreen }]}>Phản hồi từ nhà trường:</Text>
                     <Text style={[styles.responseText, { color: colors.text }]}>{item.response}</Text>
                   </View>
                 ) : null}
 
-                <Text style={[styles.feedbackDate, { color: colors.mutedForeground }]}>
-                  {item.submittedAt}
-                </Text>
+                <Text style={[styles.feedbackDate, { color: colors.mutedForeground }]}>{item.submittedAt}</Text>
               </View>
             );
           })
@@ -258,45 +271,144 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 16 },
   pageTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
   pageSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginBottom: 16 },
+
   newBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 14, borderRadius: 12, marginBottom: 16,
   },
   newBtnText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 15 },
-  form: {
-    borderRadius: 14, padding: 16, marginBottom: 20, gap: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+
+  /* Outer card: white, shadow */
+  outerCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0.5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2.5,
+    elevation: 3,
   },
-  formTitle: { fontSize: 16, fontFamily: 'Inter_600SemiBold', marginBottom: 4 },
-  fieldLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', marginTop: 8 },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 6 },
+
+  /* Inner gradient card */
+  innerCard: {
+    backgroundColor: '#FFF7F2',
+    borderWidth: 1,
+    borderColor: '#FFEDD4',
+    borderRadius: 14,
+    padding: 19,
+    gap: 14,
+  },
+
+  /* Form title */
+  formTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter_400Regular',
+    color: '#000000',
+    lineHeight: 24,
+  },
+
+  /* Complaint type chips */
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   typeChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8,
+    borderWidth: 1,
   },
   typeText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
-  textArea: {
-    borderRadius: 10, padding: 12, fontSize: 14, fontFamily: 'Inter_400Regular',
-    textAlignVertical: 'top', minHeight: 96, borderWidth: 1, marginVertical: 4,
+
+  /* Field group */
+  fieldGroup: { gap: 8 },
+  fieldLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#364153', lineHeight: 20 },
+
+  /* Time + Date row */
+  timeRow: { flexDirection: 'row', gap: 10 },
+  timeInput: {
+    width: 94,
+    height: 47,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D3D3D3',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: '#1E1E1E',
   },
+  dateInput: {
+    flex: 1,
+    height: 47,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D3D3D3',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+    color: '#1E1E1E',
+  },
+
+  /* Symptoms textarea */
+  symptomsInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1D5DC',
+    borderRadius: 12,
+    padding: 14,
+    minHeight: 116,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
+    color: '#1E2939',
+    lineHeight: 21,
+  },
+
+  /* Upload */
+  uploadLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#364153', lineHeight: 20 },
+  uploadBox: {
+    height: 90,
+    backgroundColor: '#FAFAFA',
+    borderWidth: 1,
+    borderColor: '#D1D5DC',
+    borderRadius: 12,
+    justifyContent: 'center',
+    paddingHorizontal: 15,
+  },
+  uploadInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cameraBox: {
+    width: 37,
+    height: 40,
+    backgroundColor: '#FFEDD4',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  cameraEmoji: { fontSize: 17 },
+  uploadTextCol: { flex: 1, gap: 2 },
+  uploadMainText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#1E2939', lineHeight: 21 },
+  uploadSubText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6A7282', lineHeight: 18 },
+  uploadLink: { fontSize: 13, fontFamily: 'Inter_700Bold', color: '#F15D22' },
+
+  /* Submit */
   submitBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, paddingVertical: 13, borderRadius: 10, marginTop: 8,
+    gap: 8, paddingVertical: 13, borderRadius: 10, backgroundColor: '#FF6535',
   },
   submitText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 15 },
-  sectionLabel: {
-    fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10,
-  },
+
+  /* Section label */
+  sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10 },
   emptyState: { alignItems: 'center', paddingVertical: 40, gap: 12 },
   emptyText: { fontSize: 14, fontFamily: 'Inter_400Regular' },
+
+  /* History cards */
   feedbackCard: {
     borderRadius: 14, padding: 14, marginBottom: 10, gap: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   feedbackTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  feedbackMeta: { flex: 1 },
   typePill: {
     alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8,
@@ -305,10 +417,7 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   feedbackDesc: { fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 20 },
-  symptomRow: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 6,
-    padding: 8, borderRadius: 8,
-  },
+  symptomRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, padding: 8, borderRadius: 8 },
   feedbackSymptoms: { fontSize: 12, fontFamily: 'Inter_400Regular', flex: 1 },
   responseBox: { borderRadius: 8, padding: 10, gap: 4 },
   responseLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
