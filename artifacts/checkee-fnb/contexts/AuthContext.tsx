@@ -1,15 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-export interface Student {
-  name: string;
+export interface StudentDetail {
+  childId: string;
+  fullName: string;
   dob: string;
   studentId: string;
   allergies: string;
   className: string;
+  grade: string;
   teacher: string;
   room: string;
   classSize: string;
+  school: string;
 }
 
 export interface UserAccount {
@@ -19,8 +22,8 @@ export interface UserAccount {
   email: string;
   address: string;
   role: string;
-  student: Student;
-  school: {
+  children: StudentDetail[];
+  schoolInfo: {
     name: string;
     address: string;
     phone: string;
@@ -28,65 +31,61 @@ export interface UserAccount {
   };
 }
 
-const MOCK_ACCOUNTS: Array<UserAccount & { password: string }> = [
-  {
-    id: '1',
-    email: 'huong.nguyen@gmail.com',
-    password: '123456',
-    name: 'Nguyễn Thị Hương',
-    phone: '0912 345 678',
-    address: '123 Nguyễn Trãi, Q.5, TP.HCM',
-    role: 'Phụ huynh học sinh',
-    student: {
-      name: 'Nguyễn Minh Khoa',
-      dob: '15/03/2019',
-      studentId: 'HS2024-00234',
+const MOCK_ACCOUNT: UserAccount & { password: string } = {
+  id: '1',
+  phone: '0912345678',
+  password: '123456',
+  name: 'Nguyễn Thị Hương',
+  email: 'huong.nguyen@gmail.com',
+  address: '123 Nguyễn Trãi, Q.5, TP.HCM',
+  role: 'Phụ huynh học sinh',
+  children: [
+    {
+      childId: 'child_1',
+      fullName: 'Nguyễn Minh An',
+      dob: '10/05/2018',
+      studentId: 'HS2024-00221',
       allergies: 'Không có',
-      className: '3A',
-      teacher: 'Trần Thị Mai',
-      room: 'Phòng 301, Tòa A',
-      classSize: '32 học sinh',
-    },
-    school: {
-      name: 'Tiểu học Nguyễn Du',
-      address: '45 Nguyễn Du, Q.1, TP.HCM',
-      phone: '028 3822 1122',
-      foodOfficer: 'Nguyễn Văn Tuấn',
-    },
-  },
-  {
-    id: '2',
-    email: 'minh.tran@gmail.com',
-    password: '123456',
-    name: 'Trần Văn Minh',
-    phone: '0908 765 432',
-    address: '56 Lê Lợi, Q.1, TP.HCM',
-    role: 'Phụ huynh học sinh',
-    student: {
-      name: 'Trần Thị Lan',
-      dob: '22/07/2020',
-      studentId: 'HS2024-00187',
-      allergies: 'Hải sản',
-      className: '2B',
-      teacher: 'Phạm Thị Thu',
-      room: 'Phòng 205, Tòa B',
+      className: '2A',
+      grade: 'Lớp 2',
+      teacher: 'Nguyễn Thị Lan',
+      room: 'Phòng 201, Tòa A',
       classSize: '30 học sinh',
+      school: 'Tiểu học Nguyễn Du',
     },
-    school: {
-      name: 'Tiểu học Nguyễn Du',
-      address: '45 Nguyễn Du, Q.1, TP.HCM',
-      phone: '028 3822 1122',
-      foodOfficer: 'Nguyễn Văn Tuấn',
+    {
+      childId: 'child_2',
+      fullName: 'Nguyễn Minh Bình',
+      dob: '22/11/2016',
+      studentId: 'HS2024-00189',
+      allergies: 'Hải sản',
+      className: '3B',
+      grade: 'Lớp 3',
+      teacher: 'Trần Văn Hùng',
+      room: 'Phòng 305, Tòa B',
+      classSize: '32 học sinh',
+      school: 'Tiểu học Nguyễn Du',
     },
+  ],
+  schoolInfo: {
+    name: 'Tiểu học Nguyễn Du',
+    address: '45 Nguyễn Du, Q.1, TP.HCM',
+    phone: '028 3822 1122',
+    foodOfficer: 'Nguyễn Văn Tuấn',
   },
-];
+};
 
 const AUTH_STORAGE_KEY = '@checkee_auth_user';
+
+// Normalize phone: strip spaces, dashes, etc.
+function normalizePhone(raw: string) {
+  return raw.replace(/\D/g, '');
+}
 
 interface AuthContextValue {
   user: UserAccount | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -104,14 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const found = MOCK_ACCOUNTS.find(
-      (a) => a.email.toLowerCase() === email.trim().toLowerCase() && a.password === password
-    );
-    if (!found) {
-      return { success: false, error: 'Email hoặc mật khẩu không đúng.' };
+  const login = useCallback(async (phone: string, password: string) => {
+    const inputPhone = normalizePhone(phone);
+    const accountPhone = normalizePhone(MOCK_ACCOUNT.phone);
+    if (inputPhone !== accountPhone || password !== MOCK_ACCOUNT.password) {
+      return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
     }
-    const { password: _pw, ...userData } = found;
+    const { password: _pw, ...userData } = MOCK_ACCOUNT;
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
     setUser(userData);
     return { success: true };

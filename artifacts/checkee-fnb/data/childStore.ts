@@ -1,6 +1,7 @@
 /**
  * Module-level store for children profiles and the currently selected child.
  * Shared across all tabs so every screen reflects the same active child.
+ * Child IDs match the `childId` values in AuthContext's UserAccount.children.
  */
 
 export interface Child {
@@ -10,8 +11,8 @@ export interface Child {
   className: string;   // "2A"
   grade: string;       // "Lớp 2"
   school: string;
-  avatarColor: string; // background colour for avatar circle
-  initial: string;     // single letter shown in avatar
+  avatarColor: string;
+  initial: string;
 }
 
 export const CHILDREN: Child[] = [
