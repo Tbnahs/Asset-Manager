@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
@@ -37,9 +38,21 @@ export default function FeedbackScreen() {
   const [showForm, setShowForm] = useState(false);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(FEEDBACKS);
   const [symptoms, setSymptoms] = useState('');
-  const [symptomTime, setSymptomTime] = useState('');
-  const [symptomDate, setSymptomDate] = useState('');
+  const [symptomDateTime, setSymptomDateTime] = useState<Date | null>(null);
+  const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
+
+  const formattedTime = symptomDateTime
+    ? symptomDateTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    : '';
+  const formattedDate = symptomDateTime
+    ? symptomDateTime.toLocaleDateString('vi-VN')
+    : '';
+
+  const onPickerChange = (_: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') setPickerMode(null);
+    if (selected) setSymptomDateTime(selected);
+  };
 
   const pickImage = async () => {
     if (Platform.OS !== 'web') {
@@ -87,8 +100,7 @@ export default function FeedbackScreen() {
     };
     setFeedbacks([newFeedback, ...feedbacks]);
     setSymptoms('');
-    setSymptomTime('');
-    setSymptomDate('');
+    setSymptomDateTime(null);
     setPhotos([]);
     setShowForm(false);
     Alert.alert('Đã gửi', 'Phản ánh của bạn đã được gửi thành công. Nhà trường sẽ xem xét và phản hồi sớm nhất.');
@@ -156,21 +168,41 @@ export default function FeedbackScreen() {
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Thời gian có triệu chứng *</Text>
                     <View style={styles.timeRow}>
-                      <TextInput
-                        value={symptomTime}
-                        onChangeText={setSymptomTime}
-                        placeholder="18:30"
-                        placeholderTextColor="#B0B0B0"
+                      {/* Time picker button */}
+                      <TouchableOpacity
                         style={styles.timeInput}
-                      />
-                      <TextInput
-                        value={symptomDate}
-                        onChangeText={setSymptomDate}
-                        placeholder="Ngày/tháng/năm"
-                        placeholderTextColor="#B0B0B0"
+                        activeOpacity={0.7}
+                        onPress={() => setPickerMode('time')}
+                      >
+                        <Feather name="clock" size={15} color={formattedTime ? '#1E1E1E' : '#B0B0B0'} />
+                        <Text style={[styles.pickerBtnText, { color: formattedTime ? '#1E1E1E' : '#B0B0B0' }]}>
+                          {formattedTime || '18:30'}
+                        </Text>
+                      </TouchableOpacity>
+                      {/* Date picker button */}
+                      <TouchableOpacity
                         style={styles.dateInput}
-                      />
+                        activeOpacity={0.7}
+                        onPress={() => setPickerMode('date')}
+                      >
+                        <Feather name="calendar" size={15} color={formattedDate ? '#1E1E1E' : '#B0B0B0'} />
+                        <Text style={[styles.pickerBtnText, { color: formattedDate ? '#1E1E1E' : '#B0B0B0' }]}>
+                          {formattedDate || 'Ngày/tháng/năm'}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
+
+                    {/* DateTimePicker — iOS: inline below, Android: modal on open */}
+                    {pickerMode !== null && (
+                      <DateTimePicker
+                        value={symptomDateTime ?? new Date()}
+                        mode={pickerMode}
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={onPickerChange}
+                        maximumDate={new Date()}
+                        locale="vi-VN"
+                      />
+                    )}
                   </View>
 
                   {/* Symptoms textarea */}
@@ -367,9 +399,9 @@ const styles = StyleSheet.create({
     borderColor: '#D3D3D3',
     borderRadius: 12,
     paddingHorizontal: 12,
-    fontSize: 14,
-    fontFamily: 'Inter_500Medium',
-    color: '#1E1E1E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   dateInput: {
     flex: 2,
@@ -379,9 +411,14 @@ const styles = StyleSheet.create({
     borderColor: '#D3D3D3',
     borderRadius: 12,
     paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pickerBtnText: {
     fontSize: 14,
     fontFamily: 'Inter_500Medium',
-    color: '#1E1E1E',
+    flexShrink: 1,
   },
 
   /* Symptoms textarea */
