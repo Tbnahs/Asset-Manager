@@ -13,7 +13,7 @@ import {
 
 import Header from '@/components/Header';
 import SummaryCard from '@/components/SummaryCard';
-import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS } from '@/data/mockData';
+import { FEEDBACKS, MEALS, NOTIFICATIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
 
@@ -184,9 +184,10 @@ export default function HomeScreen() {
   const monthDayMeals = useMemo(() => mealsForDate(selectedDate, days), [selectedDate, days]);
 
   // Summary stats
-  const sampleCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
+  const todayMealCount = weekDayMeals.length;
   const safetyCount = NOTIFICATIONS.filter((n) => n.type === 'safety').length;
-  const feedbackCount = FEEDBACKS.length;
+  const pendingFeedbackCount = FEEDBACKS.filter((f) => f.status === 'pending' || f.status === 'processing').length;
+  const tracedMealCount = MEALS.filter((m) => m.isMonitored).length;
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
@@ -389,14 +390,43 @@ export default function HomeScreen() {
         )}
 
         {/* ── Summary cards ── */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TỔNG QUAN</Text>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TỔNG QUAN HÔM NAY</Text>
         <View style={styles.summaryGrid}>
           <View style={styles.summaryRow}>
-            <SummaryCard icon="archive" count={sampleCount} label="Mẫu lưu đang bảo quản" iconColor="#007AFF" iconBg="#E5F1FF" onPress={() => router.push('/sample-retention')} />
-            <SummaryCard icon="shield" count={safetyCount} label="Thông báo ATTP" iconColor="#34C759" iconBg="#E8F9ED" onPress={() => router.push('/(tabs)/notifications')} />
+            <SummaryCard
+              icon="coffee"
+              count={todayMealCount}
+              label={'Món ăn\nhôm nay'}
+              iconColor="#FF6535"
+              iconBg="#FFF0EA"
+              onPress={() => {}}
+            />
+            <SummaryCard
+              icon="shield"
+              count={safetyCount}
+              label={'Cảnh báo\nan toàn'}
+              iconColor="#34C759"
+              iconBg="#E8F9ED"
+              onPress={() => router.push('/(tabs)/notifications')}
+            />
           </View>
           <View style={styles.summaryRow}>
-            <SummaryCard icon="message-circle" count={feedbackCount} label="Phản ánh đã gửi" iconColor="#FF9500" iconBg="#FFF4E5" onPress={() => router.push('/(tabs)/feedback')} />
+            <SummaryCard
+              icon="message-circle"
+              count={pendingFeedbackCount}
+              label={'Phản ánh\nchờ xử lý'}
+              iconColor="#FF9500"
+              iconBg="#FFF4E5"
+              onPress={() => router.push('/(tabs)/feedback')}
+            />
+            <SummaryCard
+              icon="search"
+              count={tracedMealCount}
+              label={'Món có\ntruy xuất'}
+              iconColor="#007AFF"
+              iconBg="#E5F1FF"
+              onPress={() => router.push('/(tabs)/traceability')}
+            />
           </View>
         </View>
 
