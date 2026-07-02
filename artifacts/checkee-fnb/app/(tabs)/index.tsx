@@ -17,18 +17,35 @@ import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS } from '@/data/mockD
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
 
+/* ─── Constants ─────────────────────────────────────────── */
 const DAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6'];
+const CAL_HEADERS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
-const SESSIONS: { key: MealSession; label: string; short: string; color: string; bg: string }[] = [
-  { key: 'sang',  label: 'Sáng',  short: 'S', color: '#FF9500', bg: '#FFF4E5' },
-  { key: 'trua',  label: 'Trưa',  short: 'T', color: '#007AFF', bg: '#E5F1FF' },
-  { key: 'chieu', label: 'Chiều', short: 'C', color: '#34C759', bg: '#E8F9ED' },
-  { key: 'phu',   label: 'Phụ',   short: 'P', color: '#8B5CF6', bg: '#F3EEFF' },
+const SESSIONS: { key: MealSession; label: string; color: string; bg: string }[] = [
+  { key: 'sang',  label: 'Sáng',  color: '#FF9500', bg: '#FFF4E5' },
+  { key: 'trua',  label: 'Trưa',  color: '#007AFF', bg: '#E5F1FF' },
+  { key: 'chieu', label: 'Chiều', color: '#34C759', bg: '#E8F9ED' },
+  { key: 'phu',   label: 'Phụ',   color: '#8B5CF6', bg: '#F3EEFF' },
 ];
+
+const SHORTCUTS = [
+  { key: 'sample',   icon: 'archive',       label: 'Mẫu lưu',  color: '#007AFF', bg: '#E5F1FF', route: '/sample-retention' as const },
+  { key: 'trace',    icon: 'search',         label: 'Truy xuất', color: '#34C759', bg: '#E8F9ED', route: '/(tabs)/traceability' as const },
+  { key: 'feedback', icon: 'message-circle', label: 'Phản ánh',  color: '#FF9500', bg: '#FFF4E5', route: '/(tabs)/feedback' as const },
+];
+
+const VN_MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+/* ─── Helpers ────────────────────────────────────────────── */
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
 
 function getWeekInfo() {
   const today = new Date();
-  const dow = today.getDay();
+  const dow = today.getDay(); // 0=Sun
   const daysFromMon = dow === 0 ? 6 : dow - 1;
   const monday = new Date(today);
   monday.setDate(today.getDate() - daysFromMon);
@@ -37,93 +54,106 @@ function getWeekInfo() {
     d.setDate(monday.getDate() + i);
     return d;
   });
-  const todayIndex = dow === 0 || dow === 6 ? 4 : dow - 1;
-  return { days, todayIndex: Math.min(Math.max(todayIndex, 0), 4) };
+  const todayIdx = dow === 0 || dow === 6 ? 4 : dow - 1;
+  return { days, todayIndex: Math.min(Math.max(todayIdx, 0), 4), today };
 }
 
-const SHORTCUTS = [
-  { key: 'sample',   icon: 'archive',        label: 'Mẫu lưu',  color: '#007AFF', bg: '#E5F1FF', route: '/sample-retention' as const },
-  { key: 'trace',    icon: 'search',          label: 'Truy xuất', color: '#34C759', bg: '#E8F9ED', route: '/(tabs)/traceability' as const },
-  { key: 'feedback', icon: 'message-circle',  label: 'Phản ánh',  color: '#FF9500', bg: '#FFF4E5', route: '/(tabs)/feedback' as const },
-];
+/** Returns MEALS whose dayIndex matches the given calendar date (within mock week) */
+function mealsForDate(date: Date, weekDays: Date[]): Meal[] {
+  const idx = weekDays.findIndex((d) => isSameDay(d, date));
+  if (idx === -1) return [];
+  return MEALS.filter((m) => m.dayIndex === idx);
+}
 
-function SessionRow({ session, meals, colors }: {
-  session: typeof SESSIONS[number];
-  meals: Meal[];
+/** Build calendar grid for a given year/month */
+function buildCalendar(year: number, month: number): (Date | null)[] {
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  // Mon=0 … Sun=6 offset
+  const startOffset = first.getDay() === 0 ? 6 : first.getDay() - 1;
+  const cells: (Date | null)[] = Array(startOffset).fill(null);
+  for (let d = 1; d <= last.getDate(); d++) {
+    cells.push(new Date(year, month, d));
+  }
+  // pad to full rows
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+/* ─── Sub-components ──────────────────────────────────────── */
+function SessionRows({ dayMeals, colors }: {
+  dayMeals: Meal[];
   colors: ReturnType<typeof useColors>;
 }) {
-  if (meals.length === 0) return null;
+  if (dayMeals.length === 0) {
+    return (
+      <View style={[rStyles.emptyBox, { backgroundColor: colors.card }]}>
+        <Feather name="coffee" size={22} color={colors.mutedForeground} />
+        <Text style={[rStyles.emptyTxt, { color: colors.mutedForeground }]}>
+          Chưa có thực đơn
+        </Text>
+      </View>
+    );
+  }
   return (
-    <View style={[rowStyles.row, { borderColor: colors.border }]}>
-      {/* Left: session label */}
-      <View style={[rowStyles.sessionCol, { backgroundColor: session.bg }]}>
-        <Text style={[rowStyles.sessionLabel, { color: session.color }]}>{session.label}</Text>
-        <Text style={[rowStyles.sessionCount, { color: session.color }]}>{meals.length} món</Text>
-      </View>
-
-      {/* Right: meals stacked */}
-      <View style={rowStyles.mealsCol}>
-        {meals.map((meal, i) => (
-          <TouchableOpacity
-            key={meal.id}
-            onPress={() => router.push(`/meal/${meal.id}` as any)}
-            activeOpacity={0.72}
-            style={[
-              rowStyles.mealRow,
-              i < meals.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
-            ]}
-          >
-            <Image source={meal.image} style={rowStyles.mealImg} resizeMode="cover" />
-            <View style={rowStyles.mealInfo}>
-              <Text style={[rowStyles.mealName, { color: colors.text }]} numberOfLines={1}>
-                {meal.name}
-              </Text>
-              <View style={rowStyles.mealMeta}>
-                <Text style={[rowStyles.kcal, { color: colors.mutedForeground }]}>
-                  {meal.calories} kcal
-                </Text>
-                {meal.isMonitored && (
-                  <View style={[rowStyles.monitored, { backgroundColor: colors.safeGreenLight }]}>
-                    <View style={[rowStyles.monDot, { backgroundColor: colors.safeGreen }]} />
-                    <Text style={[rowStyles.monText, { color: colors.safeGreen }]}>Theo dõi</Text>
-                  </View>
-                )}
-              </View>
+    <>
+      {SESSIONS.map((session) => {
+        const meals = dayMeals.filter((m) => m.session === session.key);
+        if (meals.length === 0) return null;
+        return (
+          <View key={session.key} style={[rStyles.row, { borderColor: colors.border }]}>
+            <View style={[rStyles.sessionCol, { backgroundColor: session.bg }]}>
+              <Text style={[rStyles.sessionLabel, { color: session.color }]}>{session.label}</Text>
+              <Text style={[rStyles.sessionCount, { color: session.color }]}>{meals.length} món</Text>
             </View>
-            <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
+            <View style={rStyles.mealsCol}>
+              {meals.map((meal, i) => (
+                <TouchableOpacity
+                  key={meal.id}
+                  onPress={() => router.push(`/meal/${meal.id}` as any)}
+                  activeOpacity={0.72}
+                  style={[
+                    rStyles.mealRow,
+                    i < meals.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+                  ]}
+                >
+                  <Image source={meal.image} style={rStyles.mealImg} resizeMode="cover" />
+                  <View style={rStyles.mealInfo}>
+                    <Text style={[rStyles.mealName, { color: colors.text }]} numberOfLines={1}>
+                      {meal.name}
+                    </Text>
+                    <View style={rStyles.mealMeta}>
+                      <Text style={[rStyles.kcal, { color: colors.mutedForeground }]}>
+                        {meal.calories} kcal
+                      </Text>
+                      {meal.isMonitored && (
+                        <View style={[rStyles.monitored, { backgroundColor: colors.safeGreenLight }]}>
+                          <View style={[rStyles.monDot, { backgroundColor: colors.safeGreen }]} />
+                          <Text style={[rStyles.monText, { color: colors.safeGreen }]}>Theo dõi</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </>
   );
 }
 
-const rowStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 8,
-  },
-  sessionCol: {
-    width: 58,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-    gap: 2,
-  },
+const rStyles = StyleSheet.create({
+  emptyBox: { alignItems: 'center', paddingVertical: 28, gap: 8, borderRadius: 14 },
+  emptyTxt: { fontSize: 13, fontFamily: 'Inter_400Regular' },
+  row: { flexDirection: 'row', borderRadius: 14, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, marginBottom: 8 },
+  sessionCol: { width: 58, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 4, gap: 2 },
   sessionLabel: { fontSize: 13, fontFamily: 'Inter_700Bold' },
   sessionCount: { fontSize: 10, fontFamily: 'Inter_400Regular' },
   mealsCol: { flex: 1 },
-  mealRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    gap: 10,
-  },
+  mealRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 10, gap: 10 },
   mealImg: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#f0f0f0', flexShrink: 0 },
   mealInfo: { flex: 1, gap: 4 },
   mealName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', lineHeight: 18 },
@@ -134,20 +164,44 @@ const rowStyles = StyleSheet.create({
   monText: { fontSize: 10, fontFamily: 'Inter_500Medium' },
 });
 
+/* ─── Main screen ─────────────────────────────────────────── */
 export default function HomeScreen() {
   const colors = useColors();
-  const { days, todayIndex } = useMemo(() => getWeekInfo(), []);
-  const [selectedDay, setSelectedDay] = useState(todayIndex);
   const isWeb = Platform.OS === 'web';
+  const { days, todayIndex, today } = useMemo(() => getWeekInfo(), []);
 
-  const monthLabel = `THÁNG ${days[0].getMonth() + 1}`;
-  const dayMeals = MEALS.filter((m) => m.dayIndex === selectedDay);
-  const selectedDate = days[selectedDay];
+  // Week view state
+  const [selectedDay, setSelectedDay] = useState(todayIndex);
 
+  // Month view state
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+
+  const calCells = useMemo(() => buildCalendar(calYear, calMonth), [calYear, calMonth]);
+
+  // Meals for week view
+  const weekDayMeals = MEALS.filter((m) => m.dayIndex === selectedDay);
+  const weekSelectedDate = days[selectedDay];
+
+  // Meals for month view selected date
+  const monthDayMeals = useMemo(() => mealsForDate(selectedDate, days), [selectedDate, days]);
+
+  // Summary stats
   const monitoredCount = MEALS.filter((m) => m.isMonitored).length;
   const sampleCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
   const safetyCount = NOTIFICATIONS.filter((n) => n.type === 'safety').length;
   const feedbackCount = FEEDBACKS.length;
+
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }
+    else setCalMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0); }
+    else setCalMonth(m => m + 1);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -156,42 +210,191 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}
       >
-        {/* Week title */}
-        <View style={styles.weekRow}>
-          <Text style={[styles.weekTitle, { color: colors.text }]}>Thực đơn tuần</Text>
-          <View style={[styles.monthBadge, { backgroundColor: colors.muted }]}>
-            <Feather name="calendar" size={12} color={colors.mutedForeground} />
-            <Text style={[styles.monthText, { color: colors.mutedForeground }]}>{monthLabel}</Text>
+        {/* ── Title row + mode toggle ── */}
+        <View style={styles.titleRow}>
+          <Text style={[styles.pageTitle, { color: colors.text }]}>Thực đơn</Text>
+          <View style={[styles.modePill, { backgroundColor: colors.card }]}>
+            {(['week', 'month'] as const).map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                onPress={() => setViewMode(mode)}
+                style={[
+                  styles.modeBtn,
+                  viewMode === mode && { backgroundColor: colors.primary },
+                ]}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.modeBtnText,
+                  { color: viewMode === mode ? '#fff' : colors.mutedForeground },
+                ]}>
+                  {mode === 'week' ? 'Tuần' : 'Tháng'}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
-        {/* Day selector */}
-        <View style={[styles.daySelector, { backgroundColor: colors.card }]}>
-          {days.map((d, i) => {
-            const isSelected = i === selectedDay;
-            const mealsOnDay = MEALS.filter((m) => m.dayIndex === i).length;
-            return (
-              <TouchableOpacity
-                key={i}
-                onPress={() => setSelectedDay(i)}
-                style={[styles.dayBtn, isSelected && { backgroundColor: colors.primary }]}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.dayLabel, { color: isSelected ? '#fff' : colors.mutedForeground }]}>
-                  {DAY_LABELS[i]}
-                </Text>
-                <Text style={[styles.dayNum, { color: isSelected ? '#fff' : colors.text }]}>
-                  {d.getDate()}
-                </Text>
-                {mealsOnDay > 0 && (
-                  <View style={[styles.dayDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.7)' : colors.primary }]} />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {/* ══════════ WEEK VIEW ══════════ */}
+        {viewMode === 'week' && (
+          <>
+            {/* Day selector */}
+            <View style={[styles.daySelector, { backgroundColor: colors.card }]}>
+              {days.map((d, i) => {
+                const isSelected = i === selectedDay;
+                const hasMeals = MEALS.some((m) => m.dayIndex === i);
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => setSelectedDay(i)}
+                    style={[styles.dayBtn, isSelected && { backgroundColor: colors.primary }]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.dayLabel, { color: isSelected ? '#fff' : colors.mutedForeground }]}>
+                      {DAY_LABELS[i]}
+                    </Text>
+                    <Text style={[styles.dayNum, { color: isSelected ? '#fff' : colors.text }]}>
+                      {d.getDate()}
+                    </Text>
+                    {hasMeals && (
+                      <View style={[styles.dayDot, {
+                        backgroundColor: isSelected ? 'rgba(255,255,255,0.75)' : colors.primary,
+                      }]} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-        {/* Summary cards */}
+            {/* Day header + meals immediately below */}
+            <View style={styles.daySubHeader}>
+              <Text style={[styles.daySubTitle, { color: colors.text }]}>
+                {DAY_LABELS[selectedDay]}, {weekSelectedDate.getDate()}/{weekSelectedDate.getMonth() + 1}
+              </Text>
+              {weekDayMeals.length > 0 && (
+                <View style={[styles.mealCountBadge, { backgroundColor: colors.accent }]}>
+                  <Text style={[styles.mealCountText, { color: colors.primary }]}>
+                    {weekDayMeals.length} món
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <SessionRows dayMeals={weekDayMeals} colors={colors} />
+          </>
+        )}
+
+        {/* ══════════ MONTH VIEW ══════════ */}
+        {viewMode === 'month' && (
+          <>
+            {/* Month navigation */}
+            <View style={[styles.monthNav, { backgroundColor: colors.card }]}>
+              <TouchableOpacity onPress={prevMonth} style={styles.navBtn} activeOpacity={0.7}>
+                <Feather name="chevron-left" size={20} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.monthNavTitle, { color: colors.text }]}>
+                {VN_MONTHS[calMonth]} {calYear}
+              </Text>
+              <TouchableOpacity onPress={nextMonth} style={styles.navBtn} activeOpacity={0.7}>
+                <Feather name="chevron-right" size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Calendar grid */}
+            <View style={[styles.calCard, { backgroundColor: colors.card }]}>
+              {/* Header row */}
+              <View style={styles.calHeaderRow}>
+                {CAL_HEADERS.map((h) => (
+                  <View key={h} style={styles.calHeaderCell}>
+                    <Text style={[styles.calHeaderText, {
+                      color: (h === 'T7' || h === 'CN') ? colors.primary : colors.mutedForeground
+                    }]}>{h}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Day cells */}
+              <View style={styles.calGrid}>
+                {calCells.map((cell, idx) => {
+                  if (!cell) {
+                    return <View key={`empty-${idx}`} style={styles.calCell} />;
+                  }
+                  const isToday = isSameDay(cell, today);
+                  const isSelected = isSameDay(cell, selectedDate);
+                  const cellMeals = mealsForDate(cell, days);
+                  const hasMeals = cellMeals.length > 0;
+                  const isWeekend = cell.getDay() === 0 || cell.getDay() === 6;
+
+                  return (
+                    <TouchableOpacity
+                      key={cell.toISOString()}
+                      style={styles.calCell}
+                      onPress={() => setSelectedDate(cell)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[
+                        styles.calDayCircle,
+                        isSelected && { backgroundColor: colors.primary },
+                        isToday && !isSelected && { borderWidth: 1.5, borderColor: colors.primary },
+                      ]}>
+                        <Text style={[
+                          styles.calDayNum,
+                          { color: isSelected ? '#fff' : isWeekend ? colors.primary : colors.text },
+                          isToday && !isSelected && { color: colors.primary, fontFamily: 'Inter_700Bold' },
+                        ]}>
+                          {cell.getDate()}
+                        </Text>
+                      </View>
+                      {/* Meal session dots */}
+                      <View style={styles.calDots}>
+                        {hasMeals && cellMeals.length > 0 && (
+                          <>
+                            {Array.from(new Set(cellMeals.map((m) => m.session))).slice(0, 3).map((s) => {
+                              const sess = SESSIONS.find((ss) => ss.key === s);
+                              return (
+                                <View
+                                  key={s}
+                                  style={[styles.calDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.8)' : (sess?.color ?? colors.primary) }]}
+                                />
+                              );
+                            })}
+                          </>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Session color legend */}
+            <View style={styles.legend}>
+              {SESSIONS.map((s) => (
+                <View key={s.key} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: s.color }]} />
+                  <Text style={[styles.legendText, { color: colors.mutedForeground }]}>{s.label}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Selected day meals */}
+            <View style={styles.daySubHeader}>
+              <Text style={[styles.daySubTitle, { color: colors.text }]}>
+                {selectedDate.getDate()}/{selectedDate.getMonth() + 1}/{selectedDate.getFullYear()}
+              </Text>
+              {monthDayMeals.length > 0 && (
+                <View style={[styles.mealCountBadge, { backgroundColor: colors.accent }]}>
+                  <Text style={[styles.mealCountText, { color: colors.primary }]}>
+                    {monthDayMeals.length} món
+                  </Text>
+                </View>
+              )}
+            </View>
+            <SessionRows dayMeals={monthDayMeals} colors={colors} />
+          </>
+        )}
+
+        {/* ── Summary cards ── */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TỔNG QUAN</Text>
         <View style={styles.summaryGrid}>
           <View style={styles.summaryRow}>
@@ -204,7 +407,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Quick shortcuts */}
+        {/* ── Quick shortcuts ── */}
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TRUY CẬP NHANH</Text>
         <View style={styles.shortcuts}>
           {SHORTCUTS.map((s) => (
@@ -221,72 +424,101 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* Meal session table */}
-        <View style={styles.menuHeader}>
-          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-            THỰC ĐƠN NGÀY {selectedDate.getDate()}/{selectedDate.getMonth() + 1}
-          </Text>
-          <View style={[styles.mealCountBadge, { backgroundColor: colors.accent }]}>
-            <Text style={[styles.mealCountText, { color: colors.primary }]}>
-              {dayMeals.length} món
-            </Text>
-          </View>
-        </View>
-
-        {dayMeals.length === 0 ? (
-          <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-            <Feather name="coffee" size={28} color={colors.mutedForeground} />
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              Chưa có thực đơn cho ngày này
-            </Text>
-          </View>
-        ) : (
-          SESSIONS.map((session) => {
-            const meals = dayMeals.filter((m) => m.session === session.key);
-            return (
-              <SessionRow
-                key={session.key}
-                session={session}
-                meals={meals}
-                colors={colors}
-              />
-            );
-          })
-        )}
       </ScrollView>
     </View>
   );
 }
 
+/* ─── Styles ──────────────────────────────────────────────── */
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingTop: 16 },
-  weekRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  weekTitle: { fontSize: 22, fontFamily: 'Inter_700Bold' },
-  monthBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  monthText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  daySelector: { flexDirection: 'row', borderRadius: 14, padding: 6, marginBottom: 20, gap: 2 },
+  content: { paddingHorizontal: 16, paddingTop: 16, gap: 0 },
+
+  /* Title */
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  pageTitle: { fontSize: 22, fontFamily: 'Inter_700Bold' },
+  modePill: {
+    flexDirection: 'row',
+    borderRadius: 20,
+    padding: 3,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 3, elevation: 1,
+  },
+  modeBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 18 },
+  modeBtnText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+
+  /* Week day selector */
+  daySelector: { flexDirection: 'row', borderRadius: 14, padding: 6, marginBottom: 12, gap: 2 },
   dayBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, gap: 2 },
   dayLabel: { fontSize: 11, fontFamily: 'Inter_500Medium' },
   dayNum: { fontSize: 16, fontFamily: 'Inter_700Bold' },
   dayDot: { width: 5, height: 5, borderRadius: 3 },
-  sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10, marginTop: 4 },
-  summaryGrid: { gap: 8, marginBottom: 20 },
+
+  /* Day subheader */
+  daySubHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    marginTop: 2,
+  },
+  daySubTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  mealCountBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
+  mealCountText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+
+  /* Month navigation */
+  monthNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  monthNavTitle: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+
+  /* Calendar */
+  calCard: {
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingBottom: 12,
+    marginBottom: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+  },
+  calHeaderRow: { flexDirection: 'row', paddingTop: 10, paddingBottom: 4 },
+  calHeaderCell: { flex: 1, alignItems: 'center' },
+  calHeaderText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  calCell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3 },
+  calDayCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calDayNum: { fontSize: 14, fontFamily: 'Inter_500Medium' },
+  calDots: { flexDirection: 'row', gap: 2, height: 6, alignItems: 'center', marginTop: 1 },
+  calDot: { width: 5, height: 5, borderRadius: 3 },
+
+  /* Legend */
+  legend: { flexDirection: 'row', gap: 12, marginBottom: 12, flexWrap: 'wrap' },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+
+  /* Summary */
+  sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10, marginTop: 20 },
+  summaryGrid: { gap: 8, marginBottom: 4 },
   summaryRow: { flexDirection: 'row', gap: 8 },
-  shortcuts: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+
+  /* Shortcuts */
+  shortcuts: { flexDirection: 'row', gap: 8 },
   shortcut: {
     flex: 1, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, gap: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   shortcutIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   shortcutLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', textAlign: 'center' },
-  menuHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 4 },
-  mealCountBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
-  mealCountText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-  emptyState: {
-    alignItems: 'center', paddingVertical: 36, gap: 12, borderRadius: 14,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
-  },
-  emptyText: { fontSize: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 });
