@@ -28,11 +28,6 @@ const SESSIONS: { key: MealSession; label: string; color: string; bg: string }[]
   { key: 'phu',   label: 'Phụ',   color: '#8B5CF6', bg: '#F3EEFF' },
 ];
 
-const SHORTCUTS = [
-  { key: 'sample',   icon: 'archive',       label: 'Mẫu lưu',  color: '#007AFF', bg: '#E5F1FF', route: '/sample-retention' as const },
-  { key: 'trace',    icon: 'search',         label: 'Truy xuất', color: '#34C759', bg: '#E8F9ED', route: '/(tabs)/traceability' as const },
-  { key: 'feedback', icon: 'message-circle', label: 'Phản ánh',  color: '#FF9500', bg: '#FFF4E5', route: '/(tabs)/feedback' as const },
-];
 
 const VN_MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 
@@ -407,23 +402,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ── Quick shortcuts ── */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TRUY CẬP NHANH</Text>
-        <View style={styles.shortcuts}>
-          {SHORTCUTS.map((s) => (
-            <TouchableOpacity
-              key={s.key}
-              onPress={() => router.push(s.route as any)}
-              style={[styles.shortcut, { backgroundColor: colors.card }]}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.shortcutIcon, { backgroundColor: s.bg }]}>
-                <Feather name={s.icon as any} size={20} color={s.color} />
-              </View>
-              <Text style={[styles.shortcutLabel, { color: colors.text }]}>{s.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
       </ScrollView>
     </View>
   );
@@ -513,12 +491,4 @@ const styles = StyleSheet.create({
   summaryGrid: { gap: 8, marginBottom: 4 },
   summaryRow: { flexDirection: 'row', gap: 8 },
 
-  /* Shortcuts */
-  shortcuts: { flexDirection: 'row', gap: 8 },
-  shortcut: {
-    flex: 1, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, gap: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
-  },
-  shortcutIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  shortcutLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', textAlign: 'center' },
 });
