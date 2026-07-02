@@ -547,6 +547,14 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'menu',
     title: 'Thực đơn tuần mới',
     message: 'Thực đơn tuần từ 08/06 - 12/06/2026 đã được cập nhật. Nhấn để xem chi tiết.',
+    body: `Thực đơn tuần học từ 08/06 đến 12/06/2026 đã được bộ phận dinh dưỡng nhà trường cập nhật và phê duyệt.
+
+Điểm nổi bật tuần này:
+• Bổ sung thêm món Phở bò vào buổi sáng thứ Tư
+• Tráng miệng có sữa chua nếp cẩm và trái cây tươi mỗi ngày
+• Thực đơn đảm bảo đủ 4 nhóm dinh dưỡng: tinh bột, đạm, béo, vitamin
+
+Phụ huynh có thể xem chi tiết thực đơn từng ngày trong mục Thực đơn. Nếu có thắc mắc về thành phần hoặc dị ứng thực phẩm, vui lòng liên hệ văn phòng nhà trường trước 07:00 sáng thứ Hai.`,
     isRead: false,
     createdAt: '07/06/2026 08:00',
   },
@@ -555,6 +563,20 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'safety',
     title: 'Kết quả kiểm nghiệm ATTP',
     message: 'Kết quả kiểm nghiệm an toàn thực phẩm tuần 06/2026 đã có. Tất cả mẫu đạt tiêu chuẩn.',
+    body: `Kết quả kiểm nghiệm an toàn thực phẩm (ATTP) định kỳ tuần 06/2026 đã được Trung tâm Y tế Dự phòng Quận xác nhận.
+
+Kết quả tổng hợp:
+✓ Mẫu vi sinh vật: ĐẠT — Không phát hiện E. Coli, Salmonella
+✓ Mẫu hóa chất bảo vệ thực vật: ĐẠT — Dưới ngưỡng cho phép
+✓ Mẫu kim loại nặng: ĐẠT — Không phát hiện chì, thủy ngân
+✓ Nhiệt độ bảo quản: ĐẠT — Duy trì dưới 5°C
+
+Tổng số mẫu kiểm tra: 12 mẫu
+Số mẫu đạt tiêu chuẩn: 12/12 (100%)
+Đơn vị kiểm nghiệm: Trung tâm Y tế Dự phòng Quận 1
+Ngày lấy mẫu: 06/06/2026
+
+Nhà trường cam kết duy trì tiêu chuẩn ATTP nghiêm ngặt để bảo vệ sức khỏe học sinh.`,
     isRead: false,
     createdAt: '08/06/2026 09:30',
   },
@@ -563,6 +585,20 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'complaint',
     title: 'Phản ánh đã được xử lý',
     message: 'Phản ánh của bạn về "Mì trộn hải sản" ngày 08/06 đã được giải quyết. Xem phản hồi từ nhà trường.',
+    body: `Phản ánh của bạn về chất lượng món Mì trộn hải sản ngày 08/06/2026 đã được bộ phận bếp ăn xem xét và xử lý.
+
+Nội dung phản ánh:
+"Mì bị nhão, tôm còn tanh, mùi không tươi. Con tôi ăn được nửa suất rồi bỏ."
+
+Phản hồi từ nhà trường:
+Cảm ơn phụ huynh đã phản ánh kịp thời. Sau khi kiểm tra, chúng tôi xác nhận lô tôm nhập ngày 08/06 có dấu hiệu không đảm bảo độ tươi do sự cố trong khâu vận chuyển. Nhà trường đã:
+
+• Đình chỉ sử dụng lô tôm đó ngay lập tức
+• Yêu cầu nhà cung cấp đổi hàng và bồi thường
+• Thay đổi nhà cung cấp hải sản từ tuần 09/06
+• Bổ sung bước kiểm tra cảm quan trước khi chế biến
+
+Chúng tôi xin lỗi vì sự cố này và cam kết không để tái diễn.`,
     isRead: true,
     createdAt: '09/06/2026 10:00',
   },
@@ -571,6 +607,24 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'school',
     title: 'Thông báo từ Ban Giám Hiệu',
     message: 'Nhà trường sẽ tổ chức kiểm tra bếp ăn định kỳ vào ngày 15/06/2026. Kết quả sẽ được thông báo trên app.',
+    body: `Kính gửi quý phụ huynh,
+
+Ban Giám Hiệu trường thông báo về việc tổ chức kiểm tra bếp ăn định kỳ theo kế hoạch năm học 2025–2026.
+
+Thời gian: 15/06/2026 (Thứ Hai), 08:00 – 11:00
+Đơn vị kiểm tra: Phòng Giáo dục & Đào tạo Quận phối hợp Sở Y tế
+Nội dung kiểm tra:
+  • Vệ sinh cơ sở vật chất khu vực bếp
+  • Quy trình chế biến và bảo quản thực phẩm
+  • Hồ sơ lưu mẫu và kiểm nghiệm ATTP
+  • Chứng nhận sức khỏe nhân viên bếp
+
+Trong ngày kiểm tra, bữa ăn của học sinh vẫn diễn ra bình thường theo thực đơn đã lên kế hoạch.
+
+Kết quả kiểm tra sẽ được công bố trên ứng dụng trong vòng 3 ngày làm việc sau đó.
+
+Trân trọng,
+Ban Giám Hiệu`,
     isRead: true,
     createdAt: '07/06/2026 15:00',
   },
@@ -579,6 +633,22 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'safety',
     title: 'Nhắc nhở về dị ứng thực phẩm',
     message: 'Thực đơn thứ Ba có món hải sản. Phụ huynh có con dị ứng hải sản vui lòng liên hệ nhà trường để điều chỉnh.',
+    body: `Nhà trường xin thông báo đến quý phụ huynh về thực đơn có chứa hải sản trong tuần tới.
+
+Thứ Ba, 09/06/2026:
+• Buổi sáng: Mì trộn hải sản (tôm, mực)
+• Buổi trưa: Canh chua cá (cá basa)
+
+Đối với học sinh dị ứng hải sản:
+Nhà trường có thể chuẩn bị suất ăn thay thế không chứa hải sản. Để đảm bảo bếp chuẩn bị kịp thời, quý phụ huynh vui lòng:
+
+1. Liên hệ giáo viên chủ nhiệm trước 16:00 thứ Hai 08/06
+2. Hoặc gọi trực tiếp văn phòng nhà trường: 028 xxxx xxxx
+3. Hoặc nhắn tin qua nhóm lớp Zalo
+
+Lưu ý: Nhà trường sử dụng dụng cụ chế biến riêng cho suất ăn thay thế để tránh nhiễm chéo.
+
+Sức khỏe của học sinh là ưu tiên hàng đầu của chúng tôi.`,
     isRead: true,
     createdAt: '09/06/2026 07:00',
   },

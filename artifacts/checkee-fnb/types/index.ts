@@ -102,6 +102,7 @@ export interface AppNotification {
   type: 'menu' | 'safety' | 'complaint' | 'school';
   title: string;
   message: string;
+  body?: string;
   isRead: boolean;
   createdAt: string;
 }

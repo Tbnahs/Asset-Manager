@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -67,7 +68,7 @@ export default function NotificationsScreen() {
             return (
               <TouchableOpacity
                 key={n.id}
-                onPress={() => markRead(n.id)}
+                onPress={() => { markRead(n.id); router.push(`/notification/${n.id}` as any); }}
                 activeOpacity={0.75}
                 style={[
                   styles.card,
