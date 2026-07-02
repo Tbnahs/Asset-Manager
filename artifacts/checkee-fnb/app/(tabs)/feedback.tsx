@@ -22,14 +22,6 @@ import { FEEDBACKS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { FeedbackItem } from '@/types';
 
-const COMPLAINT_TYPES: { key: FeedbackItem['complaintType']; label: string; icon: string; color: string }[] = [
-  { key: 'quality',  label: 'Chất lượng',  icon: 'alert-triangle',  color: '#FF9500' },
-  { key: 'safety',   label: 'An toàn TP',  icon: 'shield-off',      color: '#FF3B30' },
-  { key: 'quantity', label: 'Khẩu phần',   icon: 'package',         color: '#007AFF' },
-  { key: 'hygiene',  label: 'Vệ sinh',     icon: 'droplet',         color: '#34C759' },
-  { key: 'other',    label: 'Khác',        icon: 'more-horizontal', color: '#8E8E93' },
-];
-
 const STATUS_CONFIG: Record<FeedbackItem['status'], { label: string; color: string; bg: string }> = {
   pending:    { label: 'Chờ xử lý',     color: '#FF9500', bg: '#FFF4E5' },
   processing: { label: 'Đang xử lý',    color: '#007AFF', bg: '#E5F1FF' },
@@ -44,7 +36,6 @@ export default function FeedbackScreen() {
 
   const [showForm, setShowForm] = useState(false);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(FEEDBACKS);
-  const [complaintType, setComplaintType] = useState<FeedbackItem['complaintType']>('quality');
   const [symptoms, setSymptoms] = useState('');
   const [symptomTime, setSymptomTime] = useState('');
   const [symptomDate, setSymptomDate] = useState('');
@@ -84,7 +75,7 @@ export default function FeedbackScreen() {
       id: `f${Date.now()}`,
       mealId: '',
       mealName: 'Bữa ăn tại trường',
-      complaintType,
+      complaintType: 'other',
       description: symptoms.trim(),
       symptoms: symptoms.trim(),
       photos,
@@ -98,7 +89,6 @@ export default function FeedbackScreen() {
     setSymptoms('');
     setSymptomTime('');
     setSymptomDate('');
-    setComplaintType('quality');
     setPhotos([]);
     setShowForm(false);
     Alert.alert('Đã gửi', 'Phản ánh của bạn đã được gửi thành công. Nhà trường sẽ xem xét và phản hồi sớm nhất.');
@@ -162,34 +152,6 @@ export default function FeedbackScreen() {
               >
                 {/* Inner gradient card */}
                 <View style={styles.innerCard}>
-                  {/* Title */}
-                  <Text style={styles.formTitle}>Phản ánh sự cố món ăn (nếu có)</Text>
-
-                  {/* Complaint type chips */}
-                  <View style={styles.typeGrid}>
-                    {COMPLAINT_TYPES.map((t) => {
-                      const active = complaintType === t.key;
-                      return (
-                        <TouchableOpacity
-                          key={t.key}
-                          onPress={() => setComplaintType(t.key)}
-                          style={[
-                            styles.typeChip,
-                            {
-                              backgroundColor: active ? t.color + '20' : '#fff',
-                              borderColor: active ? t.color : '#D3D3D3',
-                            },
-                          ]}
-                        >
-                          <Feather name={t.icon as any} size={13} color={active ? t.color : '#8E8E93'} />
-                          <Text style={[styles.typeText, { color: active ? t.color : '#364153' }]}>
-                            {t.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-
                   {/* Time + Date row */}
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Thời gian có triệu chứng *</Text>
@@ -296,16 +258,9 @@ export default function FeedbackScreen() {
         ) : (
           feedbacks.map((item) => {
             const status = STATUS_CONFIG[item.status];
-            const typeInfo = COMPLAINT_TYPES.find((t) => t.key === item.complaintType);
             return (
               <View key={item.id} style={[styles.feedbackCard, { backgroundColor: colors.card }]}>
                 <View style={styles.feedbackTop}>
-                  <View style={[styles.typePill, { backgroundColor: (typeInfo?.color ?? '#888') + '18' }]}>
-                    <Feather name={typeInfo?.icon as any} size={11} color={typeInfo?.color ?? colors.mutedForeground} />
-                    <Text style={[styles.typePillText, { color: typeInfo?.color ?? colors.mutedForeground }]}>
-                      {typeInfo?.label}
-                    </Text>
-                  </View>
                   <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
                     <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
                   </View>
@@ -397,23 +352,6 @@ const styles = StyleSheet.create({
     padding: 19,
     gap: 14,
   },
-
-  /* Form title */
-  formTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter_400Regular',
-    color: '#000000',
-    lineHeight: 24,
-  },
-
-  /* Complaint type chips */
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  typeChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8,
-    borderWidth: 1,
-  },
-  typeText: { fontSize: 12, fontFamily: 'Inter_500Medium' },
 
   /* Field group */
   fieldGroup: { gap: 8 },
@@ -522,11 +460,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   feedbackTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  typePill: {
-    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8,
-  },
-  typePillText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
   feedbackDesc: { fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 20 },
