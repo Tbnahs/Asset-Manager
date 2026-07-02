@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -21,7 +22,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Header from '@/components/Header';
-import { FEEDBACKS } from '@/data/mockData';
+import { feedbackStore } from '@/data/feedbackStore';
 import { useColors } from '@/hooks/useColors';
 import { FeedbackItem } from '@/types';
 
@@ -38,7 +39,7 @@ export default function FeedbackScreen() {
   const insets = useSafeAreaInsets();
 
   const [showForm, setShowForm] = useState(false);
-  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(FEEDBACKS);
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(() => feedbackStore.getAll());
 
   // Swipe-to-dismiss
   const slideY = useRef(new Animated.Value(0)).current;
@@ -124,7 +125,8 @@ export default function FeedbackScreen() {
         ' ' +
         now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     };
-    setFeedbacks([newFeedback, ...feedbacks]);
+    feedbackStore.prepend(newFeedback);
+    setFeedbacks(feedbackStore.getAll());
     setSymptoms('');
     setSymptomDateTime(null);
     setPhotos([]);
@@ -343,7 +345,12 @@ export default function FeedbackScreen() {
             const hasSymptoms = item.symptoms &&
               !['không có', 'không có triệu chứng'].includes(item.symptoms.trim().toLowerCase());
             return (
-              <View key={item.id} style={[styles.feedbackCard, { backgroundColor: colors.card }]}>
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => router.push(`/feedback/${item.id}` as any)}
+                activeOpacity={0.75}
+              >
+              <View style={[styles.feedbackCard, { backgroundColor: colors.card }]}>
 
                 {/* ── Row 1: meal name + status badge ── */}
                 <View style={styles.cardHeader}>
@@ -402,7 +409,7 @@ export default function FeedbackScreen() {
                   </View>
                 ) : null}
 
-                {/* ── Row 6: timeline ── */}
+                {/* ── Row 6: timeline + chevron ── */}
                 <View style={styles.timelineRow}>
                   <Feather name="send" size={11} color={colors.mutedForeground} />
                   <Text style={[styles.timelineText, { color: colors.mutedForeground }]}>
@@ -417,9 +424,12 @@ export default function FeedbackScreen() {
                       </Text>
                     </>
                   ) : null}
+                  <View style={{ flex: 1 }} />
+                  <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
                 </View>
 
               </View>
+              </TouchableOpacity>
             );
           })
         )}
