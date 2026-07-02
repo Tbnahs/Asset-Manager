@@ -9,6 +9,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'sang',
     dayIndex: 0,
     category: 'Món chính',
     ingredients: [
@@ -28,6 +29,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-fried-rice.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'trua',
     dayIndex: 0,
     category: 'Món chính',
     ingredients: [
@@ -46,6 +48,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: false,
     mealType: 'dessert',
+    session: 'chieu',
     dayIndex: 0,
     category: 'Tráng miệng',
     ingredients: [
@@ -64,6 +67,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'sang',
     dayIndex: 1,
     category: 'Món chính',
     ingredients: [
@@ -84,6 +88,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-chicken-rice.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'trua',
     dayIndex: 1,
     category: 'Món chính',
     ingredients: [
@@ -103,6 +108,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: false,
     mealType: 'dessert',
+    session: 'phu',
     dayIndex: 1,
     category: 'Tráng miệng',
     ingredients: [
@@ -120,6 +126,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-yogurt.png'),
     isMonitored: true,
     mealType: 'drink',
+    session: 'chieu',
     dayIndex: 1,
     category: 'Đồ uống',
     ingredients: [
@@ -138,6 +145,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-fried-rice.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'phu',
     dayIndex: 1,
     category: 'Món chính',
     ingredients: [
@@ -158,6 +166,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'sang',
     dayIndex: 2,
     category: 'Món chính',
     ingredients: [
@@ -177,6 +186,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-yogurt.png'),
     isMonitored: false,
     mealType: 'dessert',
+    session: 'chieu',
     dayIndex: 2,
     category: 'Tráng miệng',
     ingredients: [
@@ -196,6 +206,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-chicken-rice.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'trua',
     dayIndex: 3,
     category: 'Món chính',
     ingredients: [
@@ -215,6 +226,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: false,
     mealType: 'dessert',
+    session: 'chieu',
     dayIndex: 3,
     category: 'Tráng miệng',
     ingredients: [
@@ -233,6 +245,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
     mealType: 'main',
+    session: 'sang',
     dayIndex: 4,
     category: 'Món chính',
     ingredients: [
@@ -252,6 +265,7 @@ export const MEALS: Meal[] = [
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: false,
     mealType: 'dessert',
+    session: 'chieu',
     dayIndex: 4,
     category: 'Tráng miệng',
     ingredients: [

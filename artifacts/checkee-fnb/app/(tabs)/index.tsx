@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -11,12 +12,19 @@ import {
 } from 'react-native';
 
 import Header from '@/components/Header';
-import MealCard from '@/components/MealCard';
 import SummaryCard from '@/components/SummaryCard';
 import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+import { Meal, MealSession } from '@/types';
 
 const DAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6'];
+
+const SESSIONS: { key: MealSession; label: string; short: string; color: string; bg: string }[] = [
+  { key: 'sang',  label: 'Sáng',  short: 'S', color: '#FF9500', bg: '#FFF4E5' },
+  { key: 'trua',  label: 'Trưa',  short: 'T', color: '#007AFF', bg: '#E5F1FF' },
+  { key: 'chieu', label: 'Chiều', short: 'C', color: '#34C759', bg: '#E8F9ED' },
+  { key: 'phu',   label: 'Phụ',   short: 'P', color: '#8B5CF6', bg: '#F3EEFF' },
+];
 
 function getWeekInfo() {
   const today = new Date();
@@ -34,10 +42,97 @@ function getWeekInfo() {
 }
 
 const SHORTCUTS = [
-  { key: 'sample', icon: 'archive', label: 'Mẫu lưu', color: '#007AFF', bg: '#E5F1FF', route: '/sample-retention' as const },
-  { key: 'trace', icon: 'search', label: 'Truy xuất', color: '#34C759', bg: '#E8F9ED', route: '/(tabs)/traceability' as const },
-  { key: 'feedback', icon: 'message-circle', label: 'Phản ánh', color: '#FF9500', bg: '#FFF4E5', route: '/(tabs)/feedback' as const },
+  { key: 'sample',   icon: 'archive',        label: 'Mẫu lưu',  color: '#007AFF', bg: '#E5F1FF', route: '/sample-retention' as const },
+  { key: 'trace',    icon: 'search',          label: 'Truy xuất', color: '#34C759', bg: '#E8F9ED', route: '/(tabs)/traceability' as const },
+  { key: 'feedback', icon: 'message-circle',  label: 'Phản ánh',  color: '#FF9500', bg: '#FFF4E5', route: '/(tabs)/feedback' as const },
 ];
+
+function SessionRow({ session, meals, colors }: {
+  session: typeof SESSIONS[number];
+  meals: Meal[];
+  colors: ReturnType<typeof useColors>;
+}) {
+  if (meals.length === 0) return null;
+  return (
+    <View style={[rowStyles.row, { borderColor: colors.border }]}>
+      {/* Left: session label */}
+      <View style={[rowStyles.sessionCol, { backgroundColor: session.bg }]}>
+        <Text style={[rowStyles.sessionLabel, { color: session.color }]}>{session.label}</Text>
+        <Text style={[rowStyles.sessionCount, { color: session.color }]}>{meals.length} món</Text>
+      </View>
+
+      {/* Right: meals stacked */}
+      <View style={rowStyles.mealsCol}>
+        {meals.map((meal, i) => (
+          <TouchableOpacity
+            key={meal.id}
+            onPress={() => router.push(`/meal/${meal.id}` as any)}
+            activeOpacity={0.72}
+            style={[
+              rowStyles.mealRow,
+              i < meals.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+            ]}
+          >
+            <Image source={meal.image} style={rowStyles.mealImg} resizeMode="cover" />
+            <View style={rowStyles.mealInfo}>
+              <Text style={[rowStyles.mealName, { color: colors.text }]} numberOfLines={1}>
+                {meal.name}
+              </Text>
+              <View style={rowStyles.mealMeta}>
+                <Text style={[rowStyles.kcal, { color: colors.mutedForeground }]}>
+                  {meal.calories} kcal
+                </Text>
+                {meal.isMonitored && (
+                  <View style={[rowStyles.monitored, { backgroundColor: colors.safeGreenLight }]}>
+                    <View style={[rowStyles.monDot, { backgroundColor: colors.safeGreen }]} />
+                    <Text style={[rowStyles.monText, { color: colors.safeGreen }]}>Theo dõi</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const rowStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 8,
+  },
+  sessionCol: {
+    width: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    gap: 2,
+  },
+  sessionLabel: { fontSize: 13, fontFamily: 'Inter_700Bold' },
+  sessionCount: { fontSize: 10, fontFamily: 'Inter_400Regular' },
+  mealsCol: { flex: 1 },
+  mealRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  mealImg: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#f0f0f0', flexShrink: 0 },
+  mealInfo: { flex: 1, gap: 4 },
+  mealName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', lineHeight: 18 },
+  mealMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  kcal: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  monitored: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
+  monDot: { width: 5, height: 5, borderRadius: 3 },
+  monText: { fontSize: 10, fontFamily: 'Inter_500Medium' },
+});
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -47,6 +142,7 @@ export default function HomeScreen() {
 
   const monthLabel = `THÁNG ${days[0].getMonth() + 1}`;
   const dayMeals = MEALS.filter((m) => m.dayIndex === selectedDay);
+  const selectedDate = days[selectedDay];
 
   const monitoredCount = MEALS.filter((m) => m.isMonitored).length;
   const sampleCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
@@ -58,19 +154,14 @@ export default function HomeScreen() {
       <Header />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: isWeb ? 118 : 120 },
-        ]}
+        contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}
       >
         {/* Week title */}
         <View style={styles.weekRow}>
           <Text style={[styles.weekTitle, { color: colors.text }]}>Thực đơn tuần</Text>
           <View style={[styles.monthBadge, { backgroundColor: colors.muted }]}>
             <Feather name="calendar" size={12} color={colors.mutedForeground} />
-            <Text style={[styles.monthText, { color: colors.mutedForeground }]}>
-              {monthLabel}
-            </Text>
+            <Text style={[styles.monthText, { color: colors.mutedForeground }]}>{monthLabel}</Text>
           </View>
         </View>
 
@@ -78,84 +169,43 @@ export default function HomeScreen() {
         <View style={[styles.daySelector, { backgroundColor: colors.card }]}>
           {days.map((d, i) => {
             const isSelected = i === selectedDay;
+            const mealsOnDay = MEALS.filter((m) => m.dayIndex === i).length;
             return (
               <TouchableOpacity
                 key={i}
                 onPress={() => setSelectedDay(i)}
-                style={[
-                  styles.dayBtn,
-                  isSelected && { backgroundColor: colors.primary },
-                ]}
+                style={[styles.dayBtn, isSelected && { backgroundColor: colors.primary }]}
                 activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    styles.dayLabel,
-                    { color: isSelected ? '#fff' : colors.mutedForeground },
-                  ]}
-                >
+                <Text style={[styles.dayLabel, { color: isSelected ? '#fff' : colors.mutedForeground }]}>
                   {DAY_LABELS[i]}
                 </Text>
-                <Text
-                  style={[
-                    styles.dayNum,
-                    { color: isSelected ? '#fff' : colors.text },
-                  ]}
-                >
+                <Text style={[styles.dayNum, { color: isSelected ? '#fff' : colors.text }]}>
                   {d.getDate()}
                 </Text>
+                {mealsOnDay > 0 && (
+                  <View style={[styles.dayDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.7)' : colors.primary }]} />
+                )}
               </TouchableOpacity>
             );
           })}
         </View>
 
         {/* Summary cards */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          TỔNG QUAN
-        </Text>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TỔNG QUAN</Text>
         <View style={styles.summaryGrid}>
           <View style={styles.summaryRow}>
-            <SummaryCard
-              icon="eye"
-              count={monitoredCount}
-              label="Bữa ăn đang theo dõi"
-              iconColor="#FF6535"
-              iconBg="#FFF0EB"
-              onPress={() => {}}
-            />
-            <SummaryCard
-              icon="archive"
-              count={sampleCount}
-              label="Mẫu lưu đang bảo quản"
-              iconColor="#007AFF"
-              iconBg="#E5F1FF"
-              onPress={() => router.push('/sample-retention')}
-            />
+            <SummaryCard icon="eye" count={monitoredCount} label="Bữa ăn đang theo dõi" iconColor="#FF6535" iconBg="#FFF0EB" onPress={() => {}} />
+            <SummaryCard icon="archive" count={sampleCount} label="Mẫu lưu đang bảo quản" iconColor="#007AFF" iconBg="#E5F1FF" onPress={() => router.push('/sample-retention')} />
           </View>
           <View style={styles.summaryRow}>
-            <SummaryCard
-              icon="shield"
-              count={safetyCount}
-              label="Thông báo ATTP"
-              iconColor="#34C759"
-              iconBg="#E8F9ED"
-              onPress={() => router.push('/(tabs)/notifications')}
-            />
-            <SummaryCard
-              icon="message-circle"
-              count={feedbackCount}
-              label="Phản ánh đã gửi"
-              iconColor="#FF9500"
-              iconBg="#FFF4E5"
-              onPress={() => router.push('/(tabs)/feedback')}
-            />
+            <SummaryCard icon="shield" count={safetyCount} label="Thông báo ATTP" iconColor="#34C759" iconBg="#E8F9ED" onPress={() => router.push('/(tabs)/notifications')} />
+            <SummaryCard icon="message-circle" count={feedbackCount} label="Phản ánh đã gửi" iconColor="#FF9500" iconBg="#FFF4E5" onPress={() => router.push('/(tabs)/feedback')} />
           </View>
         </View>
 
         {/* Quick shortcuts */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          TRUY CẬP NHANH
-        </Text>
+        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TRUY CẬP NHANH</Text>
         <View style={styles.shortcuts}>
           {SHORTCUTS.map((s) => (
             <TouchableOpacity
@@ -167,32 +217,42 @@ export default function HomeScreen() {
               <View style={[styles.shortcutIcon, { backgroundColor: s.bg }]}>
                 <Feather name={s.icon as any} size={20} color={s.color} />
               </View>
-              <Text style={[styles.shortcutLabel, { color: colors.text }]}>
-                {s.label}
-              </Text>
+              <Text style={[styles.shortcutLabel, { color: colors.text }]}>{s.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Meal list */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          THỰC ĐƠN HÔM NAY
-        </Text>
+        {/* Meal session table */}
+        <View style={styles.menuHeader}>
+          <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+            THỰC ĐƠN NGÀY {selectedDate.getDate()}/{selectedDate.getMonth() + 1}
+          </Text>
+          <View style={[styles.mealCountBadge, { backgroundColor: colors.accent }]}>
+            <Text style={[styles.mealCountText, { color: colors.primary }]}>
+              {dayMeals.length} món
+            </Text>
+          </View>
+        </View>
+
         {dayMeals.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Feather name="coffee" size={32} color={colors.mutedForeground} />
+          <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+            <Feather name="coffee" size={28} color={colors.mutedForeground} />
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
               Chưa có thực đơn cho ngày này
             </Text>
           </View>
         ) : (
-          dayMeals.map((meal) => (
-            <MealCard
-              key={meal.id}
-              meal={meal}
-              onPress={() => router.push(`/meal/${meal.id}` as any)}
-            />
-          ))
+          SESSIONS.map((session) => {
+            const meals = dayMeals.filter((m) => m.session === session.key);
+            return (
+              <SessionRow
+                key={session.key}
+                session={session}
+                meals={meals}
+                colors={colors}
+              />
+            );
+          })
         )}
       </ScrollView>
     </View>
@@ -202,97 +262,31 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingTop: 16 },
-  weekRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  weekTitle: {
-    fontSize: 22,
-    fontFamily: 'Inter_700Bold',
-  },
-  monthBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  monthText: {
-    fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
-  },
-  daySelector: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    padding: 6,
-    marginBottom: 20,
-    gap: 2,
-  },
-  dayBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 10,
-    gap: 2,
-  },
-  dayLabel: {
-    fontSize: 11,
-    fontFamily: 'Inter_500Medium',
-  },
-  dayNum: {
-    fontSize: 16,
-    fontFamily: 'Inter_700Bold',
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
-    letterSpacing: 0.8,
-    marginBottom: 10,
-    marginTop: 4,
-  },
+  weekRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  weekTitle: { fontSize: 22, fontFamily: 'Inter_700Bold' },
+  monthBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  monthText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  daySelector: { flexDirection: 'row', borderRadius: 14, padding: 6, marginBottom: 20, gap: 2 },
+  dayBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, gap: 2 },
+  dayLabel: { fontSize: 11, fontFamily: 'Inter_500Medium' },
+  dayNum: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  dayDot: { width: 5, height: 5, borderRadius: 3 },
+  sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 10, marginTop: 4 },
   summaryGrid: { gap: 8, marginBottom: 20 },
   summaryRow: { flexDirection: 'row', gap: 8 },
-  shortcuts: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
+  shortcuts: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   shortcut: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    flex: 1, alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, borderRadius: 12, gap: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
-  shortcutIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shortcutLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
-    textAlign: 'center',
-  },
+  shortcutIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  shortcutLabel: { fontSize: 12, fontFamily: 'Inter_500Medium', textAlign: 'center' },
+  menuHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 4 },
+  mealCountBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
+  mealCountText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
   emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    gap: 12,
+    alignItems: 'center', paddingVertical: 36, gap: 12, borderRadius: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
-  emptyText: {
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    textAlign: 'center',
-  },
+  emptyText: { fontSize: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 });

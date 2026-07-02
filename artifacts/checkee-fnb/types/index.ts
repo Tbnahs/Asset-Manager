@@ -12,6 +12,8 @@ export interface Nutrition {
   sodium: number;
 }
 
+export type MealSession = 'sang' | 'trua' | 'chieu' | 'phu';
+
 export interface Meal {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ export interface Meal {
   image: number;
   isMonitored: boolean;
   mealType: 'main' | 'dessert' | 'drink';
+  session: MealSession;
   dayIndex: number;
   ingredients: Ingredient[];
   nutrition: Nutrition;
