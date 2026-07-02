@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 15,
   },
-  uploadInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  uploadInner: { flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
   cameraBox: {
     width: 37,
     height: 40,
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   uploadTextCol: { flex: 1, gap: 2 },
   uploadMainText: { fontSize: 14, fontFamily: 'Inter_400Regular', color: '#1E2939', lineHeight: 21 },
   uploadSubText: { fontSize: 12, fontFamily: 'Inter_400Regular', color: '#6A7282', lineHeight: 18 },
-  uploadLink: { fontSize: 13, fontFamily: 'Inter_700Bold', color: '#F15D22' },
+  uploadLink: { fontSize: 13, fontFamily: 'Inter_700Bold', color: '#F15D22', flexShrink: 0 },
 
   thumbnailRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   thumbWrap: { position: 'relative' },
