@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ChildSelectorModal from '@/components/ChildSelectorModal';
@@ -58,17 +58,19 @@ export default function Header({ showBack = false, title, rightAction }: HeaderP
               activeOpacity={0.75}
               style={styles.childPill}
             >
-              <View style={styles.childPillInner}>
-                <Text style={[styles.childPillName, { color: colors.text }]} numberOfLines={1}>
-                  {child.name}
+              {/* Logo */}
+              <Image
+                source={require('@/assets/images/logo-ischool.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+              {/* Child sub-label */}
+              <View style={styles.childPillSub}>
+                <View style={[styles.classDot, { backgroundColor: child.avatarColor }]} />
+                <Text style={[styles.childPillClass, { color: colors.mutedForeground }]}>
+                  {child.name} · {child.grade} · Lớp {child.className}
                 </Text>
-                <View style={styles.childPillSub}>
-                  <View style={[styles.classDot, { backgroundColor: child.avatarColor }]} />
-                  <Text style={[styles.childPillClass, { color: colors.mutedForeground }]}>
-                    {child.grade} · Lớp {child.className}
-                  </Text>
-                  <Feather name="chevron-down" size={12} color={colors.mutedForeground} style={{ marginLeft: 2 }} />
-                </View>
+                <Feather name="chevron-down" size={11} color={colors.mutedForeground} style={{ marginLeft: 1 }} />
               </View>
             </TouchableOpacity>
           )}
@@ -124,18 +126,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  logo: {
+    width: 110,
+    height: 28,
+  },
   childPill: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 8,
-  },
-  childPillInner: {
-    alignItems: 'center',
     gap: 2,
-  },
-  childPillName: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
   },
   childPillSub: {
     flexDirection: 'row',
