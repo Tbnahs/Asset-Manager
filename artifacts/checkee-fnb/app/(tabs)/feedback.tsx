@@ -318,31 +318,85 @@ export default function FeedbackScreen() {
         ) : (
           feedbacks.map((item) => {
             const status = STATUS_CONFIG[item.status];
+            const hasSymptoms = item.symptoms &&
+              !['không có', 'không có triệu chứng'].includes(item.symptoms.trim().toLowerCase());
             return (
               <View key={item.id} style={[styles.feedbackCard, { backgroundColor: colors.card }]}>
-                <View style={styles.feedbackTop}>
+
+                {/* ── Row 1: meal name + status badge ── */}
+                <View style={styles.cardHeader}>
+                  <View style={styles.mealNameRow}>
+                    <Feather name="package" size={13} color={colors.primary} />
+                    <Text style={[styles.mealName, { color: colors.primary }]} numberOfLines={1}>
+                      {item.mealName}
+                    </Text>
+                  </View>
                   <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+                    <View style={[styles.statusDot, { backgroundColor: status.color }]} />
                     <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
                   </View>
                 </View>
 
+                {/* ── Row 2: description ── */}
                 <Text style={[styles.feedbackDesc, { color: colors.text }]}>{item.description}</Text>
 
-                {item.symptoms ? (
-                  <View style={[styles.symptomRow, { backgroundColor: colors.muted }]}>
-                    <Feather name="activity" size={12} color={colors.mutedForeground} />
-                    <Text style={[styles.feedbackSymptoms, { color: colors.mutedForeground }]}>{item.symptoms}</Text>
+                {/* ── Row 3: symptoms (only if meaningful) ── */}
+                {hasSymptoms ? (
+                  <View style={[styles.symptomRow, { backgroundColor: colors.warningLight }]}>
+                    <Feather name="alert-circle" size={13} color={colors.warning} />
+                    <Text style={[styles.feedbackSymptoms, { color: colors.text }]}>{item.symptoms}</Text>
                   </View>
                 ) : null}
 
+                {/* ── Row 4: photo count ── */}
+                {item.photos.length > 0 ? (
+                  <View style={styles.photoCountRow}>
+                    <Feather name="image" size={12} color={colors.mutedForeground} />
+                    <Text style={[styles.photoCountText, { color: colors.mutedForeground }]}>
+                      {item.photos.length} ảnh đính kèm
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* ── Row 5: school response ── */}
                 {item.response ? (
-                  <View style={[styles.responseBox, { backgroundColor: colors.safeGreenLight }]}>
-                    <Text style={[styles.responseLabel, { color: colors.safeGreen }]}>Phản hồi từ nhà trường:</Text>
+                  <View style={[styles.responseBox, {
+                    backgroundColor: item.status === 'rejected' ? colors.dangerLight : colors.safeGreenLight,
+                    borderColor: item.status === 'rejected' ? '#FFCDD2' : '#B7EFC5',
+                  }]}>
+                    <View style={styles.responseHeader}>
+                      <Feather
+                        name={item.status === 'rejected' ? 'x-circle' : 'check-circle'}
+                        size={13}
+                        color={item.status === 'rejected' ? colors.danger : colors.safeGreen}
+                      />
+                      <Text style={[styles.responseLabel, {
+                        color: item.status === 'rejected' ? colors.danger : colors.safeGreen,
+                      }]}>
+                        Phản hồi từ nhà trường
+                      </Text>
+                    </View>
                     <Text style={[styles.responseText, { color: colors.text }]}>{item.response}</Text>
                   </View>
                 ) : null}
 
-                <Text style={[styles.feedbackDate, { color: colors.mutedForeground }]}>{item.submittedAt}</Text>
+                {/* ── Row 6: timeline ── */}
+                <View style={styles.timelineRow}>
+                  <Feather name="send" size={11} color={colors.mutedForeground} />
+                  <Text style={[styles.timelineText, { color: colors.mutedForeground }]}>
+                    Gửi: {item.submittedAt}
+                  </Text>
+                  {item.resolvedAt ? (
+                    <>
+                      <Feather name="chevron-right" size={11} color={colors.mutedForeground} />
+                      <Feather name="check" size={11} color={colors.safeGreen} />
+                      <Text style={[styles.timelineText, { color: colors.safeGreen }]}>
+                        {item.resolvedAt}
+                      </Text>
+                    </>
+                  ) : null}
+                </View>
+
               </View>
             );
           })
@@ -522,18 +576,34 @@ const styles = StyleSheet.create({
 
   /* History cards */
   feedbackCard: {
-    borderRadius: 14, padding: 14, marginBottom: 10, gap: 8,
+    borderRadius: 16, padding: 14, marginBottom: 10, gap: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+    shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
-  feedbackTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  cardHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', gap: 8,
+  },
+  mealNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
+  mealName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', flexShrink: 1 },
+  statusBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20,
+  },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  feedbackDesc: { fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 20 },
-  symptomRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, padding: 8, borderRadius: 8 },
-  feedbackSymptoms: { fontSize: 12, fontFamily: 'Inter_400Regular', flex: 1 },
-  responseBox: { borderRadius: 8, padding: 10, gap: 4 },
-  responseLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  responseText: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 18 },
-  feedbackDate: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  feedbackDesc: { fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 21, color: '#1C1C1E' },
+  symptomRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 7,
+    padding: 10, borderRadius: 10,
+  },
+  feedbackSymptoms: { fontSize: 13, fontFamily: 'Inter_400Regular', flex: 1, lineHeight: 19 },
+  photoCountRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  photoCountText: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+  responseBox: { borderRadius: 10, padding: 12, gap: 6, borderWidth: 1 },
+  responseHeader: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  responseLabel: { fontSize: 12, fontFamily: 'Inter_700Bold' },
+  responseText: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19 },
+  timelineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' },
+  timelineText: { fontSize: 11, fontFamily: 'Inter_400Regular' },
 });
