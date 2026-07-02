@@ -184,7 +184,6 @@ export default function HomeScreen() {
   const monthDayMeals = useMemo(() => mealsForDate(selectedDate, days), [selectedDate, days]);
 
   // Summary stats
-  const monitoredCount = MEALS.filter((m) => m.isMonitored).length;
   const sampleCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
   const safetyCount = NOTIFICATIONS.filter((n) => n.type === 'safety').length;
   const feedbackCount = FEEDBACKS.length;
@@ -393,11 +392,10 @@ export default function HomeScreen() {
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>TỔNG QUAN</Text>
         <View style={styles.summaryGrid}>
           <View style={styles.summaryRow}>
-            <SummaryCard icon="eye" count={monitoredCount} label="Bữa ăn đang theo dõi" iconColor="#FF6535" iconBg="#FFF0EB" onPress={() => {}} />
             <SummaryCard icon="archive" count={sampleCount} label="Mẫu lưu đang bảo quản" iconColor="#007AFF" iconBg="#E5F1FF" onPress={() => router.push('/sample-retention')} />
+            <SummaryCard icon="shield" count={safetyCount} label="Thông báo ATTP" iconColor="#34C759" iconBg="#E8F9ED" onPress={() => router.push('/(tabs)/notifications')} />
           </View>
           <View style={styles.summaryRow}>
-            <SummaryCard icon="shield" count={safetyCount} label="Thông báo ATTP" iconColor="#34C759" iconBg="#E8F9ED" onPress={() => router.push('/(tabs)/notifications')} />
             <SummaryCard icon="message-circle" count={feedbackCount} label="Phản ánh đã gửi" iconColor="#FF9500" iconBg="#FFF4E5" onPress={() => router.push('/(tabs)/feedback')} />
           </View>
         </View>
