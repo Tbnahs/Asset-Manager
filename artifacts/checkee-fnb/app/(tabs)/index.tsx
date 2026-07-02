@@ -13,7 +13,7 @@ import {
 
 import Header from '@/components/Header';
 import SummaryCard from '@/components/SummaryCard';
-import { FEEDBACKS, MEALS, NOTIFICATIONS } from '@/data/mockData';
+import { FEEDBACKS, MEALS, NOTIFICATIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
 
@@ -76,9 +76,10 @@ function buildCalendar(year: number, month: number): (Date | null)[] {
 }
 
 /* ─── Sub-components ──────────────────────────────────────── */
-function SessionRows({ dayMeals, colors }: {
+function SessionRows({ dayMeals, colors, onMealPress }: {
   dayMeals: Meal[];
   colors: ReturnType<typeof useColors>;
+  onMealPress: (meal: Meal) => void;
 }) {
   if (dayMeals.length === 0) {
     return (
