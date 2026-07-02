@@ -42,3 +42,27 @@ id = "lbt42koJCgrfo9n_j5oCn"
 uri = "file://artifacts/checkee-fnb/assets/images/supplier-farm.png"
 type = "image"
 title = "fresh vegetables supplier"
+
+[[generated]]
+id = "qtURsbN16iOQy2t_OKCTj"
+uri = "file://artifacts/checkee-fnb/assets/images/app-logo.png"
+type = "image"
+title = "app logo shield"
+
+[[generated]]
+id = "R2dfFBgbkxuzv_Uzxl9BW"
+uri = "file://artifacts/checkee-fnb/assets/images/notification-illustration.png"
+type = "image"
+title = "food safety lab illustration"
+
+[[generated]]
+id = "sVRIt6xNAy7LIbaRXqfgr"
+uri = "file://artifacts/checkee-fnb/assets/images/feedback-photo-1.png"
+type = "image"
+title = "questionable school meal"
+
+[[generated]]
+id = "TvJ3vHFoMviMSC97Dd2XC"
+uri = "file://artifacts/checkee-fnb/assets/images/feedback-photo-2.png"
+type = "image"
+title = "dirty cafeteria table"

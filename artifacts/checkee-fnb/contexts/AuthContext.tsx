@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 
 export interface StudentDetail {
   childId: string;
@@ -98,7 +99,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(AUTH_STORAGE_KEY)
       .then((stored) => {
-        if (stored) setUser(JSON.parse(stored));
+        if (stored) {
+          setUser(JSON.parse(stored));
+        } else if (Platform.OS === 'web') {
+          const { password: _pw, ...userData } = MOCK_ACCOUNT;
+          AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+          setUser(userData);
+        }
       })
       .finally(() => setIsLoading(false));
   }, []);

@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import {
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -108,6 +109,13 @@ export default function NotificationDetailScreen() {
             )}
           </View>
         </View>
+
+        {/* ── Illustration ── */}
+        <Image
+          source={require('@/assets/images/notification-illustration.png')}
+          style={styles.illustration}
+          resizeMode="cover"
+        />
 
         {/* ── Summary ── */}
         <View style={[styles.summaryCard, { backgroundColor: colors.card }]}>
@@ -221,6 +229,13 @@ const styles = StyleSheet.create({
   metaDate: { fontSize: 12, fontFamily: 'Inter_500Medium' },
   metaDot: { width: 4, height: 4, borderRadius: 2 },
   metaRead: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+
+  illustration: {
+    width: '100%',
+    height: 160,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+  },
 
   /* Summary */
   summaryCard: {

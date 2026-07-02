@@ -163,8 +163,8 @@ export default function FeedbackDetailScreen() {
             </View>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.photoGrid}>
-              {item.photos.map((uri, i) => (
-                <Image key={i} source={{ uri }} style={styles.photo} resizeMode="cover" />
+              {item.photos.map((src, i) => (
+                <Image key={i} source={typeof src === 'string' ? { uri: src } : src} style={styles.photo} resizeMode="cover" />
               ))}
             </View>
           </View>

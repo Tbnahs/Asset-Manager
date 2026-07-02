@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -60,10 +61,11 @@ export default function LoginScreen() {
         >
           {/* Logo */}
           <View style={styles.header}>
-            <View style={[styles.logoWrap, { backgroundColor: colors.accent }]}>
-              <Feather name="shield" size={32} color={colors.primary} />
-            </View>
-            <Text style={[styles.appName, { color: colors.primary }]}>CHECKEE F&B</Text>
+            <Image
+              source={require('@/assets/images/app-logo.png')}
+              style={styles.logoImg}
+              resizeMode="contain"
+            />
             <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
               Hệ thống giám sát dinh dưỡng trường học
             </Text>
@@ -186,11 +188,11 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 32, paddingBottom: 32, gap: 16 },
   header: { alignItems: 'center', gap: 8, marginBottom: 8 },
-  logoWrap: {
-    width: 72, height: 72, borderRadius: 22,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
+  logoImg: {
+    width: 110, height: 110,
+    alignSelf: 'center',
+    marginBottom: 4,
   },
-  appName: { fontSize: 24, fontFamily: 'Inter_700Bold', letterSpacing: 0.5 },
   tagline: { fontSize: 13, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   card: {
     borderRadius: 20, padding: 20,

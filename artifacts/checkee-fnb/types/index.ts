@@ -90,7 +90,7 @@ export interface FeedbackItem {
   complaintType: 'quality' | 'safety' | 'quantity' | 'hygiene' | 'other';
   description: string;
   symptoms: string;
-  photos: string[];
+  photos: (string | number)[];
   status: 'pending' | 'processing' | 'resolved' | 'rejected';
   submittedAt: string;
   resolvedAt?: string;

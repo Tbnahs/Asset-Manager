@@ -270,11 +270,15 @@ export default function MealDetailScreen() {
             <TouchableOpacity
               onPress={() => router.push(`/traceability/${traceRecord.id}` as any)}
               style={[styles.traceCta, { backgroundColor: colors.primary }]}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
-              <Feather name="search" size={18} color="#fff" />
+              <View style={styles.traceCtaIconWrap}>
+                <Feather name="search" size={20} color={colors.primary} />
+              </View>
               <Text style={styles.traceCtaText}>Xem truy xuất nguồn gốc</Text>
-              <Feather name="chevron-right" size={18} color="#fff" />
+              <View style={styles.traceCtaArrowWrap}>
+                <Feather name="chevron-right" size={18} color="#fff" />
+              </View>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -420,13 +424,42 @@ const styles = StyleSheet.create({
   traceCta: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 15,
+    gap: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
     borderRadius: 14,
     marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    elevation: 3,
   },
-  traceCtaText: { color: '#fff', fontSize: 15, fontFamily: 'Inter_600SemiBold', flex: 1, textAlign: 'center' },
+  traceCtaIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  traceCtaText: {
+    color: '#fff',
+    fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
+    flex: 1,
+    textAlign: 'left',
+  },
+  traceCtaArrowWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
   backBtn: { padding: 16 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   notFoundText: { fontSize: 16, fontFamily: 'Inter_400Regular' },

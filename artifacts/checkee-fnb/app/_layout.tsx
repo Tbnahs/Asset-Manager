@@ -48,7 +48,9 @@ function RootLayoutNav() {
         <Stack.Screen name="meal/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="traceability/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="sample-retention" options={{ headerShown: false }} />
+        <Stack.Screen name="sample-retention/[mealId]" options={{ headerShown: false }} />
         <Stack.Screen name="feedback/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
       </Stack>
     </AuthGate>
   );
