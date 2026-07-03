@@ -184,9 +184,11 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 32, paddingBottom: 32, gap: 16 },
-  header: { alignItems: 'center', gap: 8, marginBottom: 8 },
+  header: { alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
   logoImg: {
-    width: 340, height: 150,
+    width: '100%',
+    maxWidth: 440,
+    height: 200,
     alignSelf: 'center',
     marginBottom: 8,
   },
