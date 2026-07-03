@@ -1,39 +1,124 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import Header from '@/components/Header';
 import { TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
+type FilterMode = 'all' | 'today' | 'week' | 'month' | 'year';
+
+function parseCookDate(cookTime: string): Date | null {
+  // cookTime format: "HH:MM DD/MM/YYYY"
+  const match = cookTime.match(/(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, day, month, year] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function isSameDay(d1: Date, d2: Date) {
+  return d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+}
+
+function isSameWeek(d1: Date, d2: Date) {
+  const startOfWeek = (d: Date) => {
+    const clone = new Date(d);
+    const day = clone.getDay();
+    const diff = clone.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(clone.setDate(diff));
+  };
+  const s1 = startOfWeek(d1);
+  const s2 = startOfWeek(d2);
+  return isSameDay(s1, s2);
+}
+
+function isSameMonth(d1: Date, d2: Date) {
+  return d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
+}
+
+function isSameYear(d1: Date, d2: Date) {
+  return d1.getFullYear() === d2.getFullYear();
+}
+
+const FILTER_CONFIG: { key: FilterMode; label: string }[] = [
+  { key: 'all', label: 'Tất cả' },
+  { key: 'today', label: 'Hôm nay' },
+  { key: 'week', label: 'Tuần này' },
+  { key: 'month', label: 'Tháng này' },
+  { key: 'year', label: 'Năm nay' },
+];
+
 export default function TraceabilityScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
+  const [filter, setFilter] = useState<FilterMode>('all');
+  const today = new Date();
+
+  const filteredRecords = useMemo(() => {
+    if (filter === 'all') return TRACEABILITY_RECORDS;
+    return TRACEABILITY_RECORDS.filter((r) => {
+      const d = parseCookDate(r.cookTime);
+      if (!d) return false;
+      switch (filter) {
+        case 'today': return isSameDay(d, today);
+        case 'week': return isSameWeek(d, today);
+        case 'month': return isSameMonth(d, today);
+        case 'year': return isSameYear(d, today);
+        default: return true;
+      }
+    });
+  }, [filter]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Header />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}
-      >
+        contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}>
+
         <Text style={[styles.pageTitle, { color: colors.text }]}>Danh sách món ăn lưu mẫu</Text>
         <Text style={[styles.pageSubtitle, { color: colors.mutedForeground }]}>
           Thông tin nguồn gốc & quy trình chế biến thực phẩm
         </Text>
 
+        {/* Filter bar */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterBar}>
+          {FILTER_CONFIG.map((f) => {
+            const active = filter === f.key;
+            return (
+              <TouchableOpacity
+                key={f.key}
+                onPress={() => setFilter(f.key)}
+                activeOpacity={0.7}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: active ? colors.primary : colors.card,
+                    borderColor: active ? colors.primary : colors.border,
+                  },
+                ]}>
+                <Text style={[styles.filterChipText, { color: active ? '#fff' : colors.text }]}>
+                  {f.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          DANH SÁCH TRUY XUẤT ({TRACEABILITY_RECORDS.length})
+          DANH SÁCH TRUY XUẤT ({filteredRecords.length})
         </Text>
 
-        {TRACEABILITY_RECORDS.map((record) => (
+        {filteredRecords.map((record) => (
           <TouchableOpacity
             key={record.id}
             onPress={() => router.push(`/traceability/${record.id}` as any)}
             style={[styles.card, { backgroundColor: colors.card }]}
-            activeOpacity={0.72}
-          >
+            activeOpacity={0.72}>
             {/* Orange top stripe with trace code */}
             <View style={[styles.cardStripe, { backgroundColor: colors.primary }]}>
               <Feather name="home" size={11} color="rgba(255,255,255,0.8)" />
@@ -113,6 +198,15 @@ export default function TraceabilityScreen() {
             </View>
           </TouchableOpacity>
         ))}
+
+        {filteredRecords.length === 0 && (
+          <View style={styles.emptyState}>
+            <Feather name="inbox" size={40} color={colors.mutedForeground} />
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              Không có món ăn lưu mẫu trong khoảng thời gian này
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -122,7 +216,15 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingTop: 16 },
   pageTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
-  pageSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginBottom: 20 },
+  pageSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginBottom: 12 },
+
+  filterBar: { flexDirection: 'row', gap: 8, paddingBottom: 16 },
+  filterChip: {
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 20, borderWidth: 1,
+  },
+  filterChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+
   sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 12 },
 
   card: {
@@ -136,7 +238,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  /* Stripe */
   cardStripe: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -162,7 +263,6 @@ const styles = StyleSheet.create({
   monitoredDot: { width: 6, height: 6, borderRadius: 3 },
   monitoredText: { color: '#fff', fontSize: 10, fontFamily: 'Inter_500Medium' },
 
-  /* Body */
   cardBody: { flexDirection: 'row', padding: 12, gap: 12, alignItems: 'flex-start' },
   mealImage: { width: 72, height: 72, borderRadius: 10, backgroundColor: '#f0f0f0', flexShrink: 0 },
   cardInfo: { flex: 1, gap: 5 },
@@ -180,7 +280,6 @@ const styles = StyleSheet.create({
   ingChip: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 5 },
   ingChipText: { fontSize: 10, fontFamily: 'Inter_500Medium' },
 
-  /* Footer */
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,4 +299,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   viewMoreText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+
+  emptyState: { alignItems: 'center', paddingVertical: 40, gap: 12 },
+  emptyText: { fontSize: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 });
