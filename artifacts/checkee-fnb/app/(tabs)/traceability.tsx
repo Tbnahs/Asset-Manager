@@ -18,7 +18,7 @@ export default function TraceabilityScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}
       >
-        <Text style={[styles.pageTitle, { color: colors.text }]}>Truy xuất nguồn gốc</Text>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Danh sách món ăn lưu mẫu</Text>
         <Text style={[styles.pageSubtitle, { color: colors.mutedForeground }]}>
           Thông tin nguồn gốc & quy trình chế biến thực phẩm
         </Text>
