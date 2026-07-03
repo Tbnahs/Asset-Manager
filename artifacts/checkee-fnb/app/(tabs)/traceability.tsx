@@ -191,7 +191,7 @@ export default function TraceabilityScreen() {
                 return (
                   <View style={[styles.monitoredBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
                     <View style={[styles.monitoredDot, { backgroundColor: active ? '#34C759' : 'rgba(255,255,255,0.5)' }]} />
-                    <Text style={styles.monitoredText}>{active ? 'Còn hạn' : 'Hết hạn'}</Text>
+                    <Text style={styles.monitoredText}>{active ? 'Đang theo dõi' : 'Ngưng hoạt động'}</Text>
                   </View>
                 );
               })()}

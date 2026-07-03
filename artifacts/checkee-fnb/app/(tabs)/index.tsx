@@ -131,7 +131,7 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
                           <View style={[rStyles.monitored, { backgroundColor: bg }]}>
                             <View style={[rStyles.monDot, { backgroundColor: fg }]} />
                             <Text style={[rStyles.monText, { color: fg }]}>
-                              {active ? 'Còn hạn' : 'Hết hạn'}
+                              {active ? 'Đang theo dõi' : 'Ngưng hoạt động'}
                             </Text>
                           </View>
                         );

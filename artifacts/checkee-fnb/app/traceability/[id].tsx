@@ -83,7 +83,7 @@ export default function TraceabilityDetailScreen() {
             const active = record.isMonitored && isMonitoringActive(meal?.monitoredUntil);
             const bg = !record.isMonitored ? colors.muted : active ? colors.safeGreenLight : colors.muted;
             const fg = !record.isMonitored ? colors.mutedForeground : active ? colors.safeGreen : colors.mutedForeground;
-            const label = !record.isMonitored ? 'Không theo dõi' : active ? 'Còn hạn' : 'Hết hạn';
+            const label = !record.isMonitored ? 'Không theo dõi' : active ? 'Đang theo dõi' : 'Ngưng hoạt động';
             return (
               <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Trạng thái:</Text>

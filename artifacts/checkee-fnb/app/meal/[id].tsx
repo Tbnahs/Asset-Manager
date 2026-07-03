@@ -110,8 +110,8 @@ export default function MealDetailScreen() {
                 <View style={[styles.dot, { backgroundColor: fg }]} />
                 <Text style={[styles.monitorText, { color: fg }]}>
                   {active
-                    ? `Còn hạn${meal.monitoredUntil ? ` (đến ${meal.monitoredUntil})` : ''}`
-                    : `Hết hạn${meal.monitoredUntil ? ` (${meal.monitoredUntil})` : ''}`}
+                    ? `Đang theo dõi${meal.monitoredUntil ? ` (đến ${meal.monitoredUntil})` : ''}`
+                    : `Ngưng hoạt động${meal.monitoredUntil ? ` (${meal.monitoredUntil})` : ''}`}
                 </Text>
               </View>
             );
