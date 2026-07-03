@@ -127,8 +127,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 110,
-    height: 28,
+    width: 150,
+    height: 42,
   },
   childPill: {
     flex: 1,
