@@ -603,6 +603,7 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'menu',
     title: 'Thực đơn tuần mới',
     message: 'Thực đơn tuần từ 08/06 - 12/06/2026 đã được cập nhật. Nhấn để xem chi tiết.',
+    image: require('../assets/images/notif-menu.png'),
     body: `Thực đơn tuần học từ 08/06 đến 12/06/2026 đã được bộ phận dinh dưỡng nhà trường cập nhật và phê duyệt.
 
 Điểm nổi bật tuần này:
@@ -619,6 +620,7 @@ Phụ huynh có thể xem chi tiết thực đơn từng ngày trong mục Thự
     type: 'safety',
     title: 'Kết quả kiểm nghiệm ATTP',
     message: 'Kết quả kiểm nghiệm an toàn thực phẩm tuần 06/2026 đã có. Tất cả mẫu đạt tiêu chuẩn.',
+    image: require('../assets/images/notif-safety.png'),
     body: `Kết quả kiểm nghiệm an toàn thực phẩm (ATTP) định kỳ tuần 06/2026 đã được Trung tâm Y tế Dự phòng Quận xác nhận.
 
 Kết quả tổng hợp:
@@ -641,6 +643,7 @@ Nhà trường cam kết duy trì tiêu chuẩn ATTP nghiêm ngặt để bảo 
     type: 'complaint',
     title: 'Phản ánh đã được xử lý',
     message: 'Phản ánh của bạn về "Mì trộn hải sản" ngày 08/06 đã được giải quyết. Xem phản hồi từ nhà trường.',
+    image: require('../assets/images/notif-complaint.png'),
     body: `Phản ánh của bạn về chất lượng món Mì trộn hải sản ngày 08/06/2026 đã được bộ phận bếp ăn xem xét và xử lý.
 
 Nội dung phản ánh:
@@ -663,6 +666,7 @@ Chúng tôi xin lỗi vì sự cố này và cam kết không để tái diễn.
     type: 'school',
     title: 'Thông báo từ Ban Giám Hiệu',
     message: 'Nhà trường sẽ tổ chức kiểm tra bếp ăn định kỳ vào ngày 15/06/2026. Kết quả sẽ được thông báo trên app.',
+    image: require('../assets/images/notif-school.png'),
     body: `Kính gửi quý phụ huynh,
 
 Ban Giám Hiệu trường thông báo về việc tổ chức kiểm tra bếp ăn định kỳ theo kế hoạch năm học 2025–2026.
@@ -689,6 +693,7 @@ Ban Giám Hiệu`,
     type: 'safety',
     title: 'Nhắc nhở về dị ứng thực phẩm',
     message: 'Thực đơn thứ Ba có món hải sản. Phụ huynh có con dị ứng hải sản vui lòng liên hệ nhà trường để điều chỉnh.',
+    image: require('../assets/images/notif-safety.png'),
     body: `Nhà trường xin thông báo đến quý phụ huynh về thực đơn có chứa hải sản trong tuần tới.
 
 Thứ Ba, 09/06/2026:

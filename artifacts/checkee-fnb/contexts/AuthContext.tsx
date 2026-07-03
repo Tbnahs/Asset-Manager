@@ -101,6 +101,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((stored) => {
         if (stored) {
           setUser(JSON.parse(stored));
+        } else if (Platform.OS === 'web') {
+          const { password: _pw, ...userData } = MOCK_ACCOUNT;
+          AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+          setUser(userData);
         }
       })
       .finally(() => setIsLoading(false));

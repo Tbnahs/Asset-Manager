@@ -111,11 +111,13 @@ export default function NotificationDetailScreen() {
         </View>
 
         {/* ── Illustration ── */}
-        <Image
-          source={require('@/assets/images/notification-illustration.png')}
-          style={styles.illustration}
-          resizeMode="cover"
-        />
+        {notif.image && (
+          <Image
+            source={notif.image}
+            style={styles.illustration}
+            resizeMode="cover"
+          />
+        )}
 
         {/* ── Summary ── */}
         <View style={[styles.summaryCard, { backgroundColor: colors.card }]}>

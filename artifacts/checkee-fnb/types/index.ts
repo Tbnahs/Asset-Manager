@@ -103,6 +103,7 @@ export interface AppNotification {
   title: string;
   message: string;
   body?: string;
+  image?: number;
   isRead: boolean;
   createdAt: string;
 }

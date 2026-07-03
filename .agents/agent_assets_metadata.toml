@@ -66,3 +66,27 @@ id = "TvJ3vHFoMviMSC97Dd2XC"
 uri = "file://artifacts/checkee-fnb/assets/images/feedback-photo-2.png"
 type = "image"
 title = "dirty cafeteria table"
+
+[[generated]]
+id = "PuUItUILQkgIEqx7J6at7"
+uri = "file://artifacts/checkee-fnb/assets/images/notif-menu.png"
+type = "image"
+title = "weekly meal menu illustration"
+
+[[generated]]
+id = "hqpZyJmegfVUVDCLNTfcJ"
+uri = "file://artifacts/checkee-fnb/assets/images/notif-safety.png"
+type = "image"
+title = "food safety certificate illustration"
+
+[[generated]]
+id = "CN4AF7Ujz2xqz5J7sABsE"
+uri = "file://artifacts/checkee-fnb/assets/images/notif-complaint.png"
+type = "image"
+title = "resolved feedback illustration"
+
+[[generated]]
+id = "QH3eXZoCPVgB5_c0gxlsa"
+uri = "file://artifacts/checkee-fnb/assets/images/notif-school.png"
+type = "image"
+title = "school announcement illustration"
