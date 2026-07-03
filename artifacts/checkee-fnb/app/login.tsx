@@ -105,8 +105,8 @@ export default function LoginScreen() {
               }]}>
                 <Feather name="lock" size={16} color={colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, { color: colors.text }, Platform.OS === 'web' && { paddingRight: 12 }]}
-                  placeholder="\u2022\u2022\u2022\u2022\u2022\u2022"
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="••••••"
                   placeholderTextColor={colors.mutedForeground}
                   value={password}
                   onChangeText={(t) => { setPassword(t); setError(''); }}
@@ -115,11 +115,9 @@ export default function LoginScreen() {
                   returnKeyType="done"
                   onSubmitEditing={handleLogin}
                 />
-                {Platform.OS !== 'web' && (
-                  <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn}>
-                    <Feather name={showPassword ? 'eye-off' : 'eye'} size={16} color={colors.mutedForeground} />
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={styles.eyeBtn}>
+                  <Feather name={showPassword ? 'eye-off' : 'eye'} size={16} color={colors.mutedForeground} />
+                </TouchableOpacity>
               </View>
             </View>
 
