@@ -177,7 +177,7 @@ export default function ProfileScreen() {
             <Feather name="shield" size={20} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.appName, { color: colors.text }]}>CHECKEE F&B</Text>
+            <Text style={[styles.appName, { color: colors.text }]}>ISCHOOL F&B</Text>
             <Text style={[styles.appVersion, { color: colors.mutedForeground }]}>Phiên bản 1.0.0</Text>
           </View>
         </View>

@@ -175,7 +175,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={[styles.footer, { color: colors.mutedForeground }]}>
-            CHECKEE F&B © 2024 · Bảo mật thông tin học sinh
+            ISCHOOL F&B © 2024 · Bảo mật thông tin học sinh
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
