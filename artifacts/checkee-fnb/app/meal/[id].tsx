@@ -234,16 +234,7 @@ export default function MealDetailScreen() {
                     </Text>
                   </View>
 
-                  {/* CTA to full detail */}
-                  <TouchableOpacity
-                    onPress={() => router.push(`/sample-retention/${meal.id}` as any)}
-                    style={[styles.sampleCta, { borderColor: colors.primary + '40', backgroundColor: colors.accent }]}
-                    activeOpacity={0.75}
-                  >
-                    <Feather name="file-text" size={14} color={colors.primary} />
-                    <Text style={[styles.sampleCtaText, { color: colors.primary }]}>Xem hồ sơ lưu mẫu đầy đủ</Text>
-                    <Feather name="chevron-right" size={14} color={colors.primary} />
-                  </TouchableOpacity>
+
                 </>
               );
             })() : (
