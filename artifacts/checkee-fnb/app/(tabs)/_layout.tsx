@@ -17,7 +17,7 @@ function NativeTabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="traceability">
         <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
-        <Label>Truy xuất</Label>
+        <Label>Lưu mẫu</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="feedback">
         <Icon sf={{ default: "text.bubble", selected: "text.bubble.fill" }} />
@@ -83,7 +83,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="traceability"
         options={{
-          title: "Truy xuất",
+          title: "Lưu mẫu",
           tabBarIcon: ({ color }) => (
             <Feather name="search" size={22} color={color} />
           ),
