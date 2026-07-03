@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -7,7 +8,7 @@ import Header from '@/components/Header';
 import { TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
-type FilterMode = 'all' | 'today' | 'week' | 'month' | 'year';
+type FilterMode = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
 
 function parseCookDate(cookTime: string): Date | null {
   // cookTime format: "HH:MM DD/MM/YYYY"
@@ -53,6 +54,8 @@ export default function TraceabilityScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
   const [filter, setFilter] = useState<FilterMode>('all');
+  const [customDate, setCustomDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const today = new Date();
 
   const filteredRecords = useMemo(() => {
@@ -65,10 +68,23 @@ export default function TraceabilityScreen() {
         case 'week': return isSameWeek(d, today);
         case 'month': return isSameMonth(d, today);
         case 'year': return isSameYear(d, today);
+        case 'custom': return customDate ? isSameDay(d, customDate) : true;
         default: return true;
       }
     });
-  }, [filter]);
+  }, [filter, customDate]);
+
+  const onPickerChange = (_: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') setShowDatePicker(false);
+    if (selected) {
+      setCustomDate(selected);
+      setFilter('custom');
+    }
+  };
+
+  const customLabel = customDate
+    ? customDate.toLocaleDateString('vi-VN')
+    : 'Chọn ngày';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -107,7 +123,52 @@ export default function TraceabilityScreen() {
               </TouchableOpacity>
             );
           })}
+
+          <TouchableOpacity
+            key="custom"
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.7}
+            style={[
+              styles.filterChip,
+              styles.dateFilterChip,
+              {
+                backgroundColor: filter === 'custom' ? colors.primary : colors.card,
+                borderColor: filter === 'custom' ? colors.primary : colors.border,
+              },
+            ]}>
+            <Feather
+              name="calendar"
+              size={13}
+              color={filter === 'custom' ? '#fff' : colors.mutedForeground}
+            />
+            <Text
+              style={[
+                styles.filterChipText,
+                { color: filter === 'custom' ? '#fff' : colors.text },
+              ]}>
+              {customLabel}
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
+
+        {showDatePicker && (
+          <View style={[styles.pickerContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.pickerHeader}>
+              <Text style={[styles.pickerHeaderText, { color: colors.text }]}>Chọn ngày</Text>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.pickerDoneBtn}>
+                <Text style={[styles.pickerDoneText, { color: colors.primary }]}>Xong</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={customDate ?? today}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onPickerChange}
+              locale="vi-VN"
+              themeVariant="light"
+            />
+          </View>
+        )}
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
           DANH SÁCH TRUY XUẤT ({filteredRecords.length})
@@ -224,6 +285,26 @@ const styles = StyleSheet.create({
     borderRadius: 20, borderWidth: 1,
   },
   filterChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+  dateFilterChip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+
+  pickerContainer: {
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  pickerHeaderText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  pickerDoneBtn: { paddingHorizontal: 8, paddingVertical: 4 },
+  pickerDoneText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
 
   sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 12 },
 
