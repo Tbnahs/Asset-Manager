@@ -14,7 +14,7 @@ import {
 import Header from '@/components/Header';
 import SummaryCard from '@/components/SummaryCard';
 import { isMonitoringActive } from '@/utils/monitoring';
-import { FEEDBACKS, MEALS, NOTIFICATIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
 
@@ -196,7 +196,11 @@ export default function HomeScreen() {
   const todayMealCount = weekDayMeals.length;
   const safetyCount = NOTIFICATIONS.filter((n) => n.type === 'safety').length;
   const pendingFeedbackCount = FEEDBACKS.filter((f) => f.status === 'pending' || f.status === 'processing').length;
-  const tracedMealCount = MEALS.filter((m) => m.isMonitored).length;
+  // Only count today's meals that have an active sample retention record
+  const tracedMealCount = SAMPLE_RETENTIONS.filter((s) => {
+    const meal = MEALS.find((m) => m.id === s.mealId);
+    return meal?.dayIndex === todayIndex && s.status === 'active';
+  }).length;
 
   const prevMonth = () => {
     if (calMonth === 0) { setCalYear(y => y - 1); setCalMonth(11); }

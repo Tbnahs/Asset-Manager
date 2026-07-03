@@ -759,6 +759,9 @@ const _STORAGE: Record<string, string> = {
   phu:   'Tủ lạnh B - Ngăn 2',
 };
 
+// Meals NOT on the official weekly menu (e.g. ad-hoc additions, substitutions)
+const _OFF_MENU_IDS = new Set(['m7', 'm10', 'm14']);
+
 export const SAMPLE_RETENTIONS: SampleRetention[] = MEALS.map((meal) => {
   const mealDt   = _mealDate(meal.dayIndex, meal.session);
   const expiryDt = new Date(mealDt.getTime() + 72 * 3_600_000);
@@ -774,6 +777,7 @@ export const SAMPLE_RETENTIONS: SampleRetention[] = MEALS.map((meal) => {
     status,
     storageLocation: isFuture ? '—' : (_STORAGE[meal.session] ?? 'Tủ lạnh A - Ngăn 1'),
     sampleCount:     isFuture ? 0 : 3,
+    isOnMenu:        !_OFF_MENU_IDS.has(meal.id),
   };
 });
 

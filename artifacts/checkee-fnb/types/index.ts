@@ -82,6 +82,7 @@ export interface SampleRetention {
   status: 'active' | 'expired' | 'disposed' | 'future';
   storageLocation: string;
   sampleCount: number;
+  isOnMenu: boolean; // true = dish is on the official weekly menu
 }
 
 export interface FeedbackItem {

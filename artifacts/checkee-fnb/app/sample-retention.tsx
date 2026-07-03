@@ -96,9 +96,20 @@ export default function SampleRetentionScreen() {
                   <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={1}>
                     {sample.mealName}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-                    <Feather name={status.icon} size={11} color={status.color} />
-                    <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+                  <View style={styles.badgeRow}>
+                    <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+                      <Feather name={status.icon} size={11} color={status.color} />
+                      <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+                    </View>
+                    <View style={[styles.menuBadge, sample.isOnMenu
+                      ? { backgroundColor: colors.infoLight }
+                      : { backgroundColor: colors.muted }]}>
+                      <Text style={[styles.menuBadgeText, sample.isOnMenu
+                        ? { color: colors.info }
+                        : { color: colors.mutedForeground }]}>
+                        {sample.isOnMenu ? 'Theo thực đơn' : 'Ngoài thực đơn'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -209,6 +220,7 @@ const styles = StyleSheet.create({
   mealImage: { width: 52, height: 52, borderRadius: 8, backgroundColor: '#f0f0f0' },
   cardMain: { flex: 1, gap: 6 },
   mealName: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -219,6 +231,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   statusText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  menuBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  menuBadgeText: { fontSize: 10, fontFamily: 'Inter_500Medium' },
   divider: { height: StyleSheet.hairlineWidth },
   detailsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   detailItem: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '46%' },
