@@ -155,7 +155,7 @@ export default function LoginScreen() {
               <View style={[styles.demoAvatar, { backgroundColor: colors.accent }]}>
                 <Text style={[styles.demoAvatarText, { color: colors.primary }]}>H</Text>
               </View>
-              <View>
+              <View style={{ flex: 1 }}>
                 <View style={styles.demoTopRow}>
                   <Feather name="info" size={12} color={colors.info} />
                   <Text style={[styles.demoHint, { color: colors.info }]}>Tài khoản demo</Text>
