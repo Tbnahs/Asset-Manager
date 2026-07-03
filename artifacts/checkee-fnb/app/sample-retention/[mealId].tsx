@@ -34,6 +34,12 @@ const STATUS_CONFIG = {
     bg: '#F5F6FA',
     icon: 'trash-2' as const,
   },
+  future: {
+    label: 'Chưa lấy mẫu',
+    color: '#8E8E93',
+    bg: '#F5F6FA',
+    icon: 'clock' as const,
+  },
 };
 
 const SESSION_LABEL: Record<string, string> = {
@@ -107,84 +113,90 @@ export default function SampleRetentionDetailScreen() {
         <View style={[styles.infoBox, { backgroundColor: colors.infoLight }]}>
           <Feather name="info" size={15} color={colors.info} />
           <Text style={[styles.infoText, { color: colors.info }]}>
-            Mẫu lưu được bảo quản tối thiểu 72 giờ sau mỗi bữa ăn theo quy định an toàn thực phẩm.
+            Tất cả món ăn (kể cả món phụ, tráng miệng) đều phải lưu mẫu theo dõi.
+            Mẫu được bảo quản tối thiểu{' '}
+            <Text style={{ fontFamily: 'Inter_700Bold' }}>24–72 giờ</Text> sau khi phục
+            vụ theo quy định an toàn thực phẩm của nhà trường.
           </Text>
         </View>
 
         {/* ── Sample retention detail ── */}
         {sample ? (
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
-            {/* Status */}
-            {(() => {
-              const st = STATUS_CONFIG[sample.status];
-              return (
-                <View style={[styles.statusRow, { backgroundColor: st.bg }]}>
-                  <Feather name={st.icon} size={18} color={st.color} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.statusLabel, { color: st.color }]}>Trạng thái mẫu lưu</Text>
-                    <Text style={[styles.statusValue, { color: st.color }]}>{st.label}</Text>
+          sample.status === 'future' ? (
+            /* ── Future: meal not served yet ── */
+            <View style={[styles.futureCard, { backgroundColor: colors.card }]}>
+              <View style={[styles.futureIconWrap, { backgroundColor: colors.muted }]}>
+                <Feather name="calendar" size={26} color={colors.mutedForeground} />
+              </View>
+              <Text style={[styles.futureTitle, { color: colors.mutedForeground }]}>
+                Chưa đến ngày phục vụ
+              </Text>
+              <Text style={[styles.futureDesc, { color: colors.mutedForeground }]}>
+                Món ăn này chưa được phục vụ. Mẫu lưu sẽ được lấy và cập nhật vào ngày hôm đó.
+              </Text>
+            </View>
+          ) : (
+            /* ── Active / Expired ── */
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              {/* Status banner */}
+              {(() => {
+                const st = STATUS_CONFIG[sample.status];
+                return (
+                  <View style={[styles.statusRow, { backgroundColor: st.bg }]}>
+                    <Feather name={st.icon} size={18} color={st.color} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.statusLabel, { color: st.color }]}>Trạng thái mẫu lưu</Text>
+                      <Text style={[styles.statusValue, { color: st.color }]}>{st.label}</Text>
+                    </View>
                   </View>
-                </View>
-              );
-            })()}
+                );
+              })()}
 
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-            {/* Detail grid */}
-            <View style={styles.detailsGrid}>
-              <DetailItem
-                icon="calendar"
-                label="Ngày lưu mẫu"
-                value={sample.storedDate}
-                colors={colors}
-              />
-              <DetailItem
-                icon="clock"
-                label="Hạn bảo quản"
-                value={sample.expiryDate}
-                colors={colors}
-                valueColor={sample.status === 'expired' ? '#FF9500' : undefined}
-              />
-              <DetailItem
-                icon="archive"
-                label="Vị trí lưu"
-                value={sample.storageLocation}
-                colors={colors}
-              />
-              <DetailItem
-                icon="layers"
-                label="Số lượng mẫu"
-                value={`${sample.sampleCount} mẫu`}
-                colors={colors}
-              />
+              {/* Detail grid */}
+              <View style={styles.detailsGrid}>
+                <DetailItem
+                  icon="calendar"
+                  label="Ngày lưu mẫu"
+                  value={sample.storedDate}
+                  colors={colors}
+                />
+                <DetailItem
+                  icon="clock"
+                  label="Hạn bảo quản (72 h)"
+                  value={sample.expiryDate}
+                  colors={colors}
+                  valueColor={sample.status === 'expired' ? '#FF9500' : undefined}
+                />
+                <DetailItem
+                  icon="archive"
+                  label="Vị trí lưu"
+                  value={sample.storageLocation}
+                  colors={colors}
+                />
+                <DetailItem
+                  icon="layers"
+                  label="Số lượng mẫu"
+                  value={`${sample.sampleCount} mẫu`}
+                  colors={colors}
+                />
+              </View>
+
+              {sample.status === 'expired' && (
+                <>
+                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  <View style={[styles.warningBox, { backgroundColor: '#FFF4E5' }]}>
+                    <Feather name="alert-triangle" size={14} color="#FF9500" />
+                    <Text style={[styles.warningText, { color: '#CC7700' }]}>
+                      Mẫu lưu đã hết hạn 72 giờ bảo quản. Nhà trường sẽ xử lý theo quy trình tiêu hủy an toàn.
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
-
-            {sample.status === 'expired' && (
-              <>
-                <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                <View style={[styles.warningBox, { backgroundColor: '#FFF4E5' }]}>
-                  <Feather name="alert-triangle" size={14} color="#FF9500" />
-                  <Text style={[styles.warningText, { color: '#CC7700' }]}>
-                    Mẫu lưu đã hết hạn bảo quản. Nhà trường sẽ xử lý theo quy trình tiêu hủy an toàn.
-                  </Text>
-                </View>
-              </>
-            )}
-          </View>
-        ) : (
-          /* ── No record ── */
-          <View style={[styles.emptyCard, { backgroundColor: colors.card }]}>
-            <View style={[styles.emptyIconWrap, { backgroundColor: colors.muted }]}>
-              <Feather name="package" size={28} color={colors.mutedForeground} />
-            </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              Chưa có thông tin lưu mẫu
-            </Text>
-            <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
-              Món ăn này chưa có dữ liệu lưu mẫu. Vui lòng liên hệ nhà trường để biết thêm chi tiết.
-            </Text>
-          </View>
-        )}
+          )
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -307,7 +319,35 @@ const styles = StyleSheet.create({
   },
   warningText: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 19, flex: 1 },
 
-  /* Empty state */
+  /* Future state */
+  futureCard: {
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  futureIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  futureTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold', textAlign: 'center' },
+  futureDesc: {
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+    lineHeight: 19,
+    textAlign: 'center',
+  },
+
+  /* Empty state (kept for safety) */
   emptyCard: {
     borderRadius: 16,
     padding: 32,

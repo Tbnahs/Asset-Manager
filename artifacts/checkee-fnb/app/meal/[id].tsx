@@ -22,9 +22,10 @@ const SAFETY_CONFIG = {
 };
 
 const SAMPLE_STATUS_CONFIG = {
-  active:   { label: 'Đang bảo quản', color: '#34C759', bg: '#E8F9ED', icon: 'shield' as const },
+  active:   { label: 'Đang bảo quản', color: '#34C759', bg: '#E8F9ED', icon: 'shield'         as const },
   expired:  { label: 'Hết hạn lưu',   color: '#FF9500', bg: '#FFF4E5', icon: 'alert-triangle' as const },
-  disposed: { label: 'Đã tiêu hủy',   color: '#8E8E93', bg: '#F5F6FA', icon: 'trash-2' as const },
+  disposed: { label: 'Đã tiêu hủy',   color: '#8E8E93', bg: '#F5F6FA', icon: 'trash-2'        as const },
+  future:   { label: 'Chưa lấy mẫu',  color: '#8E8E93', bg: '#F5F6FA', icon: 'clock'          as const },
 };
 
 export default function MealDetailScreen() {

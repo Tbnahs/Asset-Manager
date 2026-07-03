@@ -78,7 +78,7 @@ export interface SampleRetention {
   image: number;
   storedDate: string;
   expiryDate: string;
-  status: 'active' | 'expired' | 'disposed';
+  status: 'active' | 'expired' | 'disposed' | 'future';
   storageLocation: string;
   sampleCount: number;
 }

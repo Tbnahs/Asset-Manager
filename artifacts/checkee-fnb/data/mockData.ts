@@ -46,7 +46,7 @@ export const MEALS: Meal[] = [
     name: 'Chuối & Cam',
     calories: 60,
     image: require('../assets/images/meal-fruit.png'),
-    isMonitored: false,
+    isMonitored: true,
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 0,
@@ -106,7 +106,7 @@ export const MEALS: Meal[] = [
     name: 'Dưa hấu & Xoài chín',
     calories: 80,
     image: require('../assets/images/meal-fruit.png'),
-    isMonitored: false,
+    isMonitored: true,
     mealType: 'dessert',
     session: 'phu',
     dayIndex: 1,
@@ -184,7 +184,7 @@ export const MEALS: Meal[] = [
     name: 'Chè đậu xanh',
     calories: 120,
     image: require('../assets/images/meal-yogurt.png'),
-    isMonitored: false,
+    isMonitored: true,
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 2,
@@ -224,7 +224,7 @@ export const MEALS: Meal[] = [
     name: 'Xoài & Ổi',
     calories: 70,
     image: require('../assets/images/meal-fruit.png'),
-    isMonitored: false,
+    isMonitored: true,
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 3,
@@ -263,7 +263,7 @@ export const MEALS: Meal[] = [
     name: 'Dưa hấu',
     calories: 60,
     image: require('../assets/images/meal-fruit.png'),
-    isMonitored: false,
+    isMonitored: true,
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 4,
@@ -691,163 +691,77 @@ export const TRACEABILITY_RECORDS: TraceabilityRecord[] = [
   },
 ];
 
-export const SAMPLE_RETENTIONS: SampleRetention[] = [
-  {
-    id: 'sr1',
-    mealId: 'm4',
-    mealName: 'Mì trộn hải sản',
-    image: require('../assets/images/meal-noodle.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh A - Ngăn 2',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr2',
-    mealId: 'm5',
-    mealName: 'Cơm gà Hội An',
-    image: require('../assets/images/meal-chicken-rice.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh A - Ngăn 3',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr3',
-    mealId: 'm7',
-    mealName: 'Sữa chua nếp cẩm',
-    image: require('../assets/images/meal-yogurt.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 1',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr4',
-    mealId: 'm8',
-    mealName: 'Cơm chiên',
-    image: require('../assets/images/meal-fried-rice.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 2',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr5',
-    mealId: 'm9',
-    mealName: 'Phở bò',
-    image: require('../assets/images/meal-noodle.png'),
-    storedDate: '08/06/2026',
-    expiryDate: '12/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh A - Ngăn 1',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr6',
-    mealId: 'm1',
-    mealName: 'Bún bò Huế',
-    image: require('../assets/images/meal-noodle.png'),
-    storedDate: '07/06/2026',
-    expiryDate: '11/06/2026',
-    status: 'expired',
-    storageLocation: 'Tủ lạnh C - Ngăn 1',
-    sampleCount: 3,
-  },
-  /* Dessert / drink meals also have sample retention */
-  {
-    id: 'sr7',
-    mealId: 'm3',
-    mealName: 'Chuối & Cam',
-    image: require('../assets/images/meal-fruit.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 3',
-    sampleCount: 2,
-  },
-  {
-    id: 'sr8',
-    mealId: 'm6',
-    mealName: 'Sữa tươi & Bánh mì',
-    image: require('../assets/images/meal-fruit.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 4',
-    sampleCount: 2,
-  },
-  {
-    id: 'sr9',
-    mealId: 'm10',
-    mealName: 'Kem vani',
-    image: require('../assets/images/meal-yogurt.png'),
-    storedDate: '09/06/2026',
-    expiryDate: '13/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ đông A - Ngăn 1',
-    sampleCount: 2,
-  },
-  {
-    id: 'sr10',
-    mealId: 'm12',
-    mealName: 'Nước cam ép',
-    image: require('../assets/images/meal-fruit.png'),
-    storedDate: '10/06/2026',
-    expiryDate: '14/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 5',
-    sampleCount: 2,
-  },
-  {
-    id: 'sr11',
-    mealId: 'm14',
-    mealName: 'Chè đậu xanh',
-    image: require('../assets/images/meal-noodle.png'),
-    storedDate: '08/06/2026',
-    expiryDate: '12/06/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 6',
-    sampleCount: 2,
-  },
-  {
-    id: 'sr12',
-    mealId: 'm2',
-    mealName: 'Cơm trắng & Canh bí đỏ',
-    image: require('../assets/images/meal-fried-rice.png'),
-    storedDate: '07/06/2026',
-    expiryDate: '11/06/2026',
-    status: 'expired',
-    storageLocation: 'Tủ lạnh C - Ngăn 2',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr13',
-    mealId: 'm11',
-    mealName: 'Cơm tấm sườn bì',
-    image: require('../assets/images/meal-chicken-rice.png'),
-    storedDate: '02/07/2026',
-    expiryDate: '06/07/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh A - Ngăn 4',
-    sampleCount: 3,
-  },
-  {
-    id: 'sr14',
-    mealId: 'm13',
-    mealName: 'Bún riêu cua',
-    image: require('../assets/images/meal-noodle.png'),
-    storedDate: '03/07/2026',
-    expiryDate: '07/07/2026',
-    status: 'active',
-    storageLocation: 'Tủ lạnh B - Ngăn 7',
-    sampleCount: 3,
-  },
-];
+/* ─── Sample-retention helpers ───────────────────────────────────────────────
+ * All statuses are computed at app-launch from the real current date.
+ *
+ *  future  – meal day hasn't arrived yet → grey, no sample taken
+ *  active  – within 72 h of the meal being served → sample being held
+ *  expired – more than 72 h have elapsed → retention window closed
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+function _fmtVN(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+/** Approximate serving hour per session so status transitions are realistic. */
+const _SESSION_HOUR: Record<string, number> = {
+  sang:  7,   // morning  ~07:00
+  trua:  10,  // lunch    ~10:30 (use 10 to be conservative)
+  chieu: 14,  // afternoon ~14:00
+  phu:   12,  // snack/extra ~12:00
+};
+
+/**
+ * Returns the date-time a meal was served, inferred from dayIndex (Mon=0…Fri=4)
+ * and session, anchored to the Monday of the current school week.
+ */
+function _mealDate(dayIndex: number, session?: string): Date {
+  const today = new Date();
+  const dow   = today.getDay();                    // 0 Sun … 6 Sat
+  const daysFromMon = dow === 0 ? 6 : dow - 1;    // steps back to Monday
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysFromMon);
+  const hour = session ? (_SESSION_HOUR[session] ?? 6) : 6;
+  monday.setHours(hour, 30, 0, 0);
+  const d = new Date(monday);
+  d.setDate(monday.getDate() + dayIndex);
+  return d;
+}
+
+function _retentionStatus(mealDate: Date): 'active' | 'expired' | 'future' {
+  const diffH = (Date.now() - mealDate.getTime()) / 3_600_000;
+  if (diffH < 0)   return 'future';
+  if (diffH <= 72) return 'active';
+  return 'expired';
+}
+
+/** Assign a tủ lạnh slot per session so location strings stay consistent. */
+const _STORAGE: Record<string, string> = {
+  sang:  'Tủ lạnh A - Ngăn 1',
+  trua:  'Tủ lạnh A - Ngăn 2',
+  chieu: 'Tủ lạnh B - Ngăn 1',
+  phu:   'Tủ lạnh B - Ngăn 2',
+};
+
+export const SAMPLE_RETENTIONS: SampleRetention[] = MEALS.map((meal) => {
+  const mealDt   = _mealDate(meal.dayIndex, meal.session);
+  const expiryDt = new Date(mealDt.getTime() + 72 * 3_600_000);
+  const status   = _retentionStatus(mealDt);
+  const isFuture = status === 'future';
+  return {
+    id:              `sr-${meal.id}`,
+    mealId:          meal.id,
+    mealName:        meal.name,
+    image:           meal.image,
+    storedDate:      isFuture ? '—' : _fmtVN(mealDt),
+    expiryDate:      isFuture ? '—' : _fmtVN(expiryDt),
+    status,
+    storageLocation: isFuture ? '—' : (_STORAGE[meal.session] ?? 'Tủ lạnh A - Ngăn 1'),
+    sampleCount:     isFuture ? 0 : 3,
+  };
+});
 
 export const FEEDBACKS: FeedbackItem[] = [
   {

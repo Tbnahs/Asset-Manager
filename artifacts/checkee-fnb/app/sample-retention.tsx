@@ -16,9 +16,10 @@ import { SAMPLE_RETENTIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
 const STATUS_CONFIG = {
-  active: { label: 'Đang bảo quản', color: '#34C759', bg: '#E8F9ED', icon: 'shield' as const },
-  expired: { label: 'Hết hạn lưu', color: '#FF9500', bg: '#FFF4E5', icon: 'alert-triangle' as const },
-  disposed: { label: 'Đã tiêu hủy', color: '#8E8E93', bg: '#F5F6FA', icon: 'trash-2' as const },
+  active:   { label: 'Đang bảo quản', color: '#34C759', bg: '#E8F9ED', icon: 'shield'         as const },
+  expired:  { label: 'Hết hạn lưu',   color: '#FF9500', bg: '#FFF4E5', icon: 'alert-triangle' as const },
+  disposed: { label: 'Đã tiêu hủy',   color: '#8E8E93', bg: '#F5F6FA', icon: 'trash-2'        as const },
+  future:   { label: 'Chưa lấy mẫu',  color: '#8E8E93', bg: '#F5F6FA', icon: 'clock'          as const },
 };
 
 export default function SampleRetentionScreen() {
@@ -26,8 +27,9 @@ export default function SampleRetentionScreen() {
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
 
-  const activeCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
+  const activeCount  = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
   const expiredCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'expired').length;
+  const futureCount  = SAMPLE_RETENTIONS.filter((s) => s.status === 'future').length;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -67,8 +69,8 @@ export default function SampleRetentionScreen() {
             <Text style={[styles.statLabel, { color: '#FF9500' }]}>Hết hạn lưu</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.muted }]}>
-            <Text style={[styles.statNum, { color: colors.text }]}>{SAMPLE_RETENTIONS.length}</Text>
-            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Tổng cộng</Text>
+            <Text style={[styles.statNum, { color: colors.mutedForeground }]}>{futureCount}</Text>
+            <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Chưa lấy mẫu</Text>
           </View>
         </View>
 
@@ -76,7 +78,7 @@ export default function SampleRetentionScreen() {
         <View style={[styles.infoBox, { backgroundColor: colors.infoLight }]}>
           <Feather name="info" size={15} color={colors.info} />
           <Text style={[styles.infoText, { color: colors.info }]}>
-            Mẫu lưu được bảo quản trong 72 giờ sau mỗi bữa ăn theo quy định ATTP.
+            Tất cả món ăn đều phải lưu mẫu. Thời gian bảo quản tối thiểu 24–72 giờ sau khi phục vụ theo quy định ATTP.
           </Text>
         </View>
 
