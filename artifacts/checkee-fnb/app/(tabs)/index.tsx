@@ -13,6 +13,7 @@ import {
 
 import Header from '@/components/Header';
 import SummaryCard from '@/components/SummaryCard';
+import { isMonitoringActive } from '@/utils/monitoring';
 import { FEEDBACKS, MEALS, NOTIFICATIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
@@ -122,12 +123,19 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
                       <Text style={[rStyles.kcal, { color: colors.mutedForeground }]}>
                         {meal.calories} kcal
                       </Text>
-                      {meal.isMonitored && (
-                        <View style={[rStyles.monitored, { backgroundColor: colors.safeGreenLight }]}>
-                          <View style={[rStyles.monDot, { backgroundColor: colors.safeGreen }]} />
-                          <Text style={[rStyles.monText, { color: colors.safeGreen }]}>Theo dõi</Text>
-                        </View>
-                      )}
+                      {meal.isMonitored && (() => {
+                        const active = isMonitoringActive(meal.monitoredUntil);
+                        const bg = active ? colors.safeGreenLight : colors.muted;
+                        const fg = active ? colors.safeGreen : colors.mutedForeground;
+                        return (
+                          <View style={[rStyles.monitored, { backgroundColor: bg }]}>
+                            <View style={[rStyles.monDot, { backgroundColor: fg }]} />
+                            <Text style={[rStyles.monText, { color: fg }]}>
+                              {active ? 'Còn hạn' : 'Hết hạn'}
+                            </Text>
+                          </View>
+                        );
+                      })()}
                     </View>
                   </View>
                   <Feather name="chevron-right" size={14} color={colors.mutedForeground} />

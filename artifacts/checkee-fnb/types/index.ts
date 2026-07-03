@@ -20,6 +20,7 @@ export interface Meal {
   calories: number;
   image: number;
   isMonitored: boolean;
+  monitoredUntil?: string; // dd/MM/yyyy — if absent and isMonitored, monitoring has no expiry
   mealType: 'main' | 'dessert' | 'drink';
   session: MealSession;
   dayIndex: number;

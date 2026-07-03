@@ -5,8 +5,9 @@ import React, { useMemo, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import Header from '@/components/Header';
-import { TRACEABILITY_RECORDS } from '@/data/mockData';
+import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+import { isMonitoringActive } from '@/utils/monitoring';
 
 type FilterMode = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
 
@@ -184,10 +185,16 @@ export default function TraceabilityScreen() {
             <View style={[styles.cardStripe, { backgroundColor: colors.primary }]}>
               <Feather name="home" size={11} color="rgba(255,255,255,0.8)" />
               <Text style={styles.stripeCode} numberOfLines={1}>{record.traceCode}</Text>
-              <View style={[styles.monitoredBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <View style={[styles.monitoredDot, { backgroundColor: '#34C759' }]} />
-                <Text style={styles.monitoredText}>Đang theo dõi</Text>
-              </View>
+              {(() => {
+                const meal = MEALS.find(m => m.id === record.mealId);
+                const active = record.isMonitored && isMonitoringActive(meal?.monitoredUntil);
+                return (
+                  <View style={[styles.monitoredBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                    <View style={[styles.monitoredDot, { backgroundColor: active ? '#34C759' : 'rgba(255,255,255,0.5)' }]} />
+                    <Text style={styles.monitoredText}>{active ? 'Còn hạn' : 'Hết hạn'}</Text>
+                  </View>
+                );
+              })()}
             </View>
 
             {/* Card body */}

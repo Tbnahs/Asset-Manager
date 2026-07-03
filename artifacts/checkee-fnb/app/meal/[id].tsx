@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MEALS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import { isMonitoringActive } from '@/utils/monitoring';
 import { useColors } from '@/hooks/useColors';
 
 const SAFETY_CONFIG = {
@@ -100,14 +101,21 @@ export default function MealDetailScreen() {
           </View>
 
           {/* Monitoring badge */}
-          {meal.isMonitored && (
-            <View style={[styles.monitorBadge, { backgroundColor: colors.safeGreenLight }]}>
-              <View style={[styles.dot, { backgroundColor: colors.safeGreen }]} />
-              <Text style={[styles.monitorText, { color: colors.safeGreen }]}>
-                Bữa ăn đang được theo dõi
-              </Text>
-            </View>
-          )}
+          {meal.isMonitored && (() => {
+            const active = isMonitoringActive(meal.monitoredUntil);
+            const bg = active ? colors.safeGreenLight : colors.muted;
+            const fg = active ? colors.safeGreen : colors.mutedForeground;
+            return (
+              <View style={[styles.monitorBadge, { backgroundColor: bg }]}>
+                <View style={[styles.dot, { backgroundColor: fg }]} />
+                <Text style={[styles.monitorText, { color: fg }]}>
+                  {active
+                    ? `Còn hạn${meal.monitoredUntil ? ` (đến ${meal.monitoredUntil})` : ''}`
+                    : `Hết hạn${meal.monitoredUntil ? ` (${meal.monitoredUntil})` : ''}`}
+                </Text>
+              </View>
+            );
+          })()}
 
           {/* Ingredients */}
           <View style={[styles.section, { backgroundColor: colors.card }]}>

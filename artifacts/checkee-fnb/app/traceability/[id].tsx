@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TRACEABILITY_RECORDS } from '@/data/mockData';
+import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import { isMonitoringActive } from '@/utils/monitoring';
 import { useColors } from '@/hooks/useColors';
 
 export default function TraceabilityDetailScreen() {
@@ -77,15 +78,22 @@ export default function TraceabilityDetailScreen() {
         {/* Status + basic info */}
         <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
           {/* Status row */}
-          <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Trạng thái:</Text>
-            <View style={[styles.statusPill, { backgroundColor: colors.safeGreenLight }]}>
-              <View style={[styles.statusDot, { backgroundColor: colors.safeGreen }]} />
-              <Text style={[styles.statusText, { color: colors.safeGreen }]}>
-                {record.isMonitored ? 'Đang theo dõi' : 'Không theo dõi'}
-              </Text>
-            </View>
-          </View>
+          {(() => {
+            const meal = MEALS.find(m => m.id === record.mealId);
+            const active = record.isMonitored && isMonitoringActive(meal?.monitoredUntil);
+            const bg = !record.isMonitored ? colors.muted : active ? colors.safeGreenLight : colors.muted;
+            const fg = !record.isMonitored ? colors.mutedForeground : active ? colors.safeGreen : colors.mutedForeground;
+            const label = !record.isMonitored ? 'Không theo dõi' : active ? 'Còn hạn' : 'Hết hạn';
+            return (
+              <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Trạng thái:</Text>
+                <View style={[styles.statusPill, { backgroundColor: bg }]}>
+                  <View style={[styles.statusDot, { backgroundColor: fg }]} />
+                  <Text style={[styles.statusText, { color: fg }]}>{label}</Text>
+                </View>
+              </View>
+            );
+          })()}
 
           {/* Tên thực đơn */}
           <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>

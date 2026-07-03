@@ -4,7 +4,7 @@ A school food-monitoring mobile app (Expo + React Native) that lets parents trac
 
 ## Run & Operate
 
-- **Mobile app (Expo):** workflow `CHECKEE F&B (Mobile)` — runs Metro on port 18359; scan the QR code with Expo Go or open in the web preview
+- **Mobile app (Expo):** workflow `artifacts/checkee-fnb: expo` — Metro on port 18359 (external port 80); opens in the web preview pane directly, or scan the QR code with Expo Go
 - **API server:** workflow `API Server` — Express 5 on port 8080 (`/api`)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
