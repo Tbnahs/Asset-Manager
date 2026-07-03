@@ -105,8 +105,8 @@ export default function LoginScreen() {
               }]}>
                 <Feather name="lock" size={16} color={colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="••••••"
+                  style={[styles.input, { color: colors.text }, Platform.OS === 'web' && { paddingRight: 12 }]}
+                  placeholder="\u2022\u2022\u2022\u2022\u2022\u2022"
                   placeholderTextColor={colors.mutedForeground}
                   value={password}
                   onChangeText={(t) => { setPassword(t); setError(''); }}
@@ -207,9 +207,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     borderWidth: 1, borderRadius: 12,
     paddingHorizontal: 12, height: 48,
+    overflow: 'hidden',
   },
   inputIcon: { marginRight: 8 },
-  input: { flex: 1, fontSize: 15, fontFamily: 'Inter_400Regular' },
+  input: { flex: 1, fontSize: 15, fontFamily: 'Inter_400Regular', overflow: 'hidden' },
   eyeBtn: { paddingHorizontal: 10, paddingVertical: 8 },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
