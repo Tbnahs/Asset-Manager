@@ -66,9 +66,6 @@ export default function LoginScreen() {
               style={styles.logoImg}
               resizeMode="contain"
             />
-            <Text style={[styles.tagline, { color: colors.mutedForeground }]}>
-              Hệ thống giám sát dinh dưỡng trường học
-            </Text>
           </View>
 
           {/* Form */}
@@ -191,9 +188,9 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 32, paddingBottom: 32, gap: 16 },
   header: { alignItems: 'center', gap: 8, marginBottom: 8 },
   logoImg: {
-    width: 150, height: 150,
+    width: 280, height: 120,
     alignSelf: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   tagline: { fontSize: 13, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   card: {
