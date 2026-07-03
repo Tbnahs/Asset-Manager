@@ -188,9 +188,9 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 32, paddingBottom: 32, gap: 16 },
   header: { alignItems: 'center', gap: 8, marginBottom: 8 },
   logoImg: {
-    width: 280, height: 120,
+    width: 340, height: 150,
     alignSelf: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   tagline: { fontSize: 13, fontFamily: 'Inter_400Regular', textAlign: 'center' },
   card: {
