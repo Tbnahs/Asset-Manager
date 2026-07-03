@@ -1,0 +1,1 @@
+- [Expo package.json drift](expo-package-drift.md) — a dep listed in an Expo app's package.json but missing from node_modules crashes Metro at startup; run `pnpm exec expo install <pkg>` inside the artifact dir to fix.
