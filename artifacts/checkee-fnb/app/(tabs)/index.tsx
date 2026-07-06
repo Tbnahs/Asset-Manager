@@ -432,7 +432,7 @@ export default function HomeScreen() {
             <SummaryCard
               icon="shield"
               count={safetyCount}
-              label={'Cảnh báo\nan toàn'}
+              label={'Thông báo'}
               iconColor="#34C759"
               iconBg="#E8F9ED"
               onPress={() => router.push('/(tabs)/notifications')}
