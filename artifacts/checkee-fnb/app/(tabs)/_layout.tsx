@@ -1,14 +1,16 @@
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
+import { Badge, Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, Text, View, useColorScheme } from "react-native";
 
+import { useNotifications } from "@/contexts/NotificationsContext";
 import { useColors } from "@/hooks/useColors";
 
 function NativeTabLayout() {
+  const { unreadCount } = useNotifications();
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
@@ -26,6 +28,7 @@ function NativeTabLayout() {
       <NativeTabs.Trigger name="notifications">
         <Icon sf={{ default: "bell", selected: "bell.fill" }} />
         <Label>Thông báo</Label>
+        {unreadCount > 0 && <Badge>{unreadCount > 9 ? "9+" : String(unreadCount)}</Badge>}
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person", selected: "person.fill" }} />
@@ -37,6 +40,7 @@ function NativeTabLayout() {
 
 function ClassicTabLayout() {
   const colors = useColors();
+  const { unreadCount } = useNotifications();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
@@ -105,6 +109,8 @@ function ClassicTabLayout() {
           tabBarIcon: ({ color }) => (
             <Feather name="bell" size={22} color={color} />
           ),
+          tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.destructive, fontSize: 10 },
         }}
       />
       <Tabs.Screen

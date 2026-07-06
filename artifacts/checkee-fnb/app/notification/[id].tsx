@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Platform,
   ScrollView,
@@ -12,8 +12,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ZoomableImage from '@/components/ZoomableImage';
-import { NOTIFICATIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { AppNotification } from '@/types';
 
 const TYPE_CONFIG: Record<
@@ -31,8 +31,13 @@ export default function NotificationDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
+  const { notifications, markRead } = useNotifications();
 
-  const notif = NOTIFICATIONS.find((n) => n.id === id);
+  const notif = notifications.find((n) => n.id === id);
+
+  useEffect(() => {
+    if (id) markRead(id);
+  }, [id, markRead]);
 
   if (!notif) {
     return (

@@ -1,11 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import Header from '@/components/Header';
-import { NOTIFICATIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { AppNotification } from '@/types';
 
 const TYPE_CONFIG: Record<AppNotification['type'], { label: string; icon: string; color: string; bg: string }> = {
@@ -18,19 +18,7 @@ const TYPE_CONFIG: Record<AppNotification['type'], { label: string; icon: string
 export default function NotificationsScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
-  const [notifications, setNotifications] = useState<AppNotification[]>(NOTIFICATIONS);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  const markRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-  };
-
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-  };
+  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

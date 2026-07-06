@@ -5,6 +5,7 @@ import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ChildSelectorModal from '@/components/ChildSelectorModal';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { useColors } from '@/hooks/useColors';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 
@@ -20,6 +21,7 @@ export default function Header({ showBack = false, title, rightAction }: HeaderP
   const isWeb = Platform.OS === 'web';
   const child = useSelectedChild();
   const [showSelector, setShowSelector] = useState(false);
+  const { unreadCount } = useNotifications();
 
   return (
     <>
@@ -82,6 +84,11 @@ export default function Header({ showBack = false, title, rightAction }: HeaderP
               style={styles.iconBtn}
             >
               <Feather name="bell" size={22} color={colors.text} />
+              {unreadCount > 0 && (
+                <View style={[styles.badge, { backgroundColor: colors.destructive, borderColor: colors.card }]}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -125,6 +132,24 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: 3,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontFamily: 'Inter_700Bold',
+    lineHeight: 11,
   },
   logo: {
     width: 150,
