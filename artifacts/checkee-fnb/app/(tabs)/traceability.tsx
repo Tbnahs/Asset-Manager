@@ -20,7 +20,7 @@ export default function TraceabilityScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 118 : 120 }]}>
 
-        <Text style={[styles.pageTitle, { color: colors.text }]}>Danh sách món ăn lưu mẫu</Text>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Danh sách các món ăn đang theo dõi lưu mẫu</Text>
         <Text style={[styles.pageSubtitle, { color: colors.mutedForeground }]}>
           Thông tin nguồn gốc & quy trình chế biến thực phẩm
         </Text>
