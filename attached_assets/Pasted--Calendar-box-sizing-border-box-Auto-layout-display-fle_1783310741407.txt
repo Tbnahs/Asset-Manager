@@ -1,0 +1,491 @@
+/* Calendar */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: flex-start;
+padding: 4px 8px;
+gap: 10px;
+
+width: 290px;
+height: 29px;
+
+/* White */
+background: #FFFFFF;
+/* Primary / Focused */
+border: 1px solid #0095E6;
+/* Bootstrap/Focused */
+box-shadow: 0px 0px 0px 3.2px rgba(32, 162, 232, 0.25);
+border-radius: 4px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Frame 1178 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 4px;
+
+width: 274px;
+height: 21px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Frame 912 */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-end;
+padding: 0px;
+
+width: 254px;
+height: 21px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+
+/* 06/24/2021 - 06/24/2021 */
+
+width: 254px;
+height: 21px;
+
+/* Small Size/Body Regular */
+font-family: 'Poppins';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+
+/* /Text / Inactive */
+color: #BDC0CC;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 1;
+
+
+/* Line 25 */
+
+display: none;
+width: 20px;
+height: 0px;
+
+/* /Text / Medium */
+border: 1px solid #494E50;
+transform: rotate(90deg);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* icon/action/calendar_today_24px */
+
+width: 16px;
+height: 16px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* icon/action/calendar_today_24px */
+
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+
+
+
+/* icon/action/calendar_today_24px */
+
+position: absolute;
+left: 8.33%;
+right: 8.33%;
+top: 4.17%;
+bottom: 4.17%;
+
+/* /Text / Medium */
+background: #494E50;
+
+
+/* Path */
+
+position: absolute;
+left: 8.33%;
+right: 8.33%;
+top: 4.17%;
+bottom: 4.17%;
+
+background: #DADADA;
+
+
+/* Path */
+
+position: absolute;
+left: 16.67%;
+right: 16.67%;
+top: 33.33%;
+bottom: 12.5%;
+
+background: #DADADA;
+
+
+/* Frame */
+
+position: absolute;
+height: 340px;
+left: 0%;
+right: 0%;
+top: 0px;
+
+border-radius: 8px;
+
+
+/* Background */
+
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+
+/* White */
+background: #FFFFFF;
+
+
+/* Weekdays */
+
+position: absolute;
+width: 412.28px;
+height: 40px;
+left: 7.36px;
+top: 48px;
+
+
+
+/* background */
+
+position: absolute;
+left: 1.72%;
+right: 1.72%;
+top: 14.12%;
+bottom: 74.12%;
+
+/* Background / Enable */
+background: #F5F7FA;
+
+
+/* Weekday 7 */
+
+position: absolute;
+left: 87.24%;
+right: 4.81%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Weekday 6 */
+
+position: absolute;
+left: 73.45%;
+right: 18.28%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Weekday 5 */
+
+position: absolute;
+left: 59.66%;
+right: 32.07%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Weekday 4 */
+
+position: absolute;
+left: 45.86%;
+right: 45.86%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Weekday 3 */
+
+position: absolute;
+left: 32.07%;
+right: 59.66%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Weekday 2 */
+
+position: absolute;
+left: 18.28%;
+right: 73.45%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Weekday 1 */
+
+position: absolute;
+left: 4.48%;
+right: 87.24%;
+top: 17.06%;
+bottom: 76.76%;
+
+/* Subtitle 2 (unbold) */
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+letter-spacing: 0.001em;
+
+/* Grey/Grey 800 */
+color: #424242;
+
+
+
+/* Year Selector */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+align-items: center;
+padding: 0px;
+gap: 71px;
+
+position: absolute;
+height: 24px;
+left: 14px;
+right: 13px;
+top: 14px;
+
+
+
+/* ic_chevron_left_48px */
+
+margin: 0 auto;
+width: 21px;
+height: 21px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Vector */
+
+position: absolute;
+left: 33.33%;
+right: 35.77%;
+top: 25%;
+bottom: 25%;
+
+/* /Text / Medium */
+background: #494E50;
+
+
+/* Vector */
+
+position: absolute;
+visibility: hidden;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+
+
+
+/* year selector */
+
+margin: 0 auto;
+width: 135px;
+height: 24px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Month and year */
+
+position: absolute;
+width: 135px;
+height: 21px;
+left: 0px;
+top: calc(50% - 21px/2 - 0.5px);
+
+/* Small Size/Body Medium */
+font-family: 'Poppins';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 150%;
+/* identical to box height, or 21px */
+text-align: center;
+
+color: #494E50;
+
+
+
+/* ic_chevron_right_48px */
+
+margin: 0 auto;
+width: 21px;
+height: 21px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+
+/* Vector */
+
+position: absolute;
+left: 35.77%;
+right: 33.33%;
+top: 25%;
+bottom: 25%;
+
+/* /Text / Medium */
+background: #494E50;
+
+
+/* Vector */
+
+position: absolute;
+visibility: hidden;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+

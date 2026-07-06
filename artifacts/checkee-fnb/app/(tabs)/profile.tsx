@@ -142,6 +142,19 @@ export default function ProfileScreen() {
           <InfoRow label="Địa chỉ" value={user.address} />
         </SectionCard>
 
+        {/* Account settings */}
+        <SectionCard title="Cài đặt tài khoản" icon="settings" iconColor="#8B5CF6" iconBg="#F3EEFF">
+          <TouchableOpacity
+            style={styles.settingsRow}
+            activeOpacity={0.7}
+            onPress={() => router.push('/change-password')}
+          >
+            <Feather name="lock" size={16} color={colors.mutedForeground} />
+            <Text style={[styles.settingsRowText, { color: colors.text }]}>Đổi mật khẩu</Text>
+            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </SectionCard>
+
         {/* Student info — shows selected child */}
         <SectionCard
           title={`Thông tin học sinh — ${childDetail.fullName.split(' ').pop()}`}
@@ -243,6 +256,11 @@ const styles = StyleSheet.create({
   },
   infoLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', flex: 1 },
   infoValue: { fontSize: 13, fontFamily: 'Inter_500Medium', flex: 1.5, textAlign: 'right' },
+  settingsRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 6,
+  },
+  settingsRowText: { flex: 1, fontSize: 13, fontFamily: 'Inter_500Medium' },
   appInfo: {
     flexDirection: 'row', alignItems: 'center',
     padding: 14, borderRadius: 14, gap: 12,

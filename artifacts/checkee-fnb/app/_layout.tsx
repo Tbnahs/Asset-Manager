@@ -45,6 +45,7 @@ function RootLayoutNav() {
       <Stack screenOptions={{ headerBackTitle: "Quay lại" }}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="change-password" options={{ title: "Đổi mật khẩu" }} />
         <Stack.Screen name="meal/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="traceability/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="sample-retention" options={{ headerShown: false }} />

@@ -77,6 +77,7 @@ const MOCK_ACCOUNT: UserAccount & { password: string } = {
 };
 
 const AUTH_STORAGE_KEY = '@checkee_auth_user';
+const PASSWORD_STORAGE_KEY = '@checkee_auth_password';
 
 // Normalize phone: strip spaces, dashes, etc.
 function normalizePhone(raw: string) {
@@ -88,6 +89,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -95,13 +97,16 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState(MOCK_ACCOUNT.password);
 
   useEffect(() => {
-    AsyncStorage.getItem(AUTH_STORAGE_KEY)
-      .then((stored) => {
-        if (stored) {
-          setUser(JSON.parse(stored));
-        }
+    Promise.all([
+      AsyncStorage.getItem(AUTH_STORAGE_KEY),
+      AsyncStorage.getItem(PASSWORD_STORAGE_KEY),
+    ])
+      .then(([storedUser, storedPassword]) => {
+        if (storedUser) setUser(JSON.parse(storedUser));
+        if (storedPassword) setCurrentPassword(storedPassword);
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -109,22 +114,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (phone: string, password: string) => {
     const inputPhone = normalizePhone(phone);
     const accountPhone = normalizePhone(MOCK_ACCOUNT.phone);
-    if (inputPhone !== accountPhone || password !== MOCK_ACCOUNT.password) {
+    if (inputPhone !== accountPhone || password !== currentPassword) {
       return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
     }
     const { password: _pw, ...userData } = MOCK_ACCOUNT;
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
     setUser(userData);
     return { success: true };
-  }, []);
+  }, [currentPassword]);
 
   const logout = useCallback(async () => {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
     setUser(null);
   }, []);
 
+  const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
+    if (oldPassword !== currentPassword) {
+      return { success: false, error: 'Mật khẩu hiện tại không đúng.' };
+    }
+    if (newPassword.length < 6) {
+      return { success: false, error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' };
+    }
+    if (newPassword === oldPassword) {
+      return { success: false, error: 'Mật khẩu mới phải khác mật khẩu hiện tại.' };
+    }
+    await AsyncStorage.setItem(PASSWORD_STORAGE_KEY, newPassword);
+    setCurrentPassword(newPassword);
+    return { success: true };
+  }, [currentPassword]);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
