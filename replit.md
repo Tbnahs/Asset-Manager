@@ -4,8 +4,9 @@ A school food-monitoring mobile app (Expo + React Native) that lets parents trac
 
 ## Run & Operate
 
-- **Mobile app (Expo):** workflow `artifacts/checkee-fnb: expo` — Metro on port 18359 (external port 80); opens in the web preview pane directly, or scan the QR code with Expo Go
-- **API server:** workflow `API Server` — Express 5 on port 8080 (`/api`)
+- **Web preview:** workflow `API Server` — Express 5 on port 8080 serves both the Expo web build (all routes) and the API (`/api/*`); opens directly in the preview pane
+- **Expo App:** workflow `Expo App` — serves the same web build via a standalone Node server on port 5000 (webview); backup path for native preview
+- To rebuild the web bundle after UI changes: `cd artifacts/checkee-fnb && pnpm exec expo export --platform web`
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
