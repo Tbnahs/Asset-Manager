@@ -442,7 +442,7 @@ export default function HomeScreen() {
             <SummaryCard
               icon="message-circle"
               count={pendingFeedbackCount}
-              label={'Phản ánh\nchờ xử lý'}
+              label={'Phản ánh'}
               iconColor="#FF9500"
               iconBg="#FFF4E5"
               onPress={() => router.push('/(tabs)/feedback')}
