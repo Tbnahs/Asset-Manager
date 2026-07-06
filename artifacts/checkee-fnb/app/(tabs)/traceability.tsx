@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import DateRangeFilter, { DateRange, parseVNDate } from '@/components/DateRangeFilter';
 import Header from '@/components/Header';
 import ZoomableImage from '@/components/ZoomableImage';
 import { SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
@@ -13,6 +14,34 @@ export default function TraceabilityScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
 
+  const [range, setRange] = useState<DateRange>({ start: null, end: null });
+  const hasRange = range.start !== null;
+
+  // Default view: only meals still inside the 24–72h sample-retention monitoring
+  // window. When the parent picks a date range, we widen the search to any
+  // record whose sample was stored on those dates (including expired ones),
+  // so history can still be looked up.
+  const filteredRecords = useMemo(() => {
+    if (!hasRange) {
+      return TRACEABILITY_RECORDS.filter((record) => {
+        if (!record.isMonitored) return false;
+        const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === record.mealId);
+        return getMonitoringTag(sample?.status) === 'active';
+      });
+    }
+    const from = range.start as Date;
+    const to = range.end ?? range.start as Date;
+    const lo = from <= to ? from : to;
+    const hi = from <= to ? to : from;
+    return TRACEABILITY_RECORDS.filter((record) => {
+      const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === record.mealId);
+      const d = sample ? parseVNDate(sample.storedDate) : null;
+      if (!d) return false;
+      return d >= new Date(lo.getFullYear(), lo.getMonth(), lo.getDate())
+        && d <= new Date(hi.getFullYear(), hi.getMonth(), hi.getDate(), 23, 59, 59);
+    });
+  }, [hasRange, range]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Header />
@@ -22,14 +51,16 @@ export default function TraceabilityScreen() {
 
         <Text style={[styles.pageTitle, { color: colors.text }]}>Danh sách các món ăn đang theo dõi lưu mẫu</Text>
         <Text style={[styles.pageSubtitle, { color: colors.mutedForeground }]}>
-          Thông tin nguồn gốc & quy trình chế biến thực phẩm
+          Chỉ hiển thị món còn trong thời gian lưu mẫu 24–72h theo quy định ATTP
         </Text>
+
+        <DateRangeFilter value={range} onChange={setRange} placeholder="Chọn khoảng ngày lưu mẫu" />
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          DANH SÁCH TRUY XUẤT ({TRACEABILITY_RECORDS.length})
+          DANH SÁCH TRUY XUẤT ({filteredRecords.length})
         </Text>
 
-        {TRACEABILITY_RECORDS.map((record) => (
+        {filteredRecords.map((record) => (
           <TouchableOpacity
             key={record.id}
             onPress={() => router.push(`/traceability/${record.id}` as any)}
@@ -131,11 +162,13 @@ export default function TraceabilityScreen() {
           </TouchableOpacity>
         ))}
 
-        {TRACEABILITY_RECORDS.length === 0 && (
+        {filteredRecords.length === 0 && (
           <View style={styles.emptyState}>
             <Feather name="inbox" size={40} color={colors.mutedForeground} />
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              Không có món ăn lưu mẫu trong khoảng thời gian này
+              {hasRange
+                ? 'Không có món ăn lưu mẫu trong khoảng ngày đã chọn'
+                : 'Không có món ăn nào đang trong thời gian theo dõi lưu mẫu'}
             </Text>
           </View>
         )}
