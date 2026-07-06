@@ -207,7 +207,6 @@ export default function HomeScreen() {
   const monthDayMeals = useMemo(() => mealsForDate(selectedDate, days), [selectedDate, days]);
 
   // Summary stats
-  const todayMealCount = weekDayMeals.length;
   const safetyCount = NOTIFICATIONS.filter((n) => n.type === 'safety').length;
   const pendingFeedbackCount = FEEDBACKS.filter((f) => f.status === 'pending' || f.status === 'processing').length;
   // Only count today's meals that have an active sample retention record
@@ -422,14 +421,6 @@ export default function HomeScreen() {
         <View style={styles.summaryGrid}>
           <View style={styles.summaryRow}>
             <SummaryCard
-              icon="coffee"
-              count={todayMealCount}
-              label={'Món ăn\nhôm nay'}
-              iconColor="#FF6535"
-              iconBg="#FFF0EA"
-              onPress={() => {}}
-            />
-            <SummaryCard
               icon="shield"
               count={safetyCount}
               label={'Thông báo'}
@@ -437,8 +428,6 @@ export default function HomeScreen() {
               iconBg="#E8F9ED"
               onPress={() => router.push('/(tabs)/notifications')}
             />
-          </View>
-          <View style={styles.summaryRow}>
             <SummaryCard
               icon="message-circle"
               count={pendingFeedbackCount}
@@ -447,6 +436,8 @@ export default function HomeScreen() {
               iconBg="#FFF4E5"
               onPress={() => router.push('/(tabs)/feedback')}
             />
+          </View>
+          <View style={styles.summaryRow}>
             <SummaryCard
               icon="search"
               count={tracedMealCount}
