@@ -45,7 +45,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=5000 node artifacts/checkee-fnb/server/serve.js"
+args = "PORT=5000 node artifacts/checkee-fnb/server/web-serve.js"
 waitForPort = 5000
 
 [agent]
