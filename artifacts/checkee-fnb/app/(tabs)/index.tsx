@@ -13,7 +13,8 @@ import {
 
 import Header from '@/components/Header';
 import SummaryCard from '@/components/SummaryCard';
-import { isMonitoringActive } from '@/utils/monitoring';
+import ZoomableImage from '@/components/ZoomableImage';
+import { getMonitoringTag } from '@/utils/monitoring';
 import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
@@ -114,7 +115,7 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
                     i < meals.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
                   ]}
                 >
-                  <Image source={meal.image} style={rStyles.mealImg} resizeMode="cover" />
+                  <ZoomableImage source={meal.image} style={rStyles.mealImg} resizeMode="cover" />
                   <View style={rStyles.mealInfo}>
                     <Text style={[rStyles.mealName, { color: colors.text }]} numberOfLines={1}>
                       {meal.name}
@@ -124,7 +125,10 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
                         {meal.calories} kcal
                       </Text>
                       {meal.isMonitored && (() => {
-                        const active = isMonitoringActive(meal.monitoredUntil);
+                        const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === meal.id);
+                        const tag = getMonitoringTag(sample?.status);
+                        if (tag === null) return null;
+                        const active = tag === 'active';
                         const bg = active ? colors.safeGreenLight : colors.muted;
                         const fg = active ? colors.safeGreen : colors.mutedForeground;
                         return (

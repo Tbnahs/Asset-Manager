@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import {
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import ZoomableImage from '@/components/ZoomableImage';
 import { SAMPLE_RETENTIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
@@ -91,7 +91,7 @@ export default function SampleRetentionScreen() {
           return (
             <View key={sample.id} style={[styles.card, { backgroundColor: colors.card }]}>
               <View style={styles.cardTop}>
-                <Image source={sample.image} style={styles.mealImage} resizeMode="cover" />
+                <ZoomableImage source={sample.image} style={styles.mealImage} resizeMode="cover" />
                 <View style={styles.cardMain}>
                   <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={1}>
                     {sample.mealName}

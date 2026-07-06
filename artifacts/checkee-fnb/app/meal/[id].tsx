@@ -13,8 +13,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MEALS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
-import { isMonitoringActive } from '@/utils/monitoring';
+import { getMonitoringTag } from '@/utils/monitoring';
 import { useColors } from '@/hooks/useColors';
+import ZoomableImage from '@/components/ZoomableImage';
 
 const SAFETY_CONFIG = {
   safe: { label: 'Đạt chuẩn an toàn', icon: 'check-circle', color: '#34C759', bg: '#E8F9ED' },
@@ -62,7 +63,7 @@ export default function MealDetailScreen() {
       >
         {/* Hero image */}
         <View style={styles.imageContainer}>
-          <Image source={meal.image} style={styles.heroImage} resizeMode="cover" />
+          <ZoomableImage source={meal.image} style={styles.heroImage} resizeMode="cover" />
           <View
             style={[
               styles.imageOverlay,
@@ -102,7 +103,9 @@ export default function MealDetailScreen() {
 
           {/* Monitoring badge */}
           {meal.isMonitored && (() => {
-            const active = isMonitoringActive(meal.monitoredUntil);
+            const tag = getMonitoringTag(sampleRecord?.status);
+            if (tag === null) return null;
+            const active = tag === 'active';
             const bg = active ? colors.safeGreenLight : colors.muted;
             const fg = active ? colors.safeGreen : colors.mutedForeground;
             return (
@@ -110,8 +113,8 @@ export default function MealDetailScreen() {
                 <View style={[styles.dot, { backgroundColor: fg }]} />
                 <Text style={[styles.monitorText, { color: fg }]}>
                   {active
-                    ? `Đang theo dõi${meal.monitoredUntil ? ` (đến ${meal.monitoredUntil})` : ''}`
-                    : `Ngưng hoạt động${meal.monitoredUntil ? ` (${meal.monitoredUntil})` : ''}`}
+                    ? `Đang theo dõi${sampleRecord?.expiryDate ? ` (đến ${sampleRecord.expiryDate})` : ''}`
+                    : `Ngưng hoạt động${sampleRecord?.expiryDate ? ` (${sampleRecord.expiryDate})` : ''}`}
                 </Text>
               </View>
             );

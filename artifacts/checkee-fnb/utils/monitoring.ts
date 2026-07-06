@@ -1,10 +1,17 @@
+import { SampleRetention } from '@/types';
+
+export type MonitoringTag = 'active' | 'inactive' | null;
+
 /**
- * Returns true when monitoring is still active (within the expiry date or no expiry set).
- * Date format expected: 'dd/MM/yyyy'
+ * Derives the "Đang theo dõi" / "Ngưng hoạt động" tag from the meal's sample
+ * retention record instead of an arbitrary expiry date.
+ *
+ * - No sample record yet, or the meal hasn't been served yet (`future`):
+ *   monitoring hasn't started, so no tag should be shown at all (null).
+ * - `active` (sample stored within the 24–72h retention window): "Đang theo dõi".
+ * - `expired` / `disposed`: retention window has passed → "Ngưng hoạt động".
  */
-export function isMonitoringActive(monitoredUntil?: string): boolean {
-  if (!monitoredUntil) return true;
-  const [day, month, year] = monitoredUntil.split('/').map(Number);
-  const expiry = new Date(year, month - 1, day, 23, 59, 59, 999);
-  return expiry >= new Date();
+export function getMonitoringTag(sampleStatus?: SampleRetention['status']): MonitoringTag {
+  if (!sampleStatus || sampleStatus === 'future') return null;
+  return sampleStatus === 'active' ? 'active' : 'inactive';
 }

@@ -93,7 +93,7 @@ export interface FeedbackItem {
   description: string;
   symptoms: string;
   photos: (string | number)[];
-  status: 'pending' | 'processing' | 'resolved' | 'rejected';
+  status: 'pending' | 'processing' | 'resolved';
   submittedAt: string;
   resolvedAt?: string;
   response?: string;

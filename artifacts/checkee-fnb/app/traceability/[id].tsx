@@ -12,9 +12,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
-import { isMonitoringActive } from '@/utils/monitoring';
+import { SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import { getMonitoringTag } from '@/utils/monitoring';
 import { useColors } from '@/hooks/useColors';
+import ZoomableImage from '@/components/ZoomableImage';
 
 export default function TraceabilityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -72,18 +73,19 @@ export default function TraceabilityDetailScreen() {
       >
         {/* Centered food image */}
         <View style={styles.imageSection}>
-          <Image source={record.image} style={styles.foodImage} resizeMode="cover" />
+          <ZoomableImage source={record.image} style={styles.foodImage} resizeMode="cover" />
         </View>
 
         {/* Status + basic info */}
         <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
           {/* Status row */}
           {(() => {
-            const meal = MEALS.find(m => m.id === record.mealId);
-            const active = record.isMonitored && isMonitoringActive(meal?.monitoredUntil);
+            const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === record.mealId);
+            const tag = record.isMonitored ? getMonitoringTag(sample?.status) : 'inactive';
+            const active = tag === 'active';
             const bg = !record.isMonitored ? colors.muted : active ? colors.safeGreenLight : colors.muted;
             const fg = !record.isMonitored ? colors.mutedForeground : active ? colors.safeGreen : colors.mutedForeground;
-            const label = !record.isMonitored ? 'Không theo dõi' : active ? 'Đang theo dõi' : 'Ngưng hoạt động';
+            const label = !record.isMonitored ? 'Không theo dõi' : tag === 'active' ? 'Đang theo dõi' : tag === 'inactive' ? 'Ngưng hoạt động' : 'Chưa lấy mẫu';
             return (
               <View style={[styles.infoRow, { borderBottomColor: colors.border }]}>
                 <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Trạng thái:</Text>

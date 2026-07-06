@@ -825,7 +825,7 @@ export const FEEDBACKS: FeedbackItem[] = [
     description: 'Phát hiện sợi tóc trong tô bún của con. Rất mong nhà trường nhắc nhở nhân viên bếp đội mũ đúng quy định.',
     symptoms: 'Không có',
     photos: [require('../assets/images/feedback-photo-2.png')],
-    status: 'rejected',
+    status: 'resolved',
     submittedAt: '05/06/2026 11:45',
     resolvedAt: '06/06/2026 08:30',
     response: 'Chúng tôi đã xem xét phản ánh. Qua kiểm tra camera bếp ngày 05/06, không ghi nhận vi phạm quy trình vệ sinh. Rất tiếc không thể xác nhận sự cố này.',

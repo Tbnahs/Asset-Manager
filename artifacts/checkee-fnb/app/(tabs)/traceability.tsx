@@ -1,91 +1,17 @@
 import { Feather } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import Header from '@/components/Header';
-import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import ZoomableImage from '@/components/ZoomableImage';
+import { SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
-import { isMonitoringActive } from '@/utils/monitoring';
-
-type FilterMode = 'all' | 'today' | 'week' | 'month' | 'year' | 'custom';
-
-function parseCookDate(cookTime: string): Date | null {
-  // cookTime format: "HH:MM DD/MM/YYYY"
-  const match = cookTime.match(/(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return null;
-  const [, day, month, year] = match;
-  return new Date(Number(year), Number(month) - 1, Number(day));
-}
-
-function isSameDay(d1: Date, d2: Date) {
-  return d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
-}
-
-function isSameWeek(d1: Date, d2: Date) {
-  const startOfWeek = (d: Date) => {
-    const clone = new Date(d);
-    const day = clone.getDay();
-    const diff = clone.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(clone.setDate(diff));
-  };
-  const s1 = startOfWeek(d1);
-  const s2 = startOfWeek(d2);
-  return isSameDay(s1, s2);
-}
-
-function isSameMonth(d1: Date, d2: Date) {
-  return d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
-}
-
-function isSameYear(d1: Date, d2: Date) {
-  return d1.getFullYear() === d2.getFullYear();
-}
-
-const FILTER_CONFIG: { key: FilterMode; label: string }[] = [
-  { key: 'all', label: 'Tất cả' },
-  { key: 'today', label: 'Hôm nay' },
-  { key: 'week', label: 'Tuần này' },
-  { key: 'month', label: 'Tháng này' },
-  { key: 'year', label: 'Năm nay' },
-];
+import { getMonitoringTag } from '@/utils/monitoring';
 
 export default function TraceabilityScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
-  const [filter, setFilter] = useState<FilterMode>('all');
-  const [customDate, setCustomDate] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const today = new Date();
-
-  const filteredRecords = useMemo(() => {
-    if (filter === 'all') return TRACEABILITY_RECORDS;
-    return TRACEABILITY_RECORDS.filter((r) => {
-      const d = parseCookDate(r.cookTime);
-      if (!d) return false;
-      switch (filter) {
-        case 'today': return isSameDay(d, today);
-        case 'week': return isSameWeek(d, today);
-        case 'month': return isSameMonth(d, today);
-        case 'year': return isSameYear(d, today);
-        case 'custom': return customDate ? isSameDay(d, customDate) : true;
-        default: return true;
-      }
-    });
-  }, [filter, customDate]);
-
-  const onPickerChange = (_: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') setShowDatePicker(false);
-    if (selected) {
-      setCustomDate(selected);
-      setFilter('custom');
-    }
-  };
-
-  const customLabel = customDate
-    ? customDate.toLocaleDateString('vi-VN')
-    : 'Chọn ngày';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -99,83 +25,11 @@ export default function TraceabilityScreen() {
           Thông tin nguồn gốc & quy trình chế biến thực phẩm
         </Text>
 
-        {/* Filter bar */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterBar}>
-          {FILTER_CONFIG.map((f) => {
-            const active = filter === f.key;
-            return (
-              <TouchableOpacity
-                key={f.key}
-                onPress={() => setFilter(f.key)}
-                activeOpacity={0.7}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: active ? colors.primary : colors.card,
-                    borderColor: active ? colors.primary : colors.border,
-                  },
-                ]}>
-                <Text style={[styles.filterChipText, { color: active ? '#fff' : colors.text }]}>
-                  {f.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-
-          <TouchableOpacity
-            key="custom"
-            onPress={() => setShowDatePicker(true)}
-            activeOpacity={0.7}
-            style={[
-              styles.filterChip,
-              styles.dateFilterChip,
-              {
-                backgroundColor: filter === 'custom' ? colors.primary : colors.card,
-                borderColor: filter === 'custom' ? colors.primary : colors.border,
-              },
-            ]}>
-            <Feather
-              name="calendar"
-              size={13}
-              color={filter === 'custom' ? '#fff' : colors.mutedForeground}
-            />
-            <Text
-              style={[
-                styles.filterChipText,
-                { color: filter === 'custom' ? '#fff' : colors.text },
-              ]}>
-              {customLabel}
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {showDatePicker && (
-          <View style={[styles.pickerContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.pickerHeader}>
-              <Text style={[styles.pickerHeaderText, { color: colors.text }]}>Chọn ngày</Text>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.pickerDoneBtn}>
-                <Text style={[styles.pickerDoneText, { color: colors.primary }]}>Xong</Text>
-              </TouchableOpacity>
-            </View>
-            <DateTimePicker
-              value={customDate ?? today}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={onPickerChange}
-              locale="vi-VN"
-              themeVariant="light"
-            />
-          </View>
-        )}
-
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          DANH SÁCH TRUY XUẤT ({filteredRecords.length})
+          DANH SÁCH TRUY XUẤT ({TRACEABILITY_RECORDS.length})
         </Text>
 
-        {filteredRecords.map((record) => (
+        {TRACEABILITY_RECORDS.map((record) => (
           <TouchableOpacity
             key={record.id}
             onPress={() => router.push(`/traceability/${record.id}` as any)}
@@ -186,12 +40,22 @@ export default function TraceabilityScreen() {
               <Feather name="home" size={11} color="rgba(255,255,255,0.8)" />
               <Text style={styles.stripeCode} numberOfLines={1}>{record.traceCode}</Text>
               {(() => {
-                const meal = MEALS.find(m => m.id === record.mealId);
-                const active = record.isMonitored && isMonitoringActive(meal?.monitoredUntil);
+                if (!record.isMonitored) {
+                  return (
+                    <View style={[styles.monitoredBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                      <View style={[styles.monitoredDot, { backgroundColor: 'rgba(255,255,255,0.5)' }]} />
+                      <Text style={styles.monitoredText}>Ngưng hoạt động</Text>
+                    </View>
+                  );
+                }
+                const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === record.mealId);
+                const tag = getMonitoringTag(sample?.status);
+                const label = tag === 'active' ? 'Đang theo dõi' : tag === 'inactive' ? 'Ngưng hoạt động' : 'Chưa lấy mẫu';
+                const dotColor = tag === 'active' ? '#34C759' : 'rgba(255,255,255,0.5)';
                 return (
                   <View style={[styles.monitoredBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                    <View style={[styles.monitoredDot, { backgroundColor: active ? '#34C759' : 'rgba(255,255,255,0.5)' }]} />
-                    <Text style={styles.monitoredText}>{active ? 'Đang theo dõi' : 'Ngưng hoạt động'}</Text>
+                    <View style={[styles.monitoredDot, { backgroundColor: dotColor }]} />
+                    <Text style={styles.monitoredText}>{label}</Text>
                   </View>
                 );
               })()}
@@ -199,7 +63,7 @@ export default function TraceabilityScreen() {
 
             {/* Card body */}
             <View style={styles.cardBody}>
-              <Image source={record.image} style={styles.mealImage} resizeMode="cover" />
+              <ZoomableImage source={record.image} style={styles.mealImage} resizeMode="cover" />
               <View style={styles.cardInfo}>
                 <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={1}>
                   {record.mealName}
@@ -267,7 +131,7 @@ export default function TraceabilityScreen() {
           </TouchableOpacity>
         ))}
 
-        {filteredRecords.length === 0 && (
+        {TRACEABILITY_RECORDS.length === 0 && (
           <View style={styles.emptyState}>
             <Feather name="inbox" size={40} color={colors.mutedForeground} />
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
@@ -285,33 +149,6 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 16 },
   pageTitle: { fontSize: 22, fontFamily: 'Inter_700Bold', marginBottom: 4 },
   pageSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginBottom: 12 },
-
-  filterBar: { flexDirection: 'row', gap: 8, paddingBottom: 16 },
-  filterChip: {
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1,
-  },
-  filterChipText: { fontSize: 13, fontFamily: 'Inter_500Medium' },
-  dateFilterChip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-
-  pickerContainer: {
-    borderRadius: 14,
-    borderWidth: 1,
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
-  },
-  pickerHeaderText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
-  pickerDoneBtn: { paddingHorizontal: 8, paddingVertical: 4 },
-  pickerDoneText: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
 
   sectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.8, marginBottom: 12 },
 

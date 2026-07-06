@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import {
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import ZoomableImage from '@/components/ZoomableImage';
 import { NOTIFICATIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 import { AppNotification } from '@/types';
@@ -112,7 +112,7 @@ export default function NotificationDetailScreen() {
 
         {/* ── Illustration ── */}
         {notif.image && (
-          <Image
+          <ZoomableImage
             source={notif.image}
             style={styles.illustration}
             resizeMode="cover"

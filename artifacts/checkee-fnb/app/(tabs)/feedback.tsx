@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
-  Image,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -22,16 +21,16 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Header from '@/components/Header';
+import ZoomableImage from '@/components/ZoomableImage';
 import { feedbackStore } from '@/data/feedbackStore';
 import { useColors } from '@/hooks/useColors';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { FeedbackItem } from '@/types';
 
 const STATUS_CONFIG: Record<FeedbackItem['status'], { label: string; color: string; bg: string }> = {
-  pending:    { label: 'Chờ xử lý',     color: '#FF9500', bg: '#FFF4E5' },
-  processing: { label: 'Đang xử lý',    color: '#007AFF', bg: '#E5F1FF' },
-  resolved:   { label: 'Đã giải quyết', color: '#34C759', bg: '#E8F9ED' },
-  rejected:   { label: 'Từ chối',       color: '#FF3B30', bg: '#FFEBEA' },
+  pending:    { label: 'Chưa xử lý', color: '#FF9500', bg: '#FFF4E5' },
+  processing: { label: 'Đang xử lý', color: '#007AFF', bg: '#E5F1FF' },
+  resolved:   { label: 'Đã xử lý',   color: '#34C759', bg: '#E8F9ED' },
 };
 
 export default function FeedbackScreen() {
@@ -314,7 +313,7 @@ export default function FeedbackScreen() {
                     <View style={styles.thumbnailRow}>
                       {photos.map((uri) => (
                         <View key={uri} style={styles.thumbWrap}>
-                          <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
+                          <ZoomableImage source={{ uri }} style={styles.thumb} resizeMode="cover" />
                           <TouchableOpacity
                             onPress={() => removePhoto(uri)}
                             style={styles.thumbRemove}
@@ -406,17 +405,17 @@ export default function FeedbackScreen() {
                 {/* ── Row 5: school response ── */}
                 {item.response ? (
                   <View style={[styles.responseBox, {
-                    backgroundColor: item.status === 'rejected' ? colors.dangerLight : colors.safeGreenLight,
-                    borderColor: item.status === 'rejected' ? '#FFCDD2' : '#B7EFC5',
+                    backgroundColor: colors.safeGreenLight,
+                    borderColor: '#B7EFC5',
                   }]}>
                     <View style={styles.responseHeader}>
                       <Feather
-                        name={item.status === 'rejected' ? 'x-circle' : 'check-circle'}
+                        name="check-circle"
                         size={13}
-                        color={item.status === 'rejected' ? colors.danger : colors.safeGreen}
+                        color={colors.safeGreen}
                       />
                       <Text style={[styles.responseLabel, {
-                        color: item.status === 'rejected' ? colors.danger : colors.safeGreen,
+                        color: colors.safeGreen,
                       }]}>
                         Phản hồi từ nhà trường
                       </Text>

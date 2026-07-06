@@ -1,6 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import ZoomableImage from '@/components/ZoomableImage';
 import { useColors } from '@/hooks/useColors';
 import { Meal } from '@/types';
 
@@ -35,7 +36,7 @@ export default function MealCard({ meal, onPress }: MealCardProps) {
       activeOpacity={0.72}
       style={[styles.card, { backgroundColor: colors.card }]}
     >
-      <Image source={meal.image} style={styles.image} resizeMode="cover" />
+      <ZoomableImage source={meal.image} style={styles.image} resizeMode="cover" />
       <View style={styles.content}>
         <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>
           {meal.name}

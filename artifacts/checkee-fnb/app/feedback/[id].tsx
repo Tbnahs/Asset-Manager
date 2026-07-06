@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import {
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,31 +11,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import ZoomableImage from '@/components/ZoomableImage';
 import { feedbackStore } from '@/data/feedbackStore';
 import { useColors } from '@/hooks/useColors';
 import { FeedbackItem } from '@/types';
 
 const STATUS_CONFIG: Record<FeedbackItem['status'], { label: string; color: string; bg: string; icon: React.ComponentProps<typeof Feather>['name'] }> = {
-  pending:    { label: 'Chờ xử lý',     color: '#FF9500', bg: '#FFF4E5', icon: 'clock' },
+  pending:    { label: 'Chưa xử lý',    color: '#FF9500', bg: '#FFF4E5', icon: 'clock' },
   processing: { label: 'Đang xử lý',    color: '#007AFF', bg: '#E5F1FF', icon: 'loader' },
-  resolved:   { label: 'Đã giải quyết', color: '#34C759', bg: '#E8F9ED', icon: 'check-circle' },
-  rejected:   { label: 'Từ chối',       color: '#FF3B30', bg: '#FFEBEA', icon: 'x-circle' },
-};
-
-const COMPLAINT_TYPE_LABEL: Record<FeedbackItem['complaintType'], string> = {
-  quality:  'Chất lượng món ăn',
-  safety:   'An toàn thực phẩm',
-  quantity: 'Định lượng suất ăn',
-  hygiene:  'Vệ sinh',
-  other:    'Khác',
-};
-
-const COMPLAINT_TYPE_COLOR: Record<FeedbackItem['complaintType'], { color: string; bg: string }> = {
-  quality:  { color: '#FF9500', bg: '#FFF4E5' },
-  safety:   { color: '#FF3B30', bg: '#FFEBEA' },
-  quantity: { color: '#007AFF', bg: '#E5F1FF' },
-  hygiene:  { color: '#34C759', bg: '#E8F9ED' },
-  other:    { color: '#8E8E93', bg: '#F5F6FA' },
+  resolved:   { label: 'Đã xử lý',      color: '#34C759', bg: '#E8F9ED', icon: 'check-circle' },
 };
 
 export default function FeedbackDetailScreen() {
@@ -66,7 +49,6 @@ export default function FeedbackDetailScreen() {
   }
 
   const status = STATUS_CONFIG[item.status];
-  const complaint = COMPLAINT_TYPE_COLOR[item.complaintType];
   const hasSymptoms = item.symptoms &&
     !['không có', 'không có triệu chứng'].includes(item.symptoms.trim().toLowerCase());
 
@@ -109,14 +91,6 @@ export default function FeedbackDetailScreen() {
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Món ăn</Text>
             <Text style={[styles.infoValue, { color: colors.text }]}>{item.mealName}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Loại phản ánh</Text>
-            <View style={[styles.typeBadge, { backgroundColor: complaint.bg }]}>
-              <Text style={[styles.typeBadgeText, { color: complaint.color }]}>
-                {COMPLAINT_TYPE_LABEL[item.complaintType]}
-              </Text>
-            </View>
           </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>Ngày gửi</Text>
@@ -164,7 +138,7 @@ export default function FeedbackDetailScreen() {
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.photoGrid}>
               {item.photos.map((src, i) => (
-                <Image key={i} source={typeof src === 'string' ? { uri: src } : src} style={styles.photo} resizeMode="cover" />
+                <ZoomableImage key={i} source={typeof src === 'string' ? { uri: src } : src} style={styles.photo} resizeMode="cover" />
               ))}
             </View>
           </View>
@@ -175,16 +149,16 @@ export default function FeedbackDetailScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <View style={styles.cardHeaderRow}>
               <Feather
-                name={item.status === 'rejected' ? 'x-circle' : 'check-circle'}
+                name="check-circle"
                 size={15}
-                color={item.status === 'rejected' ? '#FF3B30' : '#34C759'}
+                color="#34C759"
               />
               <Text style={[styles.cardTitle, { color: colors.text }]}>Phản hồi từ nhà trường</Text>
             </View>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={[styles.responseBox, {
-              backgroundColor: item.status === 'rejected' ? '#FFEBEA' : '#E8F9ED',
-              borderColor: item.status === 'rejected' ? '#FFCDD2' : '#B7EFC5',
+              backgroundColor: '#E8F9ED',
+              borderColor: '#B7EFC5',
             }]}>
               <Text style={[styles.responseText, { color: colors.text }]}>{item.response}</Text>
             </View>
@@ -227,31 +201,29 @@ export default function FeedbackDetailScreen() {
           {/* Processing */}
           <View style={styles.timelineItem}>
             <View style={[styles.timelineDot, {
-              backgroundColor: ['processing', 'resolved', 'rejected'].includes(item.status) ? '#007AFF' : colors.border,
+              backgroundColor: ['processing', 'resolved'].includes(item.status) ? '#007AFF' : colors.border,
             }]} />
             <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />
             <View style={styles.timelineContent}>
               <Text style={[styles.timelineTitle, {
-                color: ['processing', 'resolved', 'rejected'].includes(item.status) ? colors.text : colors.mutedForeground,
+                color: ['processing', 'resolved'].includes(item.status) ? colors.text : colors.mutedForeground,
               }]}>Nhà trường tiếp nhận & xử lý</Text>
-              {['processing', 'resolved', 'rejected'].includes(item.status) ? null : (
+              {['processing', 'resolved'].includes(item.status) ? null : (
                 <Text style={[styles.timelineDate, { color: colors.mutedForeground }]}>Đang chờ</Text>
               )}
             </View>
           </View>
 
-          {/* Resolved/Rejected */}
+          {/* Resolved */}
           <View style={[styles.timelineItem, styles.timelineItemLast]}>
             <View style={[styles.timelineDot, {
-              backgroundColor: item.status === 'resolved' ? '#34C759'
-                : item.status === 'rejected' ? '#FF3B30'
-                : colors.border,
+              backgroundColor: item.status === 'resolved' ? '#34C759' : colors.border,
             }]} />
             <View style={styles.timelineContent}>
               <Text style={[styles.timelineTitle, {
-                color: ['resolved', 'rejected'].includes(item.status) ? colors.text : colors.mutedForeground,
+                color: item.status === 'resolved' ? colors.text : colors.mutedForeground,
               }]}>
-                {item.status === 'rejected' ? 'Phản ánh bị từ chối' : 'Phản ánh được giải quyết'}
+                Phản ánh được giải quyết
               </Text>
               {item.resolvedAt ? (
                 <Text style={[styles.timelineDate, { color: colors.safeGreen }]}>{item.resolvedAt}</Text>
@@ -313,9 +285,6 @@ const styles = StyleSheet.create({
   },
   infoLabel: { fontSize: 13, fontFamily: 'Inter_400Regular', flexShrink: 0 },
   infoValue: { fontSize: 13, fontFamily: 'Inter_500Medium', textAlign: 'right', flex: 1 },
-  typeBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  typeBadgeText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-
   safeGreen: { color: '#34C759' },
 
   /* Description */
