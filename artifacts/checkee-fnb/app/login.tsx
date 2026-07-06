@@ -119,6 +119,13 @@ export default function LoginScreen() {
                   <Feather name={showPassword ? 'eye-off' : 'eye'} size={16} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity
+                onPress={() => router.push('/forgot-password')}
+                style={styles.forgotBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.forgotText, { color: colors.primary }]}>Quên mật khẩu?</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Error */}
@@ -212,6 +219,8 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 8 },
   input: { flex: 1, fontSize: 15, fontFamily: 'Inter_400Regular', overflow: 'hidden' },
   eyeBtn: { paddingHorizontal: 10, paddingVertical: 8 },
+  forgotBtn: { alignSelf: 'flex-end', paddingTop: 2 },
+  forgotText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10,

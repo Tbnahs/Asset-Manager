@@ -90,6 +90,8 @@ interface AuthContextValue {
   login: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  requestPasswordResetOtp: (phone: string) => Promise<{ success: boolean; error?: string; otp?: string }>;
+  resetPasswordWithOtp: (phone: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -98,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPassword, setCurrentPassword] = useState(MOCK_ACCOUNT.password);
+  const [pendingOtp, setPendingOtp] = useState<{ phone: string; code: string } | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -143,8 +146,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, [currentPassword]);
 
+  const requestPasswordResetOtp = useCallback(async (phone: string) => {
+    const inputPhone = normalizePhone(phone);
+    const accountPhone = normalizePhone(MOCK_ACCOUNT.phone);
+    if (inputPhone !== accountPhone) {
+      return { success: false, error: 'Số điện thoại này chưa được đăng ký.' };
+    }
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    setPendingOtp({ phone: inputPhone, code });
+    // Demo only: in production this code would be sent via an SMS gateway, not returned to the client.
+    return { success: true, otp: code };
+  }, []);
+
+  const resetPasswordWithOtp = useCallback(async (phone: string, otp: string, newPassword: string) => {
+    const inputPhone = normalizePhone(phone);
+    if (!pendingOtp || pendingOtp.phone !== inputPhone) {
+      return { success: false, error: 'Vui lòng lấy mã OTP mới.' };
+    }
+    if (otp.trim() !== pendingOtp.code) {
+      return { success: false, error: 'Mã OTP không đúng.' };
+    }
+    if (newPassword.length < 6) {
+      return { success: false, error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' };
+    }
+    await AsyncStorage.setItem(PASSWORD_STORAGE_KEY, newPassword);
+    setCurrentPassword(newPassword);
+    setPendingOtp(null);
+    return { success: true };
+  }, [pendingOtp]);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, changePassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        logout,
+        changePassword,
+        requestPasswordResetOtp,
+        resetPasswordWithOtp,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

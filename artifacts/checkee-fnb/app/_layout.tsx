@@ -27,7 +27,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading) return;
-    const inAuthGroup = segments[0] === 'login';
+    const inAuthGroup = segments[0] === 'login' || segments[0] === 'forgot-password';
     if (!user && !inAuthGroup) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
@@ -45,6 +45,7 @@ function RootLayoutNav() {
     <AuthGate>
       <Stack screenOptions={{ headerBackTitle: "Quay lại" }}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="forgot-password" options={{ title: "Quên mật khẩu" }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="change-password" options={{ title: "Đổi mật khẩu" }} />
         <Stack.Screen name="meal/[id]" options={{ headerShown: false }} />
