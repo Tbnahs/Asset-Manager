@@ -289,6 +289,69 @@ export const MEALS: Meal[] = [
     preparation: 'Rửa sạch, cắt miếng tam giác.',
     foodSafetyStatus: 'safe',
   },
+  // Friday of last week (fixed calendar date, not the current dynamic week)
+  {
+    id: 'm15',
+    name: 'Cháo lươn',
+    calories: 310,
+    image: require('../assets/images/meal-noodle.png'),
+    isMonitored: true,
+    date: '2026-07-03',
+    mealType: 'main',
+    session: 'sang',
+    dayIndex: 4,
+    category: 'Món chính',
+    ingredients: [
+      { name: 'Gạo tẻ', amount: '80g', origin: 'An Giang' },
+      { name: 'Lươn đồng', amount: '70g', origin: 'Đồng Tháp' },
+      { name: 'Nghệ tươi', amount: '10g', origin: 'Hưng Yên' },
+      { name: 'Hành lá', amount: '5g', origin: 'Đà Lạt' },
+    ],
+    nutrition: { protein: 19, carbs: 38, fat: 6, fiber: 1, sodium: 410 },
+    preparation: 'Ninh nhừ gạo thành cháo. Lươn làm sạch, xào nghệ, hành, nêm vừa ăn rồi trộn vào cháo.',
+    foodSafetyStatus: 'safe',
+  },
+  {
+    id: 'm16',
+    name: 'Cơm sườn nướng & Canh chua',
+    calories: 480,
+    image: require('../assets/images/meal-fried-rice.png'),
+    isMonitored: true,
+    date: '2026-07-03',
+    mealType: 'main',
+    session: 'trua',
+    dayIndex: 4,
+    category: 'Món chính',
+    ingredients: [
+      { name: 'Gạo tẻ', amount: '100g', origin: 'An Giang' },
+      { name: 'Sườn heo', amount: '90g', origin: 'Bình Phước' },
+      { name: 'Cá lóc', amount: '60g', origin: 'Đồng Tháp' },
+      { name: 'Me chua', amount: '15g', origin: 'Tây Ninh' },
+      { name: 'Bạc hà', amount: '30g', origin: 'Long An' },
+    ],
+    nutrition: { protein: 26, carbs: 55, fat: 14, fiber: 3, sodium: 540 },
+    preparation: 'Sườn ướp gia vị, nướng chín thơm. Canh chua nấu từ cá lóc, me, bạc hà và rau nêm.',
+    foodSafetyStatus: 'safe',
+  },
+  {
+    id: 'm17',
+    name: 'Sữa chua & Nho',
+    calories: 110,
+    image: require('../assets/images/meal-fruit.png'),
+    isMonitored: true,
+    date: '2026-07-03',
+    mealType: 'dessert',
+    session: 'chieu',
+    dayIndex: 4,
+    category: 'Tráng miệng',
+    ingredients: [
+      { name: 'Sữa chua', amount: '1 hộp', origin: 'TP. Hồ Chí Minh' },
+      { name: 'Nho xanh', amount: '80g', origin: 'Ninh Thuận' },
+    ],
+    nutrition: { protein: 4, carbs: 18, fat: 3, fiber: 1, sodium: 45 },
+    preparation: 'Rửa sạch nho, bày cùng sữa chua.',
+    foodSafetyStatus: 'safe',
+  },
 ];
 
 export const TRACEABILITY_RECORDS: TraceabilityRecord[] = [
@@ -728,19 +791,29 @@ const _SESSION_HOUR: Record<string, number> = {
 };
 
 /**
- * Returns the date-time a meal was served, inferred from dayIndex (Mon=0…Fri=4)
- * and session, anchored to the Monday of the current school week.
+ * Returns the date-time a meal was served.
+ *
+ * - If the meal has a fixed `date` (e.g. a past week added on top of the
+ *   normal rotation), that exact calendar date is used.
+ * - Otherwise, it's inferred from dayIndex (Mon=0…Fri=4) and session,
+ *   anchored to the Monday of the current school week.
  */
-function _mealDate(dayIndex: number, session?: string): Date {
+function _mealDate(meal: Meal): Date {
+  const hour = meal.session ? (_SESSION_HOUR[meal.session] ?? 6) : 6;
+  if (meal.date) {
+    const [y, m, d] = meal.date.split('-').map(Number);
+    const fixed = new Date(y, m - 1, d);
+    fixed.setHours(hour, 30, 0, 0);
+    return fixed;
+  }
   const today = new Date();
   const dow   = today.getDay();                    // 0 Sun … 6 Sat
   const daysFromMon = dow === 0 ? 6 : dow - 1;    // steps back to Monday
   const monday = new Date(today);
   monday.setDate(today.getDate() - daysFromMon);
-  const hour = session ? (_SESSION_HOUR[session] ?? 6) : 6;
   monday.setHours(hour, 30, 0, 0);
   const d = new Date(monday);
-  d.setDate(monday.getDate() + dayIndex);
+  d.setDate(monday.getDate() + meal.dayIndex);
   return d;
 }
 
@@ -763,7 +836,7 @@ const _STORAGE: Record<string, string> = {
 const _OFF_MENU_IDS = new Set(['m7', 'm10', 'm14']);
 
 export const SAMPLE_RETENTIONS: SampleRetention[] = MEALS.map((meal) => {
-  const mealDt   = _mealDate(meal.dayIndex, meal.session);
+  const mealDt   = _mealDate(meal);
   const expiryDt = new Date(mealDt.getTime() + 72 * 3_600_000);
   const status   = _retentionStatus(mealDt);
   const isFuture = status === 'future';

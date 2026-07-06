@@ -55,11 +55,21 @@ function getWeekInfo() {
   return { days, todayIndex: Math.min(Math.max(todayIdx, 0), 4), today };
 }
 
-/** Returns MEALS whose dayIndex matches the given calendar date (within mock week) */
+function parseFixedDate(date: string): Date {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Returns meals for a given calendar date: meals with a fixed `date` are
+ * matched directly (e.g. a past week added outside the normal rotation),
+ * while the rest fall back to matching dayIndex against the current week.
+ */
 function mealsForDate(date: Date, weekDays: Date[]): Meal[] {
+  const fixedMatches = MEALS.filter((m) => m.date && isSameDay(parseFixedDate(m.date), date));
   const idx = weekDays.findIndex((d) => isSameDay(d, date));
-  if (idx === -1) return [];
-  return MEALS.filter((m) => m.dayIndex === idx);
+  const rotationMatches = idx === -1 ? [] : MEALS.filter((m) => !m.date && m.dayIndex === idx);
+  return [...fixedMatches, ...rotationMatches];
 }
 
 /** Build calendar grid for a given year/month */
@@ -190,8 +200,8 @@ export default function HomeScreen() {
   const calCells = useMemo(() => buildCalendar(calYear, calMonth), [calYear, calMonth]);
 
   // Meals for week view
-  const weekDayMeals = MEALS.filter((m) => m.dayIndex === selectedDay);
   const weekSelectedDate = days[selectedDay];
+  const weekDayMeals = useMemo(() => mealsForDate(weekSelectedDate, days), [weekSelectedDate, days]);
 
   // Meals for month view selected date
   const monthDayMeals = useMemo(() => mealsForDate(selectedDate, days), [selectedDate, days]);
@@ -203,7 +213,8 @@ export default function HomeScreen() {
   // Only count today's meals that have an active sample retention record
   const tracedMealCount = SAMPLE_RETENTIONS.filter((s) => {
     const meal = MEALS.find((m) => m.id === s.mealId);
-    return meal?.dayIndex === todayIndex && s.status === 'active';
+    const isToday = meal && (meal.date ? isSameDay(parseFixedDate(meal.date), today) : meal.dayIndex === todayIndex);
+    return isToday && s.status === 'active';
   }).length;
 
   const prevMonth = () => {
@@ -254,7 +265,7 @@ export default function HomeScreen() {
             <View style={[styles.daySelector, { backgroundColor: colors.card }]}>
               {days.map((d, i) => {
                 const isSelected = i === selectedDay;
-                const hasMeals = MEALS.some((m) => m.dayIndex === i);
+                const hasMeals = mealsForDate(d, days).length > 0;
                 return (
                   <TouchableOpacity
                     key={i}

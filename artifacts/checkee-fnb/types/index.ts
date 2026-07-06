@@ -24,6 +24,8 @@ export interface Meal {
   mealType: 'main' | 'dessert' | 'drink';
   session: MealSession;
   dayIndex: number;
+  /** Fixed calendar date 'yyyy-MM-dd' for meals outside the current dynamic week (e.g. past weeks). */
+  date?: string;
   ingredients: Ingredient[];
   nutrition: Nutrition;
   preparation: string;
