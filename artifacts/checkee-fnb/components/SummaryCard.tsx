@@ -11,10 +11,32 @@ interface SummaryCardProps {
   iconColor: string;
   iconBg: string;
   onPress?: () => void;
+  wide?: boolean;
 }
 
-export default function SummaryCard({ icon, count, label, iconColor, iconBg, onPress }: SummaryCardProps) {
+export default function SummaryCard({ icon, count, label, iconColor, iconBg, onPress, wide }: SummaryCardProps) {
   const colors = useColors();
+
+  if (wide) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={onPress ? 0.7 : 1}
+        style={[styles.wideCard, { backgroundColor: colors.card }]}
+      >
+        <View style={[styles.iconWrap, styles.wideIconWrap, { backgroundColor: iconBg }]}>
+          <Feather name={icon as any} size={19} color={iconColor} />
+        </View>
+        <View style={styles.wideTextCol}>
+          <Text style={[styles.wideLabel, { color: colors.text }]} numberOfLines={2}>
+            {label}
+          </Text>
+          <Text style={[styles.wideCount, { color: colors.mutedForeground }]}>{count} món</Text>
+        </View>
+        {onPress && <Feather name="chevron-right" size={18} color={colors.mutedForeground} />}
+      </TouchableOpacity>
+    );
+  }
 
   return (
     <TouchableOpacity
@@ -61,5 +83,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter_400Regular',
     lineHeight: 15,
+  },
+  wideCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 14,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  wideIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    flexShrink: 0,
+  },
+  wideTextCol: { flex: 1, gap: 2 },
+  wideLabel: {
+    fontSize: 13,
+    fontFamily: 'Inter_600SemiBold',
+    lineHeight: 17,
+  },
+  wideCount: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
   },
 });

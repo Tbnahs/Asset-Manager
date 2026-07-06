@@ -439,6 +439,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.summaryRow}>
             <SummaryCard
+              wide
               icon="search"
               count={tracedMealCount}
               label={'Danh sách các món ăn đang theo dõi lưu mẫu'}
