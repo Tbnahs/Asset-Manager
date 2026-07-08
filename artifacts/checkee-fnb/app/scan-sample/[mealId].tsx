@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import SignaturePad from '@/components/SignaturePad';
 import { useAuth } from '@/contexts/AuthContext';
 import { RetentionHours, SamplerRecord, useSampler } from '@/contexts/SamplerContext';
 import { MEALS } from '@/data/mockData';
@@ -314,23 +315,24 @@ export default function ScanSampleScreen() {
 
         {/* ── Signature ── */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.label, { color: colors.text }]}>
-            Chữ ký người lưu mẫu <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
-          </Text>
-          <TouchableOpacity
-            style={[styles.signatureBox, { borderColor: colors.border, backgroundColor: colors.background }]}
-            onPress={() => {}} activeOpacity={1}
-          >
-            <TextInput
-              style={[styles.signatureInput, { color: colors.text }]}
-              value={signature}
-              onChangeText={setSignature}
-              placeholder="Ký tên vùng này"
-              placeholderTextColor={colors.mutedForeground}
-              textAlign="center"
-              multiline
-            />
-          </TouchableOpacity>
+          <View style={styles.signatureHeader}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Chữ ký người lưu mẫu <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
+            </Text>
+            {signature ? (
+              <TouchableOpacity onPress={() => setSignature('')} hitSlop={8}>
+                <Text style={[styles.clearSignature, { color: colors.primary }]}>Xoá</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+          <View style={[styles.signatureBox, { borderColor: colors.border, backgroundColor: colors.background }]}>
+            <SignaturePad value={signature} onChange={setSignature} strokeColor={colors.text} />
+            {!signature && (
+              <Text pointerEvents="none" style={[styles.signaturePlaceholder, { color: colors.mutedForeground }]}>
+                Ký tên vùng này
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* ── Confirm ── */}
