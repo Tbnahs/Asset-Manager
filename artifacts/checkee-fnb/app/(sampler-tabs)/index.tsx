@@ -173,8 +173,8 @@ export default function SamplerHomeScreen() {
                         onPress={() => router.push(`/qr-scanner?mealId=${meal.id}` as any)}
                         activeOpacity={0.8}
                       >
-                        <Feather name="plus-circle" size={14} color="#fff" />
-                        <Text style={styles.sampleBtnText}>Lấy mẫu</Text>
+                        <Feather name="camera" size={14} color="#fff" />
+                        <Text style={styles.sampleBtnText}>Quét lưu mẫu</Text>
                       </TouchableOpacity>
                     )}
                   </View>

@@ -68,7 +68,7 @@ export default function QrScannerScreen() {
   }, [phase]);
 
   const handleProceed = () => {
-    if (meal) {
+    if (meal && phase === 'detected') {
       router.replace(`/scan-sample/${meal.id}` as any);
     }
   };
@@ -137,7 +137,7 @@ export default function QrScannerScreen() {
         {/* Hint */}
         {phase === 'idle' && (
           <Text style={styles.hint}>
-            Đặt mã QR dán trên phần ăn vào khung hình
+            Đặt mã QR dán trên khay cơm vào khung hình
           </Text>
         )}
         {phase === 'scanning' && (
@@ -156,7 +156,7 @@ export default function QrScannerScreen() {
           <View style={styles.mealPill}>
             <Feather name="info" size={13} color="rgba(255,255,255,0.6)" />
             <Text style={styles.mealPillText} numberOfLines={1}>
-              Phần ăn cần quét: <Text style={{ color: '#fff', fontWeight: '700' }}>{meal.name}</Text>
+              Khay cơm cần quét: <Text style={{ color: '#fff', fontWeight: '700' }}>{meal.name}</Text>
             </Text>
           </View>
         )}
@@ -187,12 +187,6 @@ export default function QrScannerScreen() {
           >
             <Feather name="arrow-right" size={18} color="#fff" />
             <Text style={styles.scanBtnText}>Tiếp tục điền thông tin</Text>
-          </TouchableOpacity>
-        )}
-
-        {phase !== 'detected' && (
-          <TouchableOpacity onPress={handleProceed} style={styles.skipLink}>
-            <Text style={styles.skipText}>Bỏ qua bước quét mã →</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -260,7 +254,4 @@ const styles = StyleSheet.create({
   },
   scanBtnActive: { backgroundColor: '#666' },
   scanBtnText: { color: '#fff', fontSize: 15, fontFamily: 'Inter_600SemiBold', fontWeight: '600' },
-
-  skipLink: { paddingVertical: 4 },
-  skipText: { color: 'rgba(255,255,255,0.45)', fontSize: 13, fontFamily: 'Inter_400Regular' },
 });

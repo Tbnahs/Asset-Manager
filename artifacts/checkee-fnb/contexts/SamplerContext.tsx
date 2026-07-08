@@ -19,6 +19,9 @@ export interface IngredientRow {
   quantity: string;
 }
 
+/** Retention duration a sampler can pick when saving a sample, in hours. */
+export type RetentionHours = 24 | 72;
+
 export interface SamplerRecord {
   id: string;
   mealId: string;
@@ -32,7 +35,7 @@ export interface SamplerRecord {
   storageLocation?: string;
   sampleCount?: number;
   notes?: string;
-  // New detailed form fields
+  // New detailed form fields (legacy — kept so old stored records keep typechecking)
   photoUri?: string;
   mealCode?: string;
   mealTypeLabel?: string;
@@ -43,6 +46,9 @@ export interface SamplerRecord {
   processCode?: string;
   ingredientRows?: IngredientRow[];
   signature?: string;
+  // Retention: how long the sample is kept before it's auto-removed.
+  retentionHours?: RetentionHours;
+  expiresAt?: number; // epoch ms — record is purged once Date.now() passes this
 }
 
 interface SamplerContextValue {
@@ -53,21 +59,48 @@ interface SamplerContextValue {
 }
 
 const KEY = '@sampler_records_v1';
+/** How often to check for and purge expired samples while the app is open. */
+const PURGE_INTERVAL_MS = 60_000;
 
 const SamplerContext = createContext<SamplerContextValue | null>(null);
+
+/** Drops any record whose retention window has passed. */
+function purgeExpired(list: SamplerRecord[]): SamplerRecord[] {
+  const now = Date.now();
+  return list.filter((r) => !r.expiresAt || r.expiresAt > now);
+}
 
 export function SamplerProvider({ children }: { children: React.ReactNode }) {
   const [records, setRecords] = useState<SamplerRecord[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(KEY).then((raw) => {
-      if (raw) setRecords(JSON.parse(raw));
+      if (!raw) return;
+      const parsed = purgeExpired(JSON.parse(raw));
+      setRecords(parsed);
+      AsyncStorage.setItem(KEY, JSON.stringify(parsed));
     });
+  }, []);
+
+  // Periodically drop samples whose retention window (24h/72h) has elapsed
+  // so they automatically disappear from history without needing a restart.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRecords((prev) => {
+        const purged = purgeExpired(prev);
+        if (purged.length !== prev.length) {
+          AsyncStorage.setItem(KEY, JSON.stringify(purged));
+          return purged;
+        }
+        return prev;
+      });
+    }, PURGE_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, []);
 
   const addRecord = useCallback(async (record: SamplerRecord) => {
     setRecords((prev) => {
-      const updated = [...prev, record];
+      const updated = purgeExpired([...prev, record]);
       AsyncStorage.setItem(KEY, JSON.stringify(updated));
       return updated;
     });
