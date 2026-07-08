@@ -114,24 +114,6 @@ export default function SamplerHomeScreen() {
           </View>
         )}
 
-        {/* Single global scan button */}
-        {hasPending && (
-          <TouchableOpacity
-            style={[styles.scanCta, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/qr-scanner' as any)}
-            activeOpacity={0.85}
-          >
-            <View style={styles.scanCtaIconWrap}>
-              <Feather name="camera" size={22} color="#fff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.scanCtaTitle}>Quét mã QR</Text>
-              <Text style={styles.scanCtaDesc}>Quét mã trên khay cơm để lưu mẫu</Text>
-            </View>
-            <Feather name="chevron-right" size={20} color="#fff" />
-          </TouchableOpacity>
-        )}
-
         {/* Meals by session */}
         {dayIndex === null ? (
           <View style={[styles.emptyCard, { backgroundColor: colors.card }]}>
@@ -208,6 +190,17 @@ export default function SamplerHomeScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Floating scan button */}
+      {hasPending && (
+        <TouchableOpacity
+          style={[styles.scanFab, { backgroundColor: colors.primary }]}
+          onPress={() => router.push('/qr-scanner' as any)}
+          activeOpacity={0.85}
+        >
+          <Feather name="maximize" size={26} color="#fff" />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -261,18 +254,15 @@ const styles = StyleSheet.create({
   },
   pendingBadgeText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
 
-  scanCta: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 14, borderRadius: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 8, elevation: 3,
+  scanFab: {
+    position: 'absolute',
+    right: 20,
+    bottom: Platform.OS === 'web' ? 100 : 96,
+    width: 58, height: 58, borderRadius: 29,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25, shadowRadius: 10, elevation: 6,
   },
-  scanCtaIconWrap: {
-    width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  scanCtaTitle: { color: '#fff', fontSize: 15, fontFamily: 'Inter_700Bold' },
-  scanCtaDesc: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 2 },
 
   emptyCard: {
     borderRadius: 16, padding: 32, alignItems: 'center', gap: 10,
