@@ -89,6 +89,30 @@ export default function ScanSampleScreen() {
   const alreadyDone = meal ? isMealRecordedToday(meal.id) : false;
   const traceRecord = meal ? TRACEABILITY_RECORDS.find((r) => r.mealId === meal.id) : undefined;
 
+  // Traceability info to display — falls back to the meal's own ingredient
+  // list when there's no dedicated traceability record for it, so this
+  // section always shows something for every meal.
+  const traceInfo = meal
+    ? traceRecord
+      ? {
+          chefName: traceRecord.chefName,
+          processCode: traceRecord.processCode,
+          cookTime: traceRecord.cookTime as string | undefined,
+          ingredients: traceRecord.traceIngredients,
+        }
+      : {
+          chefName: 'Đầu bếp Checkee',
+          processCode: `MON-${meal.id.replace(/\D/g, '').padStart(3, '0')}`,
+          cookTime: undefined as string | undefined,
+          ingredients: meal.ingredients.map((ing) => ({
+            name: ing.name,
+            supplier: ing.origin,
+            batchNo: '—',
+            unit: ing.amount,
+          })),
+        }
+    : undefined;
+
   // Form state — only sample-retention specific fields
   const [temperature, setTemperature]       = useState('');
   const [weight, setWeight]                 = useState('');
@@ -242,7 +266,7 @@ export default function ScanSampleScreen() {
         </View>
 
         {/* ── Quy trình chế biến (read-only, không cần điền) ── */}
-        {traceRecord && (
+        {traceInfo && (
           <View style={[styles.card, { backgroundColor: colors.card, gap: 0 }]}>
             <View style={styles.traceTitleRow}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Quy trình chế biến (lưu vết)</Text>
@@ -259,29 +283,31 @@ export default function ScanSampleScreen() {
                 </View>
                 <View style={styles.processContent}>
                   <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Đầu bếp</Text>
-                  <Text style={[styles.processValue, { color: colors.text }]}>{traceRecord.chefName}</Text>
+                  <Text style={[styles.processValue, { color: colors.text }]}>{traceInfo.chefName}</Text>
                 </View>
               </View>
 
-              <View style={[styles.processRow, { borderBottomColor: colors.border }]}>
+              <View style={[styles.processRow, { borderBottomColor: traceInfo.cookTime ? colors.border : 'transparent', borderBottomWidth: traceInfo.cookTime ? StyleSheet.hairlineWidth : 0 }]}>
                 <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
                   <Feather name="shopping-cart" size={16} color={colors.text} />
                 </View>
                 <View style={styles.processContent}>
                   <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Mã quy trình</Text>
-                  <Text style={[styles.processValue, { color: colors.text }]}>{traceRecord.processCode}</Text>
+                  <Text style={[styles.processValue, { color: colors.text }]}>{traceInfo.processCode}</Text>
                 </View>
               </View>
 
-              <View style={styles.processRow}>
-                <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
-                  <Feather name="clock" size={16} color={colors.text} />
+              {traceInfo.cookTime && (
+                <View style={styles.processRow}>
+                  <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                    <Feather name="clock" size={16} color={colors.text} />
+                  </View>
+                  <View style={styles.processContent}>
+                    <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Chế biến lúc</Text>
+                    <Text style={[styles.processValue, { color: colors.text }]}>{traceInfo.cookTime}</Text>
+                  </View>
                 </View>
-                <View style={styles.processContent}>
-                  <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Chế biến lúc</Text>
-                  <Text style={[styles.processValue, { color: colors.text }]}>{traceRecord.cookTime}</Text>
-                </View>
-              </View>
+              )}
             </View>
 
             {/* Ingredients table */}
@@ -291,12 +317,12 @@ export default function ScanSampleScreen() {
               <Text style={[styles.thSoLo, { color: colors.mutedForeground }]}>Số lô/mẻ</Text>
               <Text style={[styles.thDonVi, { color: colors.mutedForeground }]}>Đơn vị tính</Text>
             </View>
-            {traceRecord.traceIngredients.map((ing, i) => (
+            {traceInfo.ingredients.map((ing, i) => (
               <View
                 key={i}
                 style={[
                   styles.tableRow,
-                  i < traceRecord.traceIngredients.length - 1 && {
+                  i < traceInfo.ingredients.length - 1 && {
                     borderBottomWidth: StyleSheet.hairlineWidth,
                     borderBottomColor: colors.border,
                   },
