@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -13,15 +13,22 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useSampler } from '@/contexts/SamplerContext';
 import { MEALS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
+function todayDayIndex(): number | null {
+  const dow = new Date().getDay(); // 0 Sun … 6 Sat
+  if (dow === 0 || dow === 6) return null;
+  return dow - 1; // Mon=0 … Fri=4
+}
+
 export default function QrScannerScreen() {
-  const { mealId } = useLocalSearchParams<{ mealId: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
   const { user } = useAuth();
+  const { isMealRecordedToday } = useSampler();
 
   // Role guard
   React.useEffect(() => {
@@ -30,7 +37,14 @@ export default function QrScannerScreen() {
     }
   }, [user]);
 
-  const meal = MEALS.find((m) => m.id === mealId);
+  // The QR code on the tray identifies the meal — simulated here by picking
+  // the next un-recorded meal from today's menu once a scan "detects" it.
+  const dayIndex = todayDayIndex();
+  const todayMeals = dayIndex === null ? [] : MEALS.filter((m) => m.dayIndex === dayIndex);
+  const pendingMeals = todayMeals.filter((m) => !isMealRecordedToday(m.id));
+
+  const [detectedMealId, setDetectedMealId] = useState<string | null>(null);
+  const meal = MEALS.find((m) => m.id === detectedMealId);
 
   // Phases: idle → scanning → detected
   const [phase, setPhase] = useState<'idle' | 'scanning' | 'detected'>('idle');
@@ -57,14 +71,17 @@ export default function QrScannerScreen() {
   useEffect(() => {
     if (phase === 'scanning') {
       startScanLine();
-      // Simulate auto-detect after 2.2s on web
+      // Simulate reading the QR code on the tray after 2.2s and identifying
+      // which meal it belongs to (the next un-recorded meal for today).
       const t = setTimeout(() => {
         stopScanLine();
+        setDetectedMealId(pendingMeals[0]?.id ?? null);
         setPhase('detected');
       }, 2200);
       return () => clearTimeout(t);
     }
-    if (phase !== 'scanning') stopScanLine();
+    stopScanLine();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
   const handleProceed = () => {
@@ -148,15 +165,20 @@ export default function QrScannerScreen() {
             Đã nhận diện: <Text style={{ fontWeight: '700' }}>{meal.name}</Text>
           </Text>
         )}
+        {phase === 'detected' && !meal && (
+          <Text style={[styles.hint, { color: '#22C55E' }]}>
+            Tất cả món ăn hôm nay đã được lưu mẫu.
+          </Text>
+        )}
       </View>
 
       {/* Bottom panel */}
       <View style={[styles.bottomPanel, { paddingBottom: isWeb ? 40 : insets.bottom + 24 }]}>
-        {meal && (
+        {phase === 'idle' && (
           <View style={styles.mealPill}>
             <Feather name="info" size={13} color="rgba(255,255,255,0.6)" />
             <Text style={styles.mealPillText} numberOfLines={1}>
-              Khay cơm cần quét: <Text style={{ color: '#fff', fontWeight: '700' }}>{meal.name}</Text>
+              Tìm mã QR dán trên khay cơm cần lưu mẫu
             </Text>
           </View>
         )}
@@ -179,7 +201,7 @@ export default function QrScannerScreen() {
               </>
             )}
           </TouchableOpacity>
-        ) : (
+        ) : meal ? (
           <TouchableOpacity
             style={[styles.scanBtn, { backgroundColor: '#22C55E' }]}
             onPress={handleProceed}
@@ -187,6 +209,15 @@ export default function QrScannerScreen() {
           >
             <Feather name="arrow-right" size={18} color="#fff" />
             <Text style={styles.scanBtnText}>Tiếp tục điền thông tin</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.scanBtn, { backgroundColor: '#22C55E' }]}
+            onPress={() => router.replace('/(sampler-tabs)' as any)}
+            activeOpacity={0.85}
+          >
+            <Feather name="check" size={18} color="#fff" />
+            <Text style={styles.scanBtnText}>Quay lại thực đơn</Text>
           </TouchableOpacity>
         )}
       </View>

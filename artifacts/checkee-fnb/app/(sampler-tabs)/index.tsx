@@ -53,6 +53,7 @@ export default function SamplerHomeScreen() {
   const totalMeals = todayMeals.length;
   const doneMeals  = todayMeals.filter((m) => isMealRecordedToday(m.id)).length;
   const allDone    = totalMeals > 0 && doneMeals === totalMeals;
+  const hasPending = todayMeals.some((m) => !isMealRecordedToday(m.id));
 
   const grouped = useMemo(() => {
     const map = new Map<MealSession, typeof todayMeals>();
@@ -113,6 +114,24 @@ export default function SamplerHomeScreen() {
           </View>
         )}
 
+        {/* Single global scan button */}
+        {hasPending && (
+          <TouchableOpacity
+            style={[styles.scanCta, { backgroundColor: colors.primary }]}
+            onPress={() => router.push('/qr-scanner' as any)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.scanCtaIconWrap}>
+              <Feather name="camera" size={22} color="#fff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.scanCtaTitle}>Quét mã QR</Text>
+              <Text style={styles.scanCtaDesc}>Quét mã trên khay cơm để lưu mẫu</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
+
         {/* Meals by session */}
         {dayIndex === null ? (
           <View style={[styles.emptyCard, { backgroundColor: colors.card }]}>
@@ -168,14 +187,10 @@ export default function SamplerHomeScreen() {
                         <Text style={[styles.doneBadgeText, { color: colors.safeGreen }]}>Đã lưu</Text>
                       </View>
                     ) : (
-                      <TouchableOpacity
-                        style={[styles.sampleBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => router.push(`/qr-scanner?mealId=${meal.id}` as any)}
-                        activeOpacity={0.8}
-                      >
-                        <Feather name="camera" size={14} color="#fff" />
-                        <Text style={styles.sampleBtnText}>Quét lưu mẫu</Text>
-                      </TouchableOpacity>
+                      <View style={[styles.pendingBadge, { backgroundColor: colors.muted }]}>
+                        <Feather name="clock" size={12} color={colors.mutedForeground} />
+                        <Text style={[styles.pendingBadgeText, { color: colors.mutedForeground }]}>Chưa lưu</Text>
+                      </View>
                     )}
                   </View>
                 );
@@ -240,11 +255,24 @@ const styles = StyleSheet.create({
   },
   doneBadgeText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
 
-  sampleBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, flexShrink: 0,
+  pendingBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, flexShrink: 0,
   },
-  sampleBtnText: { color: '#fff', fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+  pendingBadgeText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+
+  scanCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, borderRadius: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 8, elevation: 3,
+  },
+  scanCtaIconWrap: {
+    width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  scanCtaTitle: { color: '#fff', fontSize: 15, fontFamily: 'Inter_700Bold' },
+  scanCtaDesc: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 2 },
 
   emptyCard: {
     borderRadius: 16, padding: 32, alignItems: 'center', gap: 10,
