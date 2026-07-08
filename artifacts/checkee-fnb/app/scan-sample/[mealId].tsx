@@ -78,6 +78,13 @@ export default function ScanSampleScreen() {
     }
   }, [user]);
 
+  // Auto-fill recorder name once the logged-in user is loaded
+  React.useEffect(() => {
+    if (user?.name) {
+      setRecorderName((prev) => (prev ? prev : user.name));
+    }
+  }, [user]);
+
   const meal = MEALS.find((m) => m.id === mealId);
   const alreadyDone = meal ? isMealRecordedToday(meal.id) : false;
 
@@ -85,6 +92,7 @@ export default function ScanSampleScreen() {
   const [temperature, setTemperature]       = useState('');
   const [weight, setWeight]                 = useState('');
   const [container, setContainer]           = useState('');
+  const [recorderName, setRecorderName]     = useState(user?.name ?? '');
   const [retentionHours, setRetentionHours] = useState<RetentionHours>(72);
   const [signature, setSignature]           = useState('');
   const [saving, setSaving]                 = useState(false);
@@ -105,7 +113,7 @@ export default function ScanSampleScreen() {
       session:      meal.session,
       recordedAt:   fmtNow(),
       recordedDate: localDateISO(),
-      recordedBy:   user.name,
+      recordedBy:   recorderName.trim() || user.name,
       temperature:  temperature.trim() || undefined,
       weight:       weight.trim() || undefined,
       container:    container.trim() || undefined,
@@ -271,6 +279,17 @@ export default function ScanSampleScreen() {
               placeholderTextColor={colors.mutedForeground}
             />
           </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Tên người lưu mẫu</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={recorderName}
+              onChangeText={setRecorderName}
+              placeholder="Nhập tên người lưu mẫu"
+              placeholderTextColor={colors.mutedForeground}
+            />
+          </View>
         </View>
 
         {/* ── Retention duration ── */}
@@ -420,8 +439,16 @@ const styles = StyleSheet.create({
   retentionDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', lineHeight: 15 },
 
   /* signature */
+  signatureHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  clearSignature: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
   signatureBox: { borderWidth: 1, borderRadius: 10, minHeight: 80, overflow: 'hidden' },
   signatureInput: { flex: 1, padding: 16, fontSize: 14, fontFamily: 'Inter_400Regular', minHeight: 80 },
+  signaturePlaceholder: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    fontSize: 13, fontFamily: 'Inter_400Regular',
+    alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+    textAlignVertical: 'center', paddingTop: 30,
+  },
 
   /* confirm */
   confirmBtn: {
