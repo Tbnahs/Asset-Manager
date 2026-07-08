@@ -65,6 +65,7 @@ function RootLayoutNav() {
         <Stack.Screen name="traceability/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="sample-retention" options={{ headerShown: false }} />
         <Stack.Screen name="sample-retention/[mealId]" options={{ headerShown: false }} />
+        <Stack.Screen name="qr-scanner" options={{ headerShown: false }} />
         <Stack.Screen name="scan-sample/[mealId]" options={{ headerShown: false }} />
         <Stack.Screen name="feedback/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />

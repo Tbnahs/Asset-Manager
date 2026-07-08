@@ -170,7 +170,7 @@ export default function SamplerHomeScreen() {
                     ) : (
                       <TouchableOpacity
                         style={[styles.sampleBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => router.push(`/scan-sample/${meal.id}` as any)}
+                        onPress={() => router.push(`/qr-scanner?mealId=${meal.id}` as any)}
                         activeOpacity={0.8}
                       >
                         <Feather name="plus-circle" size={14} color="#fff" />

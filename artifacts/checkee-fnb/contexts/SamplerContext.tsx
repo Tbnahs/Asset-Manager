@@ -12,6 +12,13 @@ function localDateISO(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+export interface IngredientRow {
+  name: string;
+  supplier: string;
+  unit: string;
+  quantity: string;
+}
+
 export interface SamplerRecord {
   id: string;
   mealId: string;
@@ -20,10 +27,22 @@ export interface SamplerRecord {
   session: MealSession;
   recordedAt: string;   // 'dd/MM/yyyy HH:mm'
   recordedDate: string; // 'yyyy-MM-dd' for grouping/dedup
-  storageLocation: string;
-  sampleCount: number;
-  notes: string;
   recordedBy: string;
+  // Legacy fields (kept for old records)
+  storageLocation?: string;
+  sampleCount?: number;
+  notes?: string;
+  // New detailed form fields
+  photoUri?: string;
+  mealCode?: string;
+  mealTypeLabel?: string;
+  temperature?: string;
+  weight?: string;
+  container?: string;
+  startProcess?: boolean;
+  processCode?: string;
+  ingredientRows?: IngredientRow[];
+  signature?: string;
 }
 
 interface SamplerContextValue {
