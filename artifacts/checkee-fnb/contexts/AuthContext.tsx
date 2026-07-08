@@ -95,6 +95,7 @@ const MOCK_ACCOUNT: UserAccount & { password: string } = {
 
 const AUTH_STORAGE_KEY = '@checkee_auth_user';
 const PASSWORD_STORAGE_KEY = '@checkee_auth_password';
+const SAMPLER_PASSWORD_STORAGE_KEY = '@checkee_sampler_password';
 
 // Normalize phone: strip spaces, dashes, etc.
 function normalizePhone(raw: string) {
@@ -106,6 +107,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  updateUser: (updates: Partial<UserAccount>) => Promise<{ success: boolean; error?: string }>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   requestPasswordResetOtp: (phone: string) => Promise<{ success: boolean; error?: string; otp?: string }>;
   resetPasswordWithOtp: (phone: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
@@ -116,17 +118,20 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPassword, setCurrentPassword] = useState(MOCK_ACCOUNT.password);
+  const [parentPassword, setParentPassword] = useState(MOCK_ACCOUNT.password);
+  const [samplerPassword, setSamplerPassword] = useState(MOCK_SAMPLER_ACCOUNT.password);
   const [pendingOtp, setPendingOtp] = useState<{ phone: string; code: string } | null>(null);
 
   useEffect(() => {
     Promise.all([
       AsyncStorage.getItem(AUTH_STORAGE_KEY),
       AsyncStorage.getItem(PASSWORD_STORAGE_KEY),
+      AsyncStorage.getItem(SAMPLER_PASSWORD_STORAGE_KEY),
     ])
-      .then(([storedUser, storedPassword]) => {
+      .then(([storedUser, storedPassword, storedSamplerPassword]) => {
         if (storedUser) setUser(JSON.parse(storedUser));
-        if (storedPassword) setCurrentPassword(storedPassword);
+        if (storedPassword) setParentPassword(storedPassword);
+        if (storedSamplerPassword) setSamplerPassword(storedSamplerPassword);
       })
       .finally(() => setIsLoading(false));
   }, []);
@@ -134,9 +139,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (phone: string, password: string) => {
     const inputPhone = normalizePhone(phone);
 
-    // Sampler account (fixed password, not changeable via changePassword)
+    // Sampler account
     if (inputPhone === normalizePhone(MOCK_SAMPLER_ACCOUNT.phone)) {
-      if (password !== MOCK_SAMPLER_ACCOUNT.password) {
+      if (password !== samplerPassword) {
         return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
       }
       const { password: _pw, ...userData } = MOCK_SAMPLER_ACCOUNT;
@@ -147,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Parent account
     if (inputPhone === normalizePhone(MOCK_ACCOUNT.phone)) {
-      if (password !== currentPassword) {
+      if (password !== parentPassword) {
         return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
       }
       const { password: _pw, ...userData } = MOCK_ACCOUNT;
@@ -157,15 +162,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
-  }, [currentPassword]);
+  }, [parentPassword, samplerPassword]);
 
   const logout = useCallback(async () => {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
     setUser(null);
   }, []);
 
+  const updateUser = useCallback(async (updates: Partial<UserAccount>) => {
+    if (!user) return { success: false, error: 'Chưa đăng nhập.' };
+
+    const updated = { ...user, ...updates };
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+    setUser(updated);
+
+    // Keep the mock account records in sync so login still works after edits
+    if (user.id === MOCK_ACCOUNT.id) Object.assign(MOCK_ACCOUNT, updates);
+    if (user.id === MOCK_SAMPLER_ACCOUNT.id) Object.assign(MOCK_SAMPLER_ACCOUNT, updates);
+
+    return { success: true };
+  }, [user]);
+
   const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
-    if (oldPassword !== currentPassword) {
+    if (!user) return { success: false, error: 'Chưa đăng nhập.' };
+
+    const isSampler = user.id === MOCK_SAMPLER_ACCOUNT.id;
+    const expected = isSampler ? samplerPassword : parentPassword;
+
+    if (oldPassword !== expected) {
       return { success: false, error: 'Mật khẩu hiện tại không đúng.' };
     }
     if (newPassword.length < 6) {
@@ -174,10 +198,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (newPassword === oldPassword) {
       return { success: false, error: 'Mật khẩu mới phải khác mật khẩu hiện tại.' };
     }
-    await AsyncStorage.setItem(PASSWORD_STORAGE_KEY, newPassword);
-    setCurrentPassword(newPassword);
+
+    const key = isSampler ? SAMPLER_PASSWORD_STORAGE_KEY : PASSWORD_STORAGE_KEY;
+    await AsyncStorage.setItem(key, newPassword);
+    if (isSampler) setSamplerPassword(newPassword);
+    else setParentPassword(newPassword);
+
     return { success: true };
-  }, [currentPassword]);
+  }, [user, parentPassword, samplerPassword]);
 
   const requestPasswordResetOtp = useCallback(async (phone: string) => {
     const inputPhone = normalizePhone(phone);
@@ -203,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' };
     }
     await AsyncStorage.setItem(PASSWORD_STORAGE_KEY, newPassword);
-    setCurrentPassword(newPassword);
+    setParentPassword(newPassword);
     setPendingOtp(null);
     return { success: true };
   }, [pendingOtp]);
@@ -215,6 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         logout,
+        updateUser,
         changePassword,
         requestPasswordResetOtp,
         resetPasswordWithOtp,

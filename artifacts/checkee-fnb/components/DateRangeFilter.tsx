@@ -17,7 +17,8 @@ export function formatVNDate(d: Date): string {
 }
 
 export function parseVNDate(str: string): Date | null {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(str);
+  const datePart = str.trim().split(' ')[0];
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(datePart);
   if (!m) return null;
   return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
 }
@@ -90,15 +91,14 @@ export default function DateRangeFilter({ value, onChange, placeholder = 'Chọn
         style={[
           styles.dateInput,
           {
-            backgroundColor: colors.card,
+            backgroundColor: '#FFFFFF',
             borderColor: filterOpen ? '#0095E6' : colors.border,
           },
           filterOpen && styles.dateInputFocused,
         ]}
       >
-        <Feather name="calendar" size={16} color={filterOpen ? '#0095E6' : colors.mutedForeground} />
         <Text
-          style={[styles.dateInputText, { color: hasRange ? colors.text : colors.mutedForeground }]}
+          style={[styles.dateInputText, { color: hasRange ? '#494E50' : colors.mutedForeground }]}
           numberOfLines={1}
         >
           {rangeLabel}
@@ -108,11 +108,7 @@ export default function DateRangeFilter({ value, onChange, placeholder = 'Chọn
             <Feather name="x" size={15} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
-        <Feather
-          name={filterOpen ? 'chevron-up' : 'chevron-down'}
-          size={16}
-          color={colors.mutedForeground}
-        />
+        <Feather name="calendar" size={16} color={filterOpen ? '#0095E6' : '#494E50'} />
       </TouchableOpacity>
 
       {filterOpen && (
@@ -198,16 +194,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: 6,
+    height: 40,
   },
   dateInputFocused: {
-    shadowColor: 'rgba(32, 162, 232, 0.25)',
+    shadowColor: '#20A2E8',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3.2,
-    elevation: 2,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  dateInputText: { flex: 1, fontSize: 14, fontFamily: 'Inter_400Regular' },
+  dateInputText: { flex: 1, fontSize: 13, fontFamily: 'Inter_400Regular' },
   calendarDropdown: {
     position: 'absolute',
     top: 46,

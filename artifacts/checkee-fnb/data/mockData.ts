@@ -8,7 +8,6 @@ export const MEALS: Meal[] = [
     calories: 350,
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
-    monitoredUntil: '30/06/2026',
     mealType: 'main',
     session: 'sang',
     dayIndex: 0,
@@ -29,7 +28,6 @@ export const MEALS: Meal[] = [
     calories: 300,
     image: require('../assets/images/meal-fried-rice.png'),
     isMonitored: true,
-    monitoredUntil: '15/07/2026',
     mealType: 'main',
     session: 'trua',
     dayIndex: 0,
@@ -49,7 +47,6 @@ export const MEALS: Meal[] = [
     calories: 60,
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: true,
-    monitoredUntil: '25/06/2026',
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 0,
@@ -69,7 +66,6 @@ export const MEALS: Meal[] = [
     calories: 320,
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
-    monitoredUntil: '10/07/2026',
     mealType: 'main',
     session: 'sang',
     dayIndex: 1,
@@ -91,7 +87,6 @@ export const MEALS: Meal[] = [
     calories: 450,
     image: require('../assets/images/meal-chicken-rice.png'),
     isMonitored: true,
-    monitoredUntil: '01/07/2026',
     mealType: 'main',
     session: 'trua',
     dayIndex: 1,
@@ -112,7 +107,6 @@ export const MEALS: Meal[] = [
     calories: 80,
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: true,
-    monitoredUntil: '20/07/2026',
     mealType: 'dessert',
     session: 'phu',
     dayIndex: 1,
@@ -131,7 +125,6 @@ export const MEALS: Meal[] = [
     calories: 150,
     image: require('../assets/images/meal-yogurt.png'),
     isMonitored: true,
-    monitoredUntil: '02/07/2026',
     mealType: 'drink',
     session: 'chieu',
     dayIndex: 1,
@@ -151,7 +144,6 @@ export const MEALS: Meal[] = [
     calories: 380,
     image: require('../assets/images/meal-fried-rice.png'),
     isMonitored: true,
-    monitoredUntil: '31/07/2026',
     mealType: 'main',
     session: 'phu',
     dayIndex: 1,
@@ -173,7 +165,6 @@ export const MEALS: Meal[] = [
     calories: 380,
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
-    monitoredUntil: '14/07/2026',
     mealType: 'main',
     session: 'sang',
     dayIndex: 2,
@@ -194,7 +185,6 @@ export const MEALS: Meal[] = [
     calories: 120,
     image: require('../assets/images/meal-yogurt.png'),
     isMonitored: true,
-    monitoredUntil: '28/06/2026',
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 2,
@@ -215,7 +205,6 @@ export const MEALS: Meal[] = [
     calories: 520,
     image: require('../assets/images/meal-chicken-rice.png'),
     isMonitored: true,
-    monitoredUntil: '18/07/2026',
     mealType: 'main',
     session: 'trua',
     dayIndex: 3,
@@ -236,7 +225,6 @@ export const MEALS: Meal[] = [
     calories: 70,
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: true,
-    monitoredUntil: '30/06/2026',
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 3,
@@ -256,7 +244,6 @@ export const MEALS: Meal[] = [
     calories: 340,
     image: require('../assets/images/meal-noodle.png'),
     isMonitored: true,
-    monitoredUntil: '25/07/2026',
     mealType: 'main',
     session: 'sang',
     dayIndex: 4,
@@ -277,7 +264,6 @@ export const MEALS: Meal[] = [
     calories: 60,
     image: require('../assets/images/meal-fruit.png'),
     isMonitored: true,
-    monitoredUntil: '01/07/2026',
     mealType: 'dessert',
     session: 'chieu',
     dayIndex: 4,
@@ -782,6 +768,12 @@ function _fmtVN(d: Date): string {
   return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
+function _fmtTime(d: Date): string {
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${min}`;
+}
+
 /** Approximate serving hour per session so status transitions are realistic. */
 const _SESSION_HOUR: Record<string, number> = {
   sang:  7,   // morning  ~07:00
@@ -818,10 +810,14 @@ function _mealDate(meal: Meal): Date {
 }
 
 function _retentionStatus(mealDate: Date): 'active' | 'expired' | 'future' {
-  const diffH = (Date.now() - mealDate.getTime()) / 3_600_000;
-  if (diffH < 0)   return 'future';
-  if (diffH <= 72) return 'active';
-  return 'expired';
+  // Treat meals scheduled for today as active, regardless of the exact session
+  // time. Past days are expired and future days are not yet sampled.
+  const today = new Date();
+  const mealDay = new Date(mealDate.getFullYear(), mealDate.getMonth(), mealDate.getDate());
+  const nowDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (mealDay > nowDay) return 'future';
+  if (mealDay < nowDay) return 'expired';
+  return 'active';
 }
 
 /** Assign a tủ lạnh slot per session so location strings stay consistent. */
@@ -846,7 +842,9 @@ export const SAMPLE_RETENTIONS: SampleRetention[] = MEALS.map((meal) => {
     mealName:        meal.name,
     image:           meal.image,
     storedDate:      isFuture ? '—' : _fmtVN(mealDt),
+    storedTime:      isFuture ? '—' : _fmtTime(mealDt),
     expiryDate:      isFuture ? '—' : _fmtVN(expiryDt),
+    expiryTime:      isFuture ? '—' : _fmtTime(expiryDt),
     status,
     storageLocation: isFuture ? '—' : (_STORAGE[meal.session] ?? 'Tủ lạnh A - Ngăn 1'),
     sampleCount:     isFuture ? 0 : 3,
@@ -859,7 +857,6 @@ export const FEEDBACKS: FeedbackItem[] = [
     id: 'f1',
     mealId: 'm4',
     mealName: 'Mì trộn hải sản',
-    complaintType: 'quality',
     description: 'Mì bị nhão, tôm còn tanh, mùi không tươi. Con tôi ăn được nửa suất rồi bỏ.',
     symptoms: 'Không có triệu chứng',
     photos: [require('../assets/images/feedback-photo-1.png')],
@@ -872,7 +869,6 @@ export const FEEDBACKS: FeedbackItem[] = [
     id: 'f2',
     mealId: 'm5',
     mealName: 'Cơm gà Hội An',
-    complaintType: 'quantity',
     description: 'Suất ăn bữa trưa ít hơn bình thường, cơm chỉ được khoảng 2/3 chén, con về nhà kêu đói.',
     symptoms: 'Không có',
     photos: [],
@@ -883,7 +879,6 @@ export const FEEDBACKS: FeedbackItem[] = [
     id: 'f3',
     mealId: 'm2',
     mealName: 'Canh bí đỏ',
-    complaintType: 'safety',
     description: 'Con bị đau bụng sau bữa ăn buổi sáng, có thể do canh bí đỏ để lâu hoặc nấu chưa chín kỹ.',
     symptoms: 'Đau bụng, buồn nôn nhẹ khoảng 1 tiếng sau khi ăn. Đã uống thuốc và hết.',
     photos: [require('../assets/images/feedback-photo-1.png'), require('../assets/images/feedback-photo-2.png')],
@@ -894,7 +889,6 @@ export const FEEDBACKS: FeedbackItem[] = [
     id: 'f4',
     mealId: 'm1',
     mealName: 'Bún bò Huế',
-    complaintType: 'hygiene',
     description: 'Phát hiện sợi tóc trong tô bún của con. Rất mong nhà trường nhắc nhở nhân viên bếp đội mũ đúng quy định.',
     symptoms: 'Không có',
     photos: [require('../assets/images/feedback-photo-2.png')],

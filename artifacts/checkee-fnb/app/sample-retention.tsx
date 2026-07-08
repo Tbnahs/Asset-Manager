@@ -152,7 +152,9 @@ export default function SampleRetentionScreen() {
                   </View>
                   <View>
                     <Text style={[styles.detailLabel, { color: colors.mutedForeground }]}>Ngày lưu mẫu</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{sample.storedDate}</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>
+                      {sample.storedDate} {sample.storedTime}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.detailItem}>
@@ -167,7 +169,7 @@ export default function SampleRetentionScreen() {
                         { color: sample.status === 'expired' ? '#FF9500' : colors.text },
                       ]}
                     >
-                      {sample.expiryDate}
+                      {sample.expiryDate} {sample.expiryTime}
                     </Text>
                   </View>
                 </View>

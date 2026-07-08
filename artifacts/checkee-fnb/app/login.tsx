@@ -80,6 +80,9 @@ export default function LoginScreen() {
             <Text style={[styles.cardSub, { color: colors.mutedForeground }]}>
               Dành cho phụ huynh học sinh
             </Text>
+            <Text style={[styles.defaultPasswordHint, { color: colors.mutedForeground }]}>
+              Mật khẩu mặc định: 123456 (có thể đổi trong mục Hồ sơ)
+            </Text>
 
             {/* Phone */}
             <View style={styles.fieldWrap}>
@@ -248,6 +251,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 20, fontFamily: 'Inter_700Bold' },
   cardSub: { fontSize: 13, fontFamily: 'Inter_400Regular', marginTop: -6 },
+  defaultPasswordHint: { fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: -8 },
   fieldWrap: { gap: 6 },
   label: { fontSize: 13, fontFamily: 'Inter_500Medium' },
   inputRow: {

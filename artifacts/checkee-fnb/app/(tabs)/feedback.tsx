@@ -116,7 +116,6 @@ export default function FeedbackScreen() {
       id: `f${Date.now()}`,
       mealId: '',
       mealName: `Bữa ăn tại trường · ${child.name} (Lớp ${child.className})`,
-      complaintType: 'other',
       description: symptoms.trim(),
       symptoms: symptoms.trim(),
       photos,

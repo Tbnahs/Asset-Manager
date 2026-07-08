@@ -19,6 +19,13 @@ import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS, TRACEABILITY_RECORD
 import { useColors } from '@/hooks/useColors';
 import { Meal, MealSession } from '@/types';
 
+function sampleLabel(sample: { status: string; storedDate?: string; storedTime?: string } | undefined) {
+  if (!sample || sample.status === 'future' || !sample.storedDate || sample.storedDate === '—') {
+    return 'Chưa lưu mẫu';
+  }
+  return `Lưu mẫu: ${sample.storedDate} ${sample.storedTime}`;
+}
+
 /* ─── Constants ─────────────────────────────────────────── */
 const DAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6'];
 const CAL_HEADERS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -130,27 +137,25 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
                     <Text style={[rStyles.mealName, { color: colors.text }]} numberOfLines={1}>
                       {meal.name}
                     </Text>
-                    <View style={rStyles.mealMeta}>
-                      <Text style={[rStyles.kcal, { color: colors.mutedForeground }]}>
-                        {meal.calories} kcal
-                      </Text>
-                      {meal.isMonitored && (() => {
-                        const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === meal.id);
-                        const tag = getMonitoringTag(sample?.status);
-                        if (tag === null) return null;
-                        const active = tag === 'active';
-                        const bg = active ? colors.safeGreenLight : colors.muted;
-                        const fg = active ? colors.safeGreen : colors.mutedForeground;
-                        return (
-                          <View style={[rStyles.monitored, { backgroundColor: bg }]}>
-                            <View style={[rStyles.monDot, { backgroundColor: fg }]} />
-                            <Text style={[rStyles.monText, { color: fg }]}>
-                              {active ? 'Đang theo dõi' : 'Ngưng hoạt động'}
-                            </Text>
-                          </View>
-                        );
-                      })()}
-                    </View>
+                    <Text style={[rStyles.sampleDate, { color: colors.mutedForeground }]} numberOfLines={1}>
+                      {sampleLabel(SAMPLE_RETENTIONS.find((s) => s.mealId === meal.id))}
+                    </Text>
+                    {meal.isMonitored && (() => {
+                      const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === meal.id);
+                      const tag = getMonitoringTag(sample?.status);
+                      if (tag === null) return null;
+                      const active = tag === 'active';
+                      const bg = active ? colors.safeGreenLight : colors.muted;
+                      const fg = active ? colors.safeGreen : colors.mutedForeground;
+                      return (
+                        <View style={[rStyles.monitored, { backgroundColor: bg }]}>
+                          <View style={[rStyles.monDot, { backgroundColor: fg }]} />
+                          <Text style={[rStyles.monText, { color: fg }]}>
+                            {active ? 'Đang theo dõi' : 'Ngưng hoạt động'}
+                          </Text>
+                        </View>
+                      );
+                    })()}
                   </View>
                   <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
                 </TouchableOpacity>
@@ -173,11 +178,10 @@ const rStyles = StyleSheet.create({
   mealsCol: { flex: 1 },
   mealRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 10, gap: 10 },
   mealImg: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#f0f0f0', flexShrink: 0 },
-  mealInfo: { flex: 1, gap: 4 },
+  mealInfo: { flex: 1, gap: 3 },
   mealName: { fontSize: 13, fontFamily: 'Inter_600SemiBold', lineHeight: 18 },
-  mealMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  kcal: { fontSize: 11, fontFamily: 'Inter_400Regular' },
-  monitored: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
+  sampleDate: { fontSize: 11, fontFamily: 'Inter_400Regular' },
+  monitored: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, marginTop: 2 },
   monDot: { width: 5, height: 5, borderRadius: 3 },
   monText: { fontSize: 10, fontFamily: 'Inter_500Medium' },
 });

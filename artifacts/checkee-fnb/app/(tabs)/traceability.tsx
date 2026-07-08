@@ -51,7 +51,7 @@ export default function TraceabilityScreen() {
 
         <Text style={[styles.pageTitle, { color: colors.text }]}>Danh sách các món ăn đang theo dõi lưu mẫu</Text>
         <Text style={[styles.pageSubtitle, { color: colors.mutedForeground }]}>
-          Chỉ hiển thị món còn trong thời gian lưu mẫu 24–72h theo quy định ATTP
+          Chỉ hiển thị món của ngày hôm nay đang được lưu mẫu theo dõi
         </Text>
 
         <DateRangeFilter value={range} onChange={setRange} placeholder="Chọn khoảng ngày lưu mẫu" />

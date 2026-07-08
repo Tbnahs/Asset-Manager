@@ -20,7 +20,6 @@ export interface Meal {
   calories: number;
   image: number;
   isMonitored: boolean;
-  monitoredUntil?: string; // dd/MM/yyyy — if absent and isMonitored, monitoring has no expiry
   mealType: 'main' | 'dessert' | 'drink';
   session: MealSession;
   dayIndex: number;
@@ -79,8 +78,10 @@ export interface SampleRetention {
   mealId: string;
   mealName: string;
   image: number;
-  storedDate: string;
-  expiryDate: string;
+  storedDate: string; // dd/MM/yyyy
+  storedTime: string; // HH:mm
+  expiryDate: string; // dd/MM/yyyy
+  expiryTime: string; // HH:mm
   status: 'active' | 'expired' | 'disposed' | 'future';
   storageLocation: string;
   sampleCount: number;
@@ -91,7 +92,6 @@ export interface FeedbackItem {
   id: string;
   mealId: string;
   mealName: string;
-  complaintType: 'quality' | 'safety' | 'quantity' | 'hygiene' | 'other';
   description: string;
   symptoms: string;
   photos: (string | number)[];
