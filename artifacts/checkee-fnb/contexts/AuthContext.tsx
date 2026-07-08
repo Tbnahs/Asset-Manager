@@ -32,6 +32,23 @@ export interface UserAccount {
   };
 }
 
+const MOCK_SAMPLER_ACCOUNT: UserAccount & { password: string } = {
+  id: '2',
+  phone: '0912000000',
+  password: '123456',
+  name: 'Trần Thị Mai',
+  email: 'mai.tran@ischool.edu.vn',
+  address: 'Tiểu học Nguyễn Du, Q.1, TP.HCM',
+  role: 'Người lưu mẫu',
+  children: [],
+  schoolInfo: {
+    name: 'Tiểu học Nguyễn Du',
+    address: '45 Nguyễn Du, Q.1, TP.HCM',
+    phone: '028 3822 1122',
+    foodOfficer: 'Nguyễn Văn Tuấn',
+  },
+};
+
 const MOCK_ACCOUNT: UserAccount & { password: string } = {
   id: '1',
   phone: '0912345678',
@@ -116,14 +133,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (phone: string, password: string) => {
     const inputPhone = normalizePhone(phone);
-    const accountPhone = normalizePhone(MOCK_ACCOUNT.phone);
-    if (inputPhone !== accountPhone || password !== currentPassword) {
-      return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
+
+    // Sampler account (fixed password, not changeable via changePassword)
+    if (inputPhone === normalizePhone(MOCK_SAMPLER_ACCOUNT.phone)) {
+      if (password !== MOCK_SAMPLER_ACCOUNT.password) {
+        return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
+      }
+      const { password: _pw, ...userData } = MOCK_SAMPLER_ACCOUNT;
+      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+      setUser(userData);
+      return { success: true };
     }
-    const { password: _pw, ...userData } = MOCK_ACCOUNT;
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
-    setUser(userData);
-    return { success: true };
+
+    // Parent account
+    if (inputPhone === normalizePhone(MOCK_ACCOUNT.phone)) {
+      if (password !== currentPassword) {
+        return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
+      }
+      const { password: _pw, ...userData } = MOCK_ACCOUNT;
+      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+      setUser(userData);
+      return { success: true };
+    }
+
+    return { success: false, error: 'Số điện thoại hoặc mật khẩu không đúng.' };
   }, [currentPassword]);
 
   const logout = useCallback(async () => {

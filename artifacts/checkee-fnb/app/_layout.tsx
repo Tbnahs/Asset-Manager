@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { SamplerProvider } from "@/contexts/SamplerContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,9 +29,20 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'forgot-password';
+    const inParentTabs = segments[0] === '(tabs)';
+    const inSamplerTabs = segments[0] === '(sampler-tabs)';
+
     if (!user && !inAuthGroup) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
+      if (user.role === 'Người lưu mẫu') {
+        router.replace('/(sampler-tabs)');
+      } else {
+        router.replace('/(tabs)');
+      }
+    } else if (user && user.role === 'Người lưu mẫu' && inParentTabs) {
+      router.replace('/(sampler-tabs)');
+    } else if (user && user.role !== 'Người lưu mẫu' && inSamplerTabs) {
       router.replace('/(tabs)');
     }
   }, [user, isLoading, segments]);
@@ -47,11 +59,13 @@ function RootLayoutNav() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="forgot-password" options={{ title: "Quên mật khẩu" }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(sampler-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="change-password" options={{ title: "Đổi mật khẩu" }} />
         <Stack.Screen name="meal/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="traceability/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="sample-retention" options={{ headerShown: false }} />
         <Stack.Screen name="sample-retention/[mealId]" options={{ headerShown: false }} />
+        <Stack.Screen name="scan-sample/[mealId]" options={{ headerShown: false }} />
         <Stack.Screen name="feedback/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
       </Stack>
@@ -82,9 +96,11 @@ export default function RootLayout() {
           <GestureHandlerRootView>
             <KeyboardProvider>
               <AuthProvider>
-                <NotificationsProvider>
-                  <RootLayoutNav />
-                </NotificationsProvider>
+                <SamplerProvider>
+                  <NotificationsProvider>
+                    <RootLayoutNav />
+                  </NotificationsProvider>
+                </SamplerProvider>
               </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>

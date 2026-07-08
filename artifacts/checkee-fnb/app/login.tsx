@@ -48,6 +48,12 @@ export default function LoginScreen() {
     setPassword('123456');
   };
 
+  const fillSampler = () => {
+    setError('');
+    setPhone('0912 000 000');
+    setPassword('123456');
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
@@ -150,7 +156,12 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Demo account */}
+          {/* Demo accounts */}
+          <Text style={[styles.demoSectionLabel, { color: colors.mutedForeground }]}>
+            TÀI KHOẢN DEMO
+          </Text>
+
+          {/* Parent demo */}
           <TouchableOpacity
             style={[styles.demoCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={fillDemo}
@@ -162,8 +173,8 @@ export default function LoginScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.demoTopRow}>
-                  <Feather name="info" size={12} color={colors.info} />
-                  <Text style={[styles.demoHint, { color: colors.info }]}>Tài khoản demo</Text>
+                  <Feather name="users" size={12} color={colors.info} />
+                  <Text style={[styles.demoHint, { color: colors.info }]}>Phụ huynh học sinh</Text>
                 </View>
                 <Text style={[styles.demoName, { color: colors.text }]}>Nguyễn Thị Hương</Text>
                 <Text style={[styles.demoCreds, { color: colors.mutedForeground }]}>
@@ -176,6 +187,35 @@ export default function LoginScreen() {
             </View>
             <View style={[styles.fillBtn, { backgroundColor: colors.accent }]}>
               <Text style={[styles.fillBtnText, { color: colors.primary }]}>Dùng thử</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Sampler demo */}
+          <TouchableOpacity
+            style={[styles.demoCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={fillSampler}
+            activeOpacity={0.75}
+          >
+            <View style={styles.demoLeft}>
+              <View style={[styles.demoAvatar, { backgroundColor: '#E8F9ED' }]}>
+                <Text style={[styles.demoAvatarText, { color: '#34C759' }]}>M</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.demoTopRow}>
+                  <Feather name="shield" size={12} color="#34C759" />
+                  <Text style={[styles.demoHint, { color: '#34C759' }]}>Người lưu mẫu</Text>
+                </View>
+                <Text style={[styles.demoName, { color: colors.text }]}>Trần Thị Mai</Text>
+                <Text style={[styles.demoCreds, { color: colors.mutedForeground }]}>
+                  0912 000 000 · Mật khẩu: 123456
+                </Text>
+                <Text style={[styles.demoChildren, { color: colors.mutedForeground }]}>
+                  Tiểu học Nguyễn Du · Phụ trách lưu mẫu
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.fillBtn, { backgroundColor: '#E8F9ED' }]}>
+              <Text style={[styles.fillBtnText, { color: '#34C759' }]}>Dùng thử</Text>
             </View>
           </TouchableOpacity>
 
@@ -253,5 +293,6 @@ const styles = StyleSheet.create({
     borderRadius: 10, flexShrink: 0,
   },
   fillBtnText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+  demoSectionLabel: { fontSize: 11, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.6, textAlign: 'center', marginTop: 4 },
   footer: { textAlign: 'center', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 4 },
 });
