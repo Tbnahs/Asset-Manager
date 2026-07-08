@@ -44,6 +44,7 @@ export interface SamplerRecord {
   container?: string;
   startProcess?: boolean;
   processCode?: string;
+  chefName?: string;
   ingredientRows?: IngredientRow[];
   signature?: string;
   // Retention: how long the sample is kept before it's auto-removed.

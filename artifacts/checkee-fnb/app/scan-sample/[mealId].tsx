@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { RetentionHours, SamplerRecord, useSampler } from '@/contexts/SamplerContext';
-import { MEALS } from '@/data/mockData';
+import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -67,6 +67,7 @@ export default function ScanSampleScreen() {
   }, [user]);
 
   const meal = MEALS.find((m) => m.id === mealId);
+  const trace = TRACEABILITY_RECORDS.find((t) => t.mealId === mealId);
 
   const [retentionHours, setRetentionHours] = useState<RetentionHours>(72);
   const [signature, setSignature] = useState('');
@@ -92,6 +93,8 @@ export default function ScanSampleScreen() {
       signature:    signature.trim() || undefined,
       retentionHours,
       expiresAt:    expiry,
+      chefName:     trace?.chefName,
+      processCode:  trace?.processCode,
       // keep legacy fields for history display
       storageLocation: '-',
       sampleCount: 1,
@@ -195,6 +198,28 @@ export default function ScanSampleScreen() {
               <Text style={[styles.scannedTagText, { color: colors.safeGreen }]}>Đã quét</Text>
             </View>
           </View>
+
+          {trace && (
+            <>
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              <View style={styles.autoFillRow}>
+                <Feather name="user" size={14} color={colors.mutedForeground} />
+                <Text style={[styles.autoFillLabel, { color: colors.mutedForeground }]}>Đầu bếp</Text>
+                <Text style={[styles.autoFillValue, { color: colors.text }]} numberOfLines={1}>{trace.chefName}</Text>
+              </View>
+              <View style={styles.autoFillRow}>
+                <Feather name="clipboard" size={14} color={colors.mutedForeground} />
+                <Text style={[styles.autoFillLabel, { color: colors.mutedForeground }]}>Quy trình chế biến</Text>
+                <Text style={[styles.autoFillValue, { color: colors.text }]} numberOfLines={1}>{trace.processCode}</Text>
+              </View>
+              <View style={[styles.autoFillNote, { backgroundColor: colors.accent }]}>
+                <Feather name="info" size={12} color={colors.primary} />
+                <Text style={[styles.autoFillNoteText, { color: colors.primary }]}>
+                  Tự động điền từ dữ liệu truy xuất nguồn gốc của Bếp ăn công nghiệp
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* ── Retention choice ── */}
@@ -314,6 +339,13 @@ const styles = StyleSheet.create({
   metaText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
   scannedTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 20, flexShrink: 0 },
   scannedTagText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+
+  /* auto-filled traceability info */
+  autoFillRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  autoFillLabel: { fontSize: 12, fontFamily: 'Inter_400Regular', width: 110 },
+  autoFillValue: { flex: 1, fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  autoFillNote: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 10, marginTop: 2 },
+  autoFillNoteText: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', lineHeight: 15 },
 
   /* retention */
   retentionRow: { flexDirection: 'row', gap: 10 },
