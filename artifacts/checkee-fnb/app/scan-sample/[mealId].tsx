@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -15,7 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { RetentionHours, SamplerRecord, useSampler } from '@/contexts/SamplerContext';
+import { IngredientRow, RetentionHours, SamplerRecord, useSampler } from '@/contexts/SamplerContext';
 import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
@@ -29,6 +30,15 @@ function localDateISO(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function fmtNow(): string {
+  const d = new Date();
+  const dd  = String(d.getDate()).padStart(2, '0');
+  const mm  = String(d.getMonth() + 1).padStart(2, '0');
+  const hh  = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()} ${hh}:${min}`;
+}
+
 function fmt(d: Date): string {
   const dd  = String(d.getDate()).padStart(2, '0');
   const mm  = String(d.getMonth() + 1).padStart(2, '0');
@@ -37,17 +47,127 @@ function fmt(d: Date): string {
   return `${dd}/${mm}/${d.getFullYear()} ${hh}:${min}`;
 }
 
-const SESSION_LABEL: Record<string, string> = {
-  sang:  'Buổi sáng',
-  trua:  'Buổi trưa',
-  chieu: 'Buổi chiều',
-  phu:   'Bữa phụ',
-};
+function getMealCode(mealId: string): string {
+  const n = parseInt(mealId.replace(/\D/g, ''), 10) || 1;
+  return String(1753402410000 + n * 1000 + 99);
+}
+
+// ─── constants ──────────────────────────────────────────────────────────────
+
+const MEAL_TYPES = [
+  {
+    key: 'dac',
+    label: 'Đặc (nấu chín)',
+    desc: 'Đặc (nấu chín): Món ăn được theo dõi trong 24h từ lúc bắt đầu chế biến.',
+  },
+  {
+    key: 'thuong',
+    label: 'Thường (nấu chín)',
+    desc: 'Thường (nấu chín): Món ăn được chế biến theo quy trình chuẩn HACCP và kiểm tra trước khi phục vụ.',
+  },
+  {
+    key: 'song',
+    label: 'Sống (chưa chế biến)',
+    desc: 'Sống: Nguyên liệu chưa qua chế biến, bảo quản lạnh 0–4°C.',
+  },
+  {
+    key: 'do_uong',
+    label: 'Đồ uống',
+    desc: 'Đồ uống: Theo dõi trong 12h, bảo quản ở nhiệt độ phòng hoặc lạnh.',
+  },
+  {
+    key: 'trang_mieng',
+    label: 'Tráng miệng',
+    desc: 'Tráng miệng: Theo dõi 24h, bảo quản lạnh 4–8°C.',
+  },
+];
+
+const INGREDIENT_OPTIONS = [
+  'Bún tươi', 'Thịt bò', 'Thịt heo', 'Tôm sú', 'Mực ống',
+  'Gạo tẻ', 'Bí đỏ', 'Rau muống', 'Cải ngọt', 'Cà chua',
+  'Trứng gà', 'Đậu hũ', 'Cá hồi', 'Cá basa', 'Khoai tây',
+];
+
+const SUPPLIER_OPTIONS = [
+  'Công ty TNHH Thực phẩm An Việt',
+  'HTX Nông sản Lâm Đồng',
+  'Công ty CP Thủy sản Minh Phú',
+  'Cơ sở chế biến Hương Thảo',
+  'Siêu thị BigC – phân phối',
+];
+
+const UNIT_OPTIONS = ['Gram', 'Kg', 'Lít', 'ml', 'Cái', 'Trái', 'Bó', 'Túi'];
 
 const RETENTION_OPTIONS: { hours: RetentionHours; label: string; desc: string }[] = [
   { hours: 24, label: '24 giờ', desc: 'Lưu tối thiểu 24 giờ rồi tự động gỡ bỏ' },
   { hours: 72, label: '72 giờ', desc: 'Lưu tối đa 72 giờ theo quy định ATTP' },
 ];
+
+// ─── sub-components ─────────────────────────────────────────────────────────
+
+function DropdownPicker({
+  value,
+  options,
+  placeholder,
+  onChange,
+  colors,
+}: {
+  value: string;
+  options: string[];
+  placeholder: string;
+  onChange: (v: string) => void;
+  colors: ReturnType<typeof useColors>;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View>
+      <TouchableOpacity
+        style={[dp.trigger, { borderColor: colors.border, backgroundColor: colors.background }]}
+        onPress={() => setOpen((o) => !o)}
+        activeOpacity={0.75}
+      >
+        <Text style={[dp.triggerText, { color: value ? colors.text : colors.mutedForeground }]} numberOfLines={1}>
+          {value || placeholder}
+        </Text>
+        <Feather name={open ? 'chevron-up' : 'chevron-down'} size={14} color={colors.mutedForeground} />
+      </TouchableOpacity>
+      {open && (
+        <View style={[dp.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {options.map((opt) => (
+            <TouchableOpacity
+              key={opt}
+              style={[dp.option, { borderBottomColor: colors.border }]}
+              onPress={() => { onChange(opt); setOpen(false); }}
+              activeOpacity={0.7}
+            >
+              <Text style={[dp.optionText, { color: colors.text }]}>{opt}</Text>
+              {opt === value && <Feather name="check" size={13} color={colors.primary} />}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const dp = StyleSheet.create({
+  trigger: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
+  },
+  triggerText: { fontSize: 14, fontFamily: 'Inter_400Regular', flex: 1 },
+  menu: {
+    borderWidth: 1, borderRadius: 8, marginTop: 4,
+    zIndex: 99, elevation: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6,
+    maxHeight: 220, overflow: 'scroll' as any,
+  },
+  option: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 14, paddingVertical: 11, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  optionText: { fontSize: 14, fontFamily: 'Inter_400Regular', flex: 1 },
+});
 
 // ─── main screen ─────────────────────────────────────────────────────────────
 
@@ -56,7 +176,7 @@ export default function ScanSampleScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const isWeb  = Platform.OS === 'web';
-  const { addRecord } = useSampler();
+  const { addRecord, isMealRecordedToday } = useSampler();
   const { user } = useAuth();
 
   // Role guard
@@ -67,13 +187,68 @@ export default function ScanSampleScreen() {
   }, [user]);
 
   const meal = MEALS.find((m) => m.id === mealId);
+  // Sample đã được truy xuất nguồn gốc từ Bếp ăn công nghiệp khi xuất qua trường —
+  // nếu quét thành công (tìm thấy traceability record) thì đầu bếp & quy trình chế biến
+  // được điền sẵn tự động, không cần nhập tay.
   const trace = TRACEABILITY_RECORDS.find((t) => t.mealId === mealId);
+  const mealCode = trace?.traceCode ?? (meal ? getMealCode(meal.id) : '');
+  const alreadyDone = meal ? isMealRecordedToday(meal.id) : false;
 
+  const initialTypeKey = trace
+    ? (MEAL_TYPES.find((t) => t.label === trace.mealTypeCategory)?.key ?? 'dac')
+    : 'dac';
+
+  // Form state
+  const [photoUri, setPhotoUri]         = useState<string | null>(null);
+  const [mealName, setMealName]         = useState(meal?.name ?? '');
+  const [mealTypeKey, setMealTypeKey]   = useState(initialTypeKey);
+  const [temperature, setTemperature]   = useState('');
+  const [weight, setWeight]             = useState('');
+  const [container, setContainer]       = useState('');
+  const [startProcess, setStartProcess] = useState(true);
+  const [notes, setNotes]               = useState('');
+  // Manual fallbacks for fields normally auto-filled from a traceability scan —
+  // only used when no TRACEABILITY_RECORDS entry exists for this meal.
+  const [mealCodeInput, setMealCodeInput]     = useState(mealCode);
+  const [processCodeInput, setProcessCodeInput] = useState(trace?.processCode ?? 'MTHS-001');
+  const [chefNameInput, setChefNameInput]     = useState(trace?.chefName ?? '');
+  const [ingredientRows, setIngredientRows] = useState<IngredientRow[]>(
+    trace && trace.traceIngredients.length > 0
+      ? trace.traceIngredients.map((ing) => ({ name: ing.name, supplier: ing.supplier, unit: ing.unit, quantity: '' }))
+      : [{ name: '', supplier: '', unit: 'Gram', quantity: '' }],
+  );
   const [retentionHours, setRetentionHours] = useState<RetentionHours>(72);
-  const [signature, setSignature] = useState('');
-  const [saving, setSaving]       = useState(false);
-  const [done, setDone]           = useState(false);
-  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [signature, setSignature]       = useState('');
+  const [saving, setSaving]             = useState(false);
+  const [done, setDone]                 = useState(false);
+  const [expiresAt, setExpiresAt]       = useState<number | null>(null);
+
+  const selectedType = trace
+    ? { key: mealTypeKey, label: trace.mealTypeCategory, desc: trace.mealTypeDesc }
+    : MEAL_TYPES.find((t) => t.key === mealTypeKey);
+
+  // Photo picker
+  const pickPhoto = async () => {
+    const perm = isWeb ? { granted: true } : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  // Ingredient rows helpers
+  const updateRow = (idx: number, field: keyof IngredientRow, val: string) => {
+    setIngredientRows((rows) => rows.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
+  };
+  const addRow = () =>
+    setIngredientRows((rows) => [...rows, { name: '', supplier: '', unit: 'Gram', quantity: '' }]);
+  const removeRow = (idx: number) =>
+    setIngredientRows((rows) => rows.filter((_, i) => i !== idx));
 
   // Submit
   const handleConfirm = async () => {
@@ -84,20 +259,29 @@ export default function ScanSampleScreen() {
     const record: SamplerRecord = {
       id:           `sr-${meal.id}-${Date.now()}`,
       mealId:       meal.id,
-      mealName:     meal.name,
+      mealName:     mealName,
       mealImage:    meal.image,
       session:      meal.session,
-      recordedAt:   fmt(now),
+      recordedAt:   fmtNow(),
       recordedDate: localDateISO(),
       recordedBy:   user.name,
+      photoUri:     photoUri ?? undefined,
+      mealCode:     mealCodeInput.trim() || undefined,
+      mealTypeLabel: selectedType?.label,
+      temperature:  temperature.trim() || undefined,
+      weight:       weight.trim() || undefined,
+      container:    container.trim() || undefined,
+      startProcess,
+      processCode:  processCodeInput.trim() || undefined,
+      chefName:     chefNameInput.trim() || undefined,
+      ingredientRows: ingredientRows.filter((r) => r.name),
       signature:    signature.trim() || undefined,
       retentionHours,
       expiresAt:    expiry,
-      chefName:     trace?.chefName,
-      processCode:  trace?.processCode,
       // keep legacy fields for history display
       storageLocation: '-',
       sampleCount: 1,
+      notes: notes.trim(),
     };
     await addRecord(record);
     setExpiresAt(expiry);
@@ -141,9 +325,9 @@ export default function ScanSampleScreen() {
           <Text style={[styles.successTitle, { color: colors.text }]}>Lưu mẫu thành công!</Text>
           <Text style={[styles.successDesc, { color: colors.mutedForeground }]}>
             Mẫu của{' '}
-            <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.text }}>{meal.name}</Text>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.text }}>{mealName}</Text>
             {' '}đã được ghi nhận lúc{' '}
-            <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.text }}>{fmt(new Date())}</Text>.
+            <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.text }}>{fmtNow()}</Text>.
           </Text>
           <View style={[styles.expiryPill, { backgroundColor: colors.accent }]}>
             <Feather name="clock" size={13} color={colors.primary} />
@@ -180,49 +364,305 @@ export default function ScanSampleScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { paddingBottom: isWeb ? 40 : insets.bottom + 24 }]}
       >
-        {/* ── Meal card (from scanned QR) ── */}
+        {/* Already done warning */}
+        {alreadyDone && (
+          <View style={[styles.warnBox, { backgroundColor: '#FFF4E5' }]}>
+            <Feather name="alert-triangle" size={14} color="#FF9500" />
+            <Text style={[styles.warnText, { color: '#CC7700' }]}>
+              Món này đã được lưu mẫu hôm nay. Bạn vẫn có thể ghi nhận thêm nếu cần.
+            </Text>
+          </View>
+        )}
+
+        {trace && (
+          <View style={[styles.autoFillBanner, { backgroundColor: colors.safeGreenLight }]}>
+            <Feather name="check-circle" size={14} color={colors.safeGreen} />
+            <Text style={[styles.autoFillBannerText, { color: colors.safeGreen }]}>
+              Quét thành công — thông tin đầu bếp &amp; quy trình chế biến đã được điền sẵn từ dữ liệu truy xuất nguồn gốc.
+            </Text>
+          </View>
+        )}
+
+        {/* ── Photo upload ── */}
+        <TouchableOpacity
+          style={[styles.photoUpload, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={pickPhoto}
+          activeOpacity={0.75}
+        >
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.photoPreview} resizeMode="cover" />
+          ) : (
+            <View style={styles.photoPlaceholder}>
+              <Feather name="upload" size={20} color={colors.mutedForeground} />
+              <Text style={[styles.photoPlaceholderText, { color: colors.mutedForeground }]}>
+                Nhấn để tải ảnh thực đơn
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* ── Basic info ── */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <View style={styles.mealRow}>
-            <Image source={meal.image} style={styles.mealImage} resizeMode="cover" />
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={2}>{meal.name}</Text>
-              <View style={[styles.metaBadge, { backgroundColor: colors.accent, alignSelf: 'flex-start' }]}>
-                <Feather name="clock" size={11} color={colors.primary} />
-                <Text style={[styles.metaText, { color: colors.primary }]}>
-                  {SESSION_LABEL[meal.session] ?? meal.session}
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.scannedTag, { backgroundColor: colors.safeGreenLight }]}>
-              <Feather name="check" size={12} color={colors.safeGreen} />
-              <Text style={[styles.scannedTagText, { color: colors.safeGreen }]}>Đã quét</Text>
-            </View>
+          {/* Tên món */}
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Tên món ăn/thực đơn <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={mealName}
+              onChangeText={setMealName}
+              placeholder="Tên món ăn"
+              placeholderTextColor={colors.mutedForeground}
+            />
           </View>
 
-          {trace && (
-            <>
-              <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              <View style={styles.autoFillRow}>
-                <Feather name="user" size={14} color={colors.mutedForeground} />
-                <Text style={[styles.autoFillLabel, { color: colors.mutedForeground }]}>Đầu bếp</Text>
-                <Text style={[styles.autoFillValue, { color: colors.text }]} numberOfLines={1}>{trace.chefName}</Text>
-              </View>
-              <View style={styles.autoFillRow}>
-                <Feather name="clipboard" size={14} color={colors.mutedForeground} />
-                <Text style={[styles.autoFillLabel, { color: colors.mutedForeground }]}>Quy trình chế biến</Text>
-                <Text style={[styles.autoFillValue, { color: colors.text }]} numberOfLines={1}>{trace.processCode}</Text>
-              </View>
-              <View style={[styles.autoFillNote, { backgroundColor: colors.accent }]}>
-                <Feather name="info" size={12} color={colors.primary} />
-                <Text style={[styles.autoFillNoteText, { color: colors.primary }]}>
-                  Tự động điền từ dữ liệu truy xuất nguồn gốc của Bếp ăn công nghiệp
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Mã thực đơn */}
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Mã thực đơn <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
+            </Text>
+            {trace ? (
+              <View style={[styles.input, styles.inputReadOnly, { borderColor: colors.border, backgroundColor: colors.muted }]}>
+                <Text style={[{ color: colors.mutedForeground, fontFamily: 'Inter_400Regular', fontSize: 14 }]}>
+                  {mealCodeInput}
                 </Text>
               </View>
-            </>
+            ) : (
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                value={mealCodeInput}
+                onChangeText={setMealCodeInput}
+                placeholder="Nhập mã thực đơn"
+                placeholderTextColor={colors.mutedForeground}
+              />
+            )}
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Loại thực đơn */}
+          <View style={[styles.fieldGroup, { zIndex: 10 }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Loại thực đơn <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
+            </Text>
+            {trace ? (
+              <View style={[styles.input, styles.inputReadOnly, { borderColor: colors.border, backgroundColor: colors.muted }]}>
+                <Text style={{ color: colors.mutedForeground, fontFamily: 'Inter_400Regular', fontSize: 14 }}>
+                  {trace.mealTypeCategory}
+                </Text>
+              </View>
+            ) : (
+              <DropdownPicker
+                value={MEAL_TYPES.find((t) => t.key === mealTypeKey)?.label ?? ''}
+                options={MEAL_TYPES.map((t) => t.label)}
+                placeholder="Chọn loại thực đơn"
+                onChange={(v) => {
+                  const t = MEAL_TYPES.find((x) => x.label === v);
+                  if (t) setMealTypeKey(t.key);
+                }}
+                colors={colors}
+              />
+            )}
+          </View>
+
+          {/* Type description */}
+          {selectedType && (
+            <View style={[styles.typeDesc, { backgroundColor: colors.accent }]}>
+              <Text style={[styles.typeDescText, { color: colors.primary }]}>{selectedType.desc}</Text>
+            </View>
           )}
         </View>
 
-        {/* ── Retention choice ── */}
+        {/* ── Sample details ── */}
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Chi tiết mẫu lưu trữ</Text>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Nhiệt độ bảo quản mẫu</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={temperature}
+              onChangeText={setTemperature}
+              placeholder="Nhập nhiệt độ (°C)"
+              placeholderTextColor={colors.mutedForeground}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Khối lượng lưu mẫu (Kg, lt,...)</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={weight}
+              onChangeText={setWeight}
+              placeholder="Nhập khối lượng"
+              placeholderTextColor={colors.mutedForeground}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Dụng cụ chứa mẫu thức ăn lưu</Text>
+            <TextInput
+              style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={container}
+              onChangeText={setContainer}
+              placeholder="Nhập dụng cụ chứa mẫu thức ăn lưu"
+              placeholderTextColor={colors.mutedForeground}
+            />
+          </View>
+        </View>
+
+        {/* ── Process ── */}
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          {/* Checkbox */}
+          <TouchableOpacity
+            style={styles.checkRow}
+            onPress={() => setStartProcess((v) => !v)}
+            activeOpacity={0.75}
+          >
+            <View style={[styles.checkbox, {
+              backgroundColor: startProcess ? colors.primary : 'transparent',
+              borderColor: startProcess ? colors.primary : colors.border,
+            }]}>
+              {startProcess && <Feather name="check" size={11} color="#fff" />}
+            </View>
+            <Text style={[styles.checkLabel, { color: colors.text }]}>
+              Bắt đầu quy trình chế biến{' '}
+              <Text style={{ color: colors.primary, fontFamily: 'Inter_600SemiBold' }}>(lưu vết)</Text>
+            </Text>
+          </TouchableOpacity>
+
+          <View style={[styles.checkNotice, { backgroundColor: colors.accent }]}>
+            <Text style={[styles.checkNoticeText, { color: colors.mutedForeground }]}>
+              Lưu ý: khi bắt đầu quy trình chế biến sẽ không thể thay đổi, cập nhật thông tin trong khi chờ đến khi kết thúc quá trình theo dõi.
+            </Text>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {/* Process code */}
+          <View style={styles.fieldGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Quy trình chế biến <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
+            </Text>
+            {trace ? (
+              <View style={[styles.input, styles.inputReadOnly, { borderColor: colors.border, backgroundColor: colors.muted }]}>
+                <Text style={{ color: colors.mutedForeground, fontFamily: 'Inter_400Regular', fontSize: 14 }}>
+                  {processCodeInput}
+                </Text>
+              </View>
+            ) : (
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                value={processCodeInput}
+                onChangeText={setProcessCodeInput}
+                placeholder="Nhập mã quy trình chế biến"
+                placeholderTextColor={colors.mutedForeground}
+              />
+            )}
+          </View>
+
+          {/* Chef card */}
+          <View style={[styles.chefCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            {trace ? (
+              <Text style={styles.chefRow}>
+                <Text style={[styles.chefRoleLabel, { color: colors.mutedForeground }]}>Đầu bếp chính: </Text>
+                <Text style={[styles.chefName, { color: colors.primary }]}>{chefNameInput}</Text>
+              </Text>
+            ) : (
+              <View style={styles.fieldGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Đầu bếp chính</Text>
+                <TextInput
+                  style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
+                  value={chefNameInput}
+                  onChangeText={setChefNameInput}
+                  placeholder="Nhập tên đầu bếp chính"
+                  placeholderTextColor={colors.mutedForeground}
+                />
+              </View>
+            )}
+            <Text style={[styles.chefNoteLabel, { color: colors.mutedForeground }]}>Ghi chú cho quy trình này:</Text>
+            <TextInput
+              style={[styles.notesInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]}
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              placeholderTextColor={colors.mutedForeground}
+              placeholder="Ghi chú..."
+            />
+          </View>
+        </View>
+
+        {/* ── Ingredients ── */}
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Nguyên liệu</Text>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          {ingredientRows.map((row, idx) => (
+            <View key={idx} style={[styles.ingredientRow, { borderColor: colors.border }]}>
+              <View style={{ zIndex: 100 - idx }}>
+                <DropdownPicker
+                  value={row.name}
+                  options={INGREDIENT_OPTIONS}
+                  placeholder="Chọn tên nguyên liệu"
+                  onChange={(v) => updateRow(idx, 'name', v)}
+                  colors={colors}
+                />
+              </View>
+              <View style={{ zIndex: 90 - idx }}>
+                <DropdownPicker
+                  value={row.supplier}
+                  options={SUPPLIER_OPTIONS}
+                  placeholder="Chọn tên nguyên liệu"
+                  onChange={(v) => updateRow(idx, 'supplier', v)}
+                  colors={colors}
+                />
+              </View>
+              <View style={styles.ingredientBottom}>
+                <View style={[{ flex: 1 }, { zIndex: 80 - idx }]}>
+                  <DropdownPicker
+                    value={row.unit}
+                    options={UNIT_OPTIONS}
+                    placeholder="Chọn lô"
+                    onChange={(v) => updateRow(idx, 'unit', v)}
+                    colors={colors}
+                  />
+                </View>
+                <TextInput
+                  style={[styles.qtyInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.text, flex: 1 }]}
+                  value={row.quantity}
+                  onChangeText={(v) => updateRow(idx, 'quantity', v)}
+                  placeholder="Nhập số lượng"
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="decimal-pad"
+                />
+                {ingredientRows.length > 1 && (
+                  <TouchableOpacity onPress={() => removeRow(idx)} style={styles.removeRowBtn}>
+                    <Feather name="x" size={15} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          ))}
+
+          <TouchableOpacity
+            style={[styles.addRowBtn, { borderColor: colors.primary }]}
+            onPress={addRow}
+            activeOpacity={0.7}
+          >
+            <Feather name="plus" size={14} color={colors.primary} />
+            <Text style={[styles.addRowText, { color: colors.primary }]}>Thêm nguyên liệu</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Retention ── */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Thời gian lưu mẫu <Text style={{ color: colors.danger ?? '#EF4444' }}>*</Text>
@@ -288,18 +728,18 @@ export default function ScanSampleScreen() {
           style={[
             styles.confirmBtn,
             { backgroundColor: colors.primary },
-            (saving || !signature.trim()) && { opacity: 0.6 },
+            (saving || !mealName.trim() || !signature.trim()) && { opacity: 0.6 },
           ]}
           onPress={handleConfirm}
           activeOpacity={0.85}
-          disabled={saving || !signature.trim()}
+          disabled={saving || !mealName.trim() || !signature.trim()}
         >
           {saving
             ? <ActivityIndicator color="#fff" size="small" />
             : (
               <>
                 <Feather name="check-circle" size={18} color="#fff" />
-                <Text style={styles.confirmBtnText}>Kết thúc lưu mẫu</Text>
+                <Text style={styles.confirmBtnText}>Xác nhận</Text>
               </>
             )
           }
@@ -322,6 +762,21 @@ const styles = StyleSheet.create({
 
   content: { padding: 16, gap: 12 },
 
+  warnBox: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', padding: 12, borderRadius: 12 },
+  warnText: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 18, flex: 1 },
+
+  autoFillBanner: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', padding: 12, borderRadius: 12 },
+  autoFillBannerText: { fontSize: 12, fontFamily: 'Inter_500Medium', lineHeight: 17, flex: 1 },
+
+  /* photo */
+  photoUpload: {
+    borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, overflow: 'hidden',
+    minHeight: 90, alignItems: 'center', justifyContent: 'center',
+  },
+  photoPlaceholder: { alignItems: 'center', gap: 6, paddingVertical: 24 },
+  photoPlaceholderText: { fontSize: 13, fontFamily: 'Inter_400Regular' },
+  photoPreview: { width: '100%', height: 180 },
+
   /* card */
   card: {
     borderRadius: 14, padding: 14, gap: 12,
@@ -331,21 +786,45 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
   divider: { height: StyleSheet.hairlineWidth },
 
-  /* meal card */
-  mealRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mealImage: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#f0f0f0', flexShrink: 0 },
-  mealName: { fontSize: 15, fontFamily: 'Inter_700Bold', lineHeight: 20 },
-  metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20 },
-  metaText: { fontSize: 11, fontFamily: 'Inter_500Medium' },
-  scannedTag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 20, flexShrink: 0 },
-  scannedTagText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
+  /* field */
+  fieldGroup: { gap: 6 },
+  label: { fontSize: 13, fontFamily: 'Inter_500Medium' },
+  input: {
+    borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: 14, fontFamily: 'Inter_400Regular',
+  },
+  inputReadOnly: { justifyContent: 'center' },
+  typeDesc: { borderRadius: 8, padding: 10 },
+  typeDescText: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 18 },
 
-  /* auto-filled traceability info */
-  autoFillRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  autoFillLabel: { fontSize: 12, fontFamily: 'Inter_400Regular', width: 110 },
-  autoFillValue: { flex: 1, fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-  autoFillNote: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 10, marginTop: 2 },
-  autoFillNoteText: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', lineHeight: 15 },
+  /* process */
+  checkRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  checkbox: { width: 18, height: 18, borderRadius: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginTop: 1, flexShrink: 0 },
+  checkLabel: { fontSize: 14, fontFamily: 'Inter_500Medium', flex: 1, lineHeight: 20 },
+  checkNotice: { borderRadius: 8, padding: 10 },
+  checkNoticeText: { fontSize: 12, fontFamily: 'Inter_400Regular', lineHeight: 17 },
+
+  chefCard: { borderRadius: 10, borderWidth: 1, padding: 12, gap: 8 },
+  chefRow: { fontSize: 14, lineHeight: 20 },
+  chefRoleLabel: { fontSize: 13, fontFamily: 'Inter_400Regular' },
+  chefName: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+  chefNoteLabel: { fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 2 },
+  notesInput: { borderWidth: 1, borderRadius: 8, padding: 10, fontSize: 13, fontFamily: 'Inter_400Regular', minHeight: 80 },
+
+  /* ingredients */
+  ingredientRow: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 12, marginBottom: 4, gap: 8 },
+  ingredientBottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  qtyInput: {
+    borderWidth: 1, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 10, fontSize: 14, fontFamily: 'Inter_400Regular',
+  },
+  removeRowBtn: { padding: 8 },
+  addRowBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderWidth: 1, borderStyle: 'dashed', borderRadius: 10,
+    paddingVertical: 10, marginTop: 4,
+  },
+  addRowText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
 
   /* retention */
   retentionRow: { flexDirection: 'row', gap: 10 },
@@ -355,9 +834,6 @@ const styles = StyleSheet.create({
   radioDot: { width: 9, height: 9, borderRadius: 5 },
   retentionLabel: { fontSize: 15, fontFamily: 'Inter_700Bold' },
   retentionDesc: { fontSize: 11, fontFamily: 'Inter_400Regular', lineHeight: 15 },
-
-  /* field */
-  label: { fontSize: 13, fontFamily: 'Inter_500Medium' },
 
   /* signature */
   signatureBox: { borderWidth: 1, borderRadius: 10, minHeight: 80, overflow: 'hidden' },
