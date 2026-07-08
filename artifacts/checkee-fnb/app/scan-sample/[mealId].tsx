@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SignaturePad from '@/components/SignaturePad';
 import { useAuth } from '@/contexts/AuthContext';
 import { RetentionHours, SamplerRecord, useSampler } from '@/contexts/SamplerContext';
-import { MEALS } from '@/data/mockData';
+import { MEALS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -87,6 +87,7 @@ export default function ScanSampleScreen() {
 
   const meal = MEALS.find((m) => m.id === mealId);
   const alreadyDone = meal ? isMealRecordedToday(meal.id) : false;
+  const traceRecord = meal ? TRACEABILITY_RECORDS.find((r) => r.mealId === meal.id) : undefined;
 
   // Form state — only sample-retention specific fields
   const [temperature, setTemperature]       = useState('');
@@ -239,6 +240,78 @@ export default function ScanSampleScreen() {
             </View>
           </View>
         </View>
+
+        {/* ── Quy trình chế biến (read-only, không cần điền) ── */}
+        {traceRecord && (
+          <View style={[styles.card, { backgroundColor: colors.card, gap: 0 }]}>
+            <View style={styles.traceTitleRow}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Quy trình chế biến (lưu vết)</Text>
+              <View style={[styles.noFillPill, { backgroundColor: colors.muted }]}>
+                <Text style={[styles.noFillPillText, { color: colors.mutedForeground }]}>Không cần điền</Text>
+              </View>
+            </View>
+            <View style={[styles.divider, { backgroundColor: colors.border, marginBottom: 12 }]} />
+
+            <View style={[styles.processingBox, { backgroundColor: colors.muted }]}>
+              <View style={[styles.processRow, { borderBottomColor: colors.border }]}>
+                <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                  <Feather name="user" size={16} color={colors.text} />
+                </View>
+                <View style={styles.processContent}>
+                  <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Đầu bếp</Text>
+                  <Text style={[styles.processValue, { color: colors.text }]}>{traceRecord.chefName}</Text>
+                </View>
+              </View>
+
+              <View style={[styles.processRow, { borderBottomColor: colors.border }]}>
+                <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                  <Feather name="shopping-cart" size={16} color={colors.text} />
+                </View>
+                <View style={styles.processContent}>
+                  <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Mã quy trình</Text>
+                  <Text style={[styles.processValue, { color: colors.text }]}>{traceRecord.processCode}</Text>
+                </View>
+              </View>
+
+              <View style={styles.processRow}>
+                <View style={[styles.processIconWrap, { backgroundColor: colors.card }]}>
+                  <Feather name="clock" size={16} color={colors.text} />
+                </View>
+                <View style={styles.processContent}>
+                  <Text style={[styles.processLabel, { color: colors.mutedForeground }]}>Chế biến lúc</Text>
+                  <Text style={[styles.processValue, { color: colors.text }]}>{traceRecord.cookTime}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Ingredients table */}
+            <View style={[styles.tableHeader, { backgroundColor: colors.muted, borderBottomColor: colors.border }]}>
+              <Text style={[styles.thNguyenLieu, { color: colors.mutedForeground }]}>Nguyên liệu</Text>
+              <Text style={[styles.thNguonCung, { color: colors.mutedForeground }]}>Nguồn cung cấp</Text>
+              <Text style={[styles.thSoLo, { color: colors.mutedForeground }]}>Số lô/mẻ</Text>
+              <Text style={[styles.thDonVi, { color: colors.mutedForeground }]}>Đơn vị tính</Text>
+            </View>
+            {traceRecord.traceIngredients.map((ing, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.tableRow,
+                  i < traceRecord.traceIngredients.length - 1 && {
+                    borderBottomWidth: StyleSheet.hairlineWidth,
+                    borderBottomColor: colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.tdNguyenLieu, { color: colors.text }]}>{ing.name}</Text>
+                <Text style={[styles.tdNguonCung, { color: colors.mutedForeground }]} numberOfLines={3}>
+                  {ing.supplier}
+                </Text>
+                <Text style={[styles.tdSoLo, { color: colors.text }]}>{ing.batchNo}</Text>
+                <Text style={[styles.tdDonVi, { color: colors.text }]}>{ing.unit}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* ── Sample retention details ── */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -420,6 +493,35 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
   divider: { height: StyleSheet.hairlineWidth },
+
+  /* traceability (read-only) */
+  traceTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  noFillPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  noFillPillText: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
+  processingBox: { borderRadius: 10, overflow: 'hidden', marginBottom: 12 },
+  processRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  processIconWrap: { width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  processContent: { flex: 1 },
+  processLabel: { fontSize: 11, fontFamily: 'Inter_400Regular', marginBottom: 1 },
+  processValue: { fontSize: 14, fontFamily: 'Inter_700Bold' },
+
+  /* traceability ingredients table */
+  tableHeader: {
+    flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth, gap: 6, borderRadius: 8,
+  },
+  tableRow: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 12, gap: 6, alignItems: 'flex-start' },
+  thNguyenLieu: { width: 66, fontSize: 10, fontFamily: 'Inter_600SemiBold', flexShrink: 0 },
+  thNguonCung: { flex: 1, fontSize: 10, fontFamily: 'Inter_600SemiBold' },
+  thSoLo: { width: 70, fontSize: 10, fontFamily: 'Inter_600SemiBold', textAlign: 'right' },
+  thDonVi: { width: 46, fontSize: 10, fontFamily: 'Inter_600SemiBold', textAlign: 'right' },
+  tdNguyenLieu: { width: 66, fontSize: 12, fontFamily: 'Inter_500Medium', flexShrink: 0 },
+  tdNguonCung: { flex: 1, fontSize: 11, fontFamily: 'Inter_400Regular', lineHeight: 16 },
+  tdSoLo: { width: 70, fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'right' },
+  tdDonVi: { width: 46, fontSize: 11, fontFamily: 'Inter_500Medium', textAlign: 'right' },
 
   /* field */
   fieldGroup: { gap: 6 },
