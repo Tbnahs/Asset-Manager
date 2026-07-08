@@ -39,7 +39,7 @@ function fmtDate(iso: string) {
 function RecordCard({ rec, colors }: { rec: SamplerRecord; colors: ReturnType<typeof import('@/hooks/useColors').useColors> }) {
   return (
     <View style={[rStyles.card, { backgroundColor: colors.card }]}>
-      <Image source={rec.mealImage} style={rStyles.img} resizeMode="cover" />
+      <Image source={rec.photoUri ? { uri: rec.photoUri } : rec.mealImage} style={rStyles.img} resizeMode="cover" />
       <View style={rStyles.info}>
         <Text style={[rStyles.name, { color: colors.text }]} numberOfLines={2}>{rec.mealName}</Text>
         <View style={rStyles.metaRow}>

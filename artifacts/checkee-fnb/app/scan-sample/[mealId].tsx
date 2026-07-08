@@ -1,8 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Platform,
   ScrollView,
@@ -123,6 +125,53 @@ export default function ScanSampleScreen() {
   const [saving, setSaving]                 = useState(false);
   const [done, setDone]                     = useState(false);
   const [expiresAt, setExpiresAt]           = useState<number | null>(null);
+  const [sampleImage, setSampleImage]       = useState<string | null>(null);
+
+  const pickFromLibrary = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Cần quyền truy cập', 'Vui lòng cấp quyền truy cập thư viện ảnh để chọn ảnh.');
+        return;
+      }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSampleImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Cần quyền truy cập', 'Vui lòng cấp quyền truy cập máy ảnh để chụp ảnh.');
+        return;
+      }
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSampleImage(result.assets[0].uri);
+    }
+  };
+
+  const handleChangePhoto = () => {
+    const options: { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }[] = [
+      { text: 'Chụp ảnh mới', onPress: takePhoto },
+      { text: 'Chọn từ thư viện', onPress: pickFromLibrary },
+    ];
+    if (sampleImage) {
+      options.push({ text: 'Dùng lại ảnh gốc từ QR', onPress: () => setSampleImage(null) });
+    }
+    options.push({ text: 'Huỷ', style: 'cancel' });
+    Alert.alert('Ảnh mẫu lưu', 'Bạn có thể giữ ảnh gốc quét từ QR hoặc thêm ảnh thực tế của mẫu lưu.', options);
+  };
 
   // Submit
   const handleConfirm = async () => {
@@ -145,6 +194,7 @@ export default function ScanSampleScreen() {
       signature:    signature.trim() || undefined,
       retentionHours,
       expiresAt:    expiry,
+      photoUri:     sampleImage ?? undefined,
       // keep legacy fields for history display
       storageLocation: container.trim() || '-',
       sampleCount: 1,
@@ -249,7 +299,16 @@ export default function ScanSampleScreen() {
 
         {/* ── Meal info (read-only, from scan) ── */}
         <View style={[styles.mealCard, { backgroundColor: colors.card }]}>
-          <Image source={meal.image} style={styles.mealImage} resizeMode="cover" />
+          <TouchableOpacity onPress={handleChangePhoto} activeOpacity={0.8} style={styles.mealImageWrap}>
+            <Image
+              source={sampleImage ? { uri: sampleImage } : meal.image}
+              style={styles.mealImage}
+              resizeMode="cover"
+            />
+            <View style={[styles.photoEditBadge, { backgroundColor: colors.primary }]}>
+              <Feather name="camera" size={11} color="#fff" />
+            </View>
+          </TouchableOpacity>
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={2}>{meal.name}</Text>
             <View style={styles.mealMetaRow}>
@@ -506,6 +565,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   mealImage: { width: 60, height: 60, borderRadius: 10, backgroundColor: '#f0f0f0', flexShrink: 0 },
+  mealImageWrap: { position: 'relative', flexShrink: 0 },
+  photoEditBadge: {
+    position: 'absolute', bottom: -4, right: -4,
+    width: 20, height: 20, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: '#fff',
+  },
   mealName: { fontSize: 15, fontFamily: 'Inter_600SemiBold', lineHeight: 20 },
   mealMetaRow: { flexDirection: 'row', gap: 5, flexWrap: 'wrap' },
   metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 20 },
