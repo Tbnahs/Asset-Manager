@@ -15,7 +15,7 @@ A school food-monitoring mobile app (Expo + React Native) that lets parents trac
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
+- pnpm workspaces, Node.js 20, TypeScript 5.9
 - Mobile: Expo ~54 + Expo Router (file-based routing), React Native
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM (not yet connected — add `DATABASE_URL` secret when needed)

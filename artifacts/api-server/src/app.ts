@@ -44,7 +44,10 @@ app.use("/api", router);
 
 // Serve the Expo web build for all non-API routes (SPA fallback)
 if (hasWebBuild) {
-  app.use(express.static(WEB_DIST));
+  // dotfiles: "allow" — the Expo web build nests fonts under paths like
+  // assets/__node_modules/.pnpm/..., and express.static's default
+  // ("ignore") silently 404s any path containing a dot-segment.
+  app.use(express.static(WEB_DIST, { dotfiles: "allow" }));
   app.get("/{*path}", (_req: Request, res: Response) => {
     res.sendFile(path.join(WEB_DIST, "index.html"));
   });
