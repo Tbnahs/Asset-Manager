@@ -19,6 +19,7 @@ import ZoomableImage from '@/components/ZoomableImage';
 import { getMonitoringTag } from '@/utils/monitoring';
 import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { Meal, MealSession } from '@/types';
 
 function sampleLabel(sample: { status: string; storedDate?: string; storedTime?: string } | undefined) {
@@ -198,8 +199,10 @@ export default function HomeScreen() {
   const isWeb = Platform.OS === 'web';
   const { width: windowWidth } = useWindowDimensions();
   const { days, todayIndex, today } = useMemo(() => getWeekInfo(), []);
+  const selectedChild = useSelectedChild();
   const [photosVisible, setPhotosVisible] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [nutritionSummaryVisible, setNutritionSummaryVisible] = useState(false);
 
   // Week view state
   const [selectedDay, setSelectedDay] = useState(todayIndex);
@@ -218,6 +221,32 @@ export default function HomeScreen() {
 
   // Meals for month view selected date
   const monthDayMeals = useMemo(() => mealsForDate(selectedDate, days), [selectedDate, days]);
+  const activeDayMeals = viewMode === 'week' ? weekDayMeals : monthDayMeals;
+  const activeMenuDate = viewMode === 'week' ? weekSelectedDate : selectedDate;
+  const dailyNutritionTotals = useMemo(
+    () => activeDayMeals.reduce((totals, meal) => ({
+      calories: totals.calories + meal.calories,
+      protein: totals.protein + meal.nutrition.protein,
+      fat: totals.fat + meal.nutrition.fat,
+      carbs: totals.carbs + meal.nutrition.carbs,
+      fiber: totals.fiber + meal.nutrition.fiber,
+      calcium: totals.calcium + meal.nutrition.calcium,
+      iron: totals.iron + meal.nutrition.iron,
+      zinc: totals.zinc + meal.nutrition.zinc,
+      vitaminA: totals.vitaminA + meal.nutrition.vitaminA,
+    }), {
+      calories: 0,
+      protein: 0,
+      fat: 0,
+      carbs: 0,
+      fiber: 0,
+      calcium: 0,
+      iron: 0,
+      zinc: 0,
+      vitaminA: 0,
+    }),
+    [activeDayMeals],
+  );
 
   // Summary stats
   const safetyCount = NOTIFICATIONS.filter((n) => n.type === 'safety').length;
@@ -256,6 +285,19 @@ export default function HomeScreen() {
       <View style={[styles.photoCountBadge, { backgroundColor: colors.accent }]}>
         <Text style={[styles.photoCountText, { color: colors.primary }]}>{TRAY_PHOTOS.length} ảnh</Text>
       </View>
+    </TouchableOpacity>
+  ) : null;
+
+  const nutritionSummaryButton = (mealCount: number) => mealCount > 0 ? (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel="Xem tổng hợp dinh dưỡng của thực đơn trong ngày"
+      onPress={() => setNutritionSummaryVisible(true)}
+      activeOpacity={0.8}
+      style={[styles.trayPhotosButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
+      <Feather name="activity" size={17} color={colors.primary} />
+      <Text style={[styles.trayPhotosButtonText, { color: colors.primary }]}>Tổng hợp dinh dưỡng</Text>
     </TouchableOpacity>
   ) : null;
 
@@ -336,7 +378,10 @@ export default function HomeScreen() {
               )}
             </View>
 
-            {trayPhotosButton(weekDayMeals.length)}
+            <View style={styles.menuActionsRow}>
+              {trayPhotosButton(weekDayMeals.length)}
+              {nutritionSummaryButton(weekDayMeals.length)}
+            </View>
             <SessionRows dayMeals={weekDayMeals} colors={colors} />
           </>
         )}
@@ -447,7 +492,10 @@ export default function HomeScreen() {
                 </View>
               )}
             </View>
-            {trayPhotosButton(monthDayMeals.length)}
+            <View style={styles.menuActionsRow}>
+              {trayPhotosButton(monthDayMeals.length)}
+              {nutritionSummaryButton(monthDayMeals.length)}
+            </View>
             <SessionRows dayMeals={monthDayMeals} colors={colors} />
           </>
         )}
@@ -544,6 +592,85 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      <Modal
+        visible={nutritionSummaryVisible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setNutritionSummaryVisible(false)}
+      >
+        <View style={[styles.nutritionViewer, { backgroundColor: colors.background }]}>
+          <View style={styles.nutritionViewerHeader}>
+            <View style={styles.photoViewerHeading}>
+              <Text style={[styles.nutritionViewerTitle, { color: colors.text }]}>Tổng hợp dinh dưỡng</Text>
+              <Text style={[styles.nutritionViewerSubtitle, { color: colors.mutedForeground }]}>
+                {activeMenuDate.toLocaleDateString('vi-VN', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </Text>
+            </View>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Đóng tổng hợp dinh dưỡng"
+              onPress={() => setNutritionSummaryVisible(false)}
+              style={styles.photoViewerClose}
+            >
+              <Feather name="x" size={22} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.nutritionViewerContent}
+          >
+            <View style={[styles.nutritionChildCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={[styles.nutritionChildIcon, { backgroundColor: colors.accent }]}>
+                <Feather name="user" size={17} color={colors.primary} />
+              </View>
+              <View style={styles.nutritionChildInfo}>
+                <Text style={[styles.nutritionChildName, { color: colors.text }]}>
+                  {selectedChild.name} · Lớp {selectedChild.className}
+                </Text>
+                <Text style={[styles.nutritionChildCaption, { color: colors.mutedForeground }]}>
+                  Tổng từ {activeDayMeals.length} món trong thực đơn ngày này
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.nutritionTotalsCard, { backgroundColor: colors.card }]}>
+              <Text style={[styles.nutritionTotalsHeading, { color: colors.text }]}>Tổng dinh dưỡng</Text>
+              <View style={styles.nutritionSummaryGrid}>
+                {[
+                  { label: 'Năng lượng (kcal)', value: dailyNutritionTotals.calories, color: colors.primary },
+                  { label: 'Chất đạm (g)', value: dailyNutritionTotals.protein, color: colors.info },
+                  { label: 'Chất béo (g)', value: dailyNutritionTotals.fat, color: colors.danger },
+                  { label: 'Chất bột đường (g)', value: dailyNutritionTotals.carbs, color: colors.warning },
+                  { label: 'Chất xơ (g)', value: dailyNutritionTotals.fiber, color: colors.safeGreen },
+                  { label: 'Canxi (mg)', value: dailyNutritionTotals.calcium, color: colors.info },
+                  { label: 'Sắt (mg)', value: dailyNutritionTotals.iron, color: colors.warning },
+                  { label: 'Kẽm (mg)', value: dailyNutritionTotals.zinc, color: colors.safeGreen },
+                  { label: 'Vitamin A (ug)', value: dailyNutritionTotals.vitaminA, color: colors.danger },
+                ].map((item) => (
+                  <View key={item.label} style={[styles.nutritionSummaryItem, { backgroundColor: `${item.color}12` }]}>
+                    <Text style={[styles.nutritionSummaryValue, { color: item.color }]}>
+                      {new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(item.value)}
+                    </Text>
+                    <Text style={[styles.nutritionSummaryLabel, { color: colors.mutedForeground }]}>{item.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={[styles.nutritionEstimateNote, { backgroundColor: colors.warningLight }]}>
+              <Feather name="info" size={16} color={colors.warning} />
+              <Text style={[styles.nutritionEstimateText, { color: colors.text }]}>
+                Đây là tổng ước tính theo toàn bộ món trong thực đơn. Ứng dụng chưa ghi nhận lượng bé ăn thực tế.
+              </Text>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -583,18 +710,19 @@ const styles = StyleSheet.create({
   daySubTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
   mealCountBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   mealCountText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+  menuActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   trayPhotosButton: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 10,
   },
-  trayPhotosButtonText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  trayPhotosButtonText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
   photoCountBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10 },
   photoCountText: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
   photoViewer: { flex: 1, backgroundColor: '#101114', justifyContent: 'space-between', paddingTop: 24, paddingBottom: 28 },
@@ -612,6 +740,41 @@ const styles = StyleSheet.create({
   photoDots: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   photoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#66686F' },
   photoDotActive: { width: 18, backgroundColor: '#FFFFFF' },
+  nutritionViewer: { flex: 1, paddingTop: 24 },
+  nutritionViewerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 16 },
+  nutritionViewerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold' },
+  nutritionViewerSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginTop: 3, textTransform: 'capitalize' },
+  nutritionViewerContent: { paddingHorizontal: 16, paddingBottom: 32, gap: 14 },
+  nutritionChildCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  nutritionChildIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  nutritionChildInfo: { flex: 1, gap: 3 },
+  nutritionChildName: { fontSize: 14, fontFamily: 'Inter_600SemiBold' },
+  nutritionChildCaption: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+  nutritionTotalsCard: { padding: 14, borderRadius: 14, gap: 12 },
+  nutritionTotalsHeading: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  nutritionSummaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  nutritionSummaryItem: {
+    width: '30%',
+    flex: 1,
+    minWidth: '28%',
+    minHeight: 76,
+    borderRadius: 10,
+    padding: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  nutritionSummaryValue: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  nutritionSummaryLabel: { fontSize: 10, lineHeight: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
+  nutritionEstimateNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, padding: 12, borderRadius: 12 },
+  nutritionEstimateText: { flex: 1, fontSize: 12, lineHeight: 18, fontFamily: 'Inter_400Regular' },
 
   /* Month navigation */
   monthNav: {
