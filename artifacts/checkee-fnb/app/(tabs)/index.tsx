@@ -3,12 +3,14 @@ import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   Image,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 
 import Header from '@/components/Header';
@@ -39,6 +41,10 @@ const SESSIONS: { key: MealSession; label: string; color: string; bg: string }[]
 
 
 const VN_MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+const TRAY_PHOTOS = [
+  { source: require('../../assets/images/feedback-photo-1.png'), caption: 'Khay thức ăn thực tế 1' },
+  { source: require('../../assets/images/feedback-photo-2.png'), caption: 'Khay thức ăn thực tế 2' },
+];
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function isSameDay(a: Date, b: Date) {
@@ -190,7 +196,10 @@ const rStyles = StyleSheet.create({
 export default function HomeScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
+  const { width: windowWidth } = useWindowDimensions();
   const { days, todayIndex, today } = useMemo(() => getWeekInfo(), []);
+  const [photosVisible, setPhotosVisible] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   // Week view state
   const [selectedDay, setSelectedDay] = useState(todayIndex);
@@ -228,6 +237,27 @@ export default function HomeScreen() {
     if (calMonth === 11) { setCalYear(y => y + 1); setCalMonth(0); }
     else setCalMonth(m => m + 1);
   };
+
+  const openTrayPhotos = () => {
+    setSelectedPhotoIndex(0);
+    setPhotosVisible(true);
+  };
+
+  const trayPhotosButton = (mealCount: number) => mealCount > 0 ? (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel="Xem hình ảnh thực tế khay đồ ăn"
+      onPress={openTrayPhotos}
+      activeOpacity={0.8}
+      style={[styles.trayPhotosButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
+      <Feather name="image" size={17} color={colors.primary} />
+      <Text style={[styles.trayPhotosButtonText, { color: colors.primary }]}>Hình ảnh thực tế</Text>
+      <View style={[styles.photoCountBadge, { backgroundColor: colors.accent }]}>
+        <Text style={[styles.photoCountText, { color: colors.primary }]}>{TRAY_PHOTOS.length} ảnh</Text>
+      </View>
+    </TouchableOpacity>
+  ) : null;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -306,6 +336,7 @@ export default function HomeScreen() {
               )}
             </View>
 
+            {trayPhotosButton(weekDayMeals.length)}
             <SessionRows dayMeals={weekDayMeals} colors={colors} />
           </>
         )}
@@ -416,6 +447,7 @@ export default function HomeScreen() {
                 </View>
               )}
             </View>
+            {trayPhotosButton(monthDayMeals.length)}
             <SessionRows dayMeals={monthDayMeals} colors={colors} />
           </>
         )}
@@ -455,6 +487,63 @@ export default function HomeScreen() {
         </View>
 
       </ScrollView>
+      <Modal
+        visible={photosVisible}
+        animationType="fade"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setPhotosVisible(false)}
+      >
+        <View style={styles.photoViewer}>
+          <View style={styles.photoViewerHeader}>
+            <View style={styles.photoViewerHeading}>
+              <Text style={styles.photoViewerTitle}>Hình ảnh thực tế</Text>
+              <Text style={styles.photoViewerSubtitle}>Ảnh khay đồ ăn</Text>
+            </View>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Đóng hình ảnh"
+              onPress={() => setPhotosVisible(false)}
+              style={styles.photoViewerClose}
+            >
+              <Feather name="x" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => {
+              const nextIndex = Math.round(event.nativeEvent.contentOffset.x / windowWidth);
+              setSelectedPhotoIndex(Math.min(Math.max(nextIndex, 0), TRAY_PHOTOS.length - 1));
+            }}
+          >
+            {TRAY_PHOTOS.map((photo, index) => (
+              <View key={photo.caption} style={[styles.photoSlide, { width: windowWidth }]}>
+                <Image
+                  source={photo.source}
+                  resizeMode="contain"
+                  style={[styles.trayPhoto, { width: windowWidth - 40, height: windowWidth - 40 }]}
+                />
+                <Text style={styles.photoCaption}>{photo.caption}</Text>
+                <Text style={styles.photoSwipeHint}>Vuốt ngang để xem ảnh tiếp theo</Text>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.photoPagination}>
+            <Text style={styles.photoPaginationText}>
+              {selectedPhotoIndex + 1} / {TRAY_PHOTOS.length}
+            </Text>
+            <View style={styles.photoDots}>
+              {TRAY_PHOTOS.map((photo, index) => (
+                <View
+                  key={photo.caption}
+                  style={[styles.photoDot, index === selectedPhotoIndex && styles.photoDotActive]}
+                />
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -494,6 +583,35 @@ const styles = StyleSheet.create({
   daySubTitle: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
   mealCountBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   mealCountText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
+  trayPhotosButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 10,
+  },
+  trayPhotosButtonText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
+  photoCountBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10 },
+  photoCountText: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
+  photoViewer: { flex: 1, backgroundColor: '#101114', justifyContent: 'space-between', paddingTop: 24, paddingBottom: 28 },
+  photoViewerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 12 },
+  photoViewerHeading: { flex: 1, gap: 3 },
+  photoViewerTitle: { color: '#FFFFFF', fontSize: 18, fontFamily: 'Inter_700Bold' },
+  photoViewerSubtitle: { color: '#B5B6BB', fontSize: 13, fontFamily: 'Inter_400Regular' },
+  photoViewerClose: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  photoSlide: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  trayPhoto: { maxHeight: '78%', borderRadius: 16 },
+  photoCaption: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Inter_600SemiBold', marginTop: 16 },
+  photoSwipeHint: { color: '#B5B6BB', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 6 },
+  photoPagination: { alignItems: 'center', gap: 10 },
+  photoPaginationText: { color: '#FFFFFF', fontSize: 12, fontFamily: 'Inter_500Medium' },
+  photoDots: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  photoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#66686F' },
+  photoDotActive: { width: 18, backgroundColor: '#FFFFFF' },
 
   /* Month navigation */
   monthNav: {

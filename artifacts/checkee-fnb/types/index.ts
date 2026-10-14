@@ -10,6 +10,10 @@ export interface Nutrition {
   fat: number;
   fiber: number;
   sodium: number;
+  calcium: number;
+  iron: number;
+  zinc: number;
+  vitaminA: number;
 }
 
 export type MealSession = 'sang' | 'trua' | 'chieu' | 'phu';

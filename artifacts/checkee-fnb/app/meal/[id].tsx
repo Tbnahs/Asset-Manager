@@ -30,6 +30,12 @@ const SAMPLE_STATUS_CONFIG = {
   future:   { label: 'Chưa lấy mẫu',  color: '#8E8E93', bg: '#F5F6FA', icon: 'clock'          as const },
 };
 
+const SUPPLIER_BY_INGREDIENT: Record<string, string> = Object.fromEntries(
+  TRACEABILITY_RECORDS.flatMap((record) =>
+    record.traceIngredients.map((ingredient) => [ingredient.name, ingredient.supplier]),
+  ),
+);
+
 export default function MealDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
@@ -142,8 +148,13 @@ export default function MealDetailScreen() {
                 <View style={styles.ingRight}>
                   <Text style={[styles.ingAmount, { color: colors.mutedForeground }]}>{ing.amount}</Text>
                   <View style={[styles.originBadge, { backgroundColor: colors.muted }]}>
-                    <Feather name="map-pin" size={9} color={colors.mutedForeground} />
-                    <Text style={[styles.originText, { color: colors.mutedForeground }]}>{ing.origin}</Text>
+                    <Feather name="truck" size={9} color={colors.mutedForeground} />
+                    <Text style={[styles.originText, { color: colors.mutedForeground }]}>
+                      {traceRecord?.traceIngredients.find((item) => item.name === ing.name)?.supplier
+                        ?? SUPPLIER_BY_INGREDIENT[ing.name]
+                        ?? traceRecord?.supplier
+                        ?? 'Chưa cập nhật nhà cung cấp'}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -159,12 +170,14 @@ export default function MealDetailScreen() {
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.nutritionGrid}>
               {[
-                { label: 'Protein',   value: `${meal.nutrition.protein}g`,  color: '#007AFF' },
-                { label: 'Carbs',     value: `${meal.nutrition.carbs}g`,    color: '#FF9500' },
-                { label: 'Chất béo', value: `${meal.nutrition.fat}g`,      color: '#FF3B30' },
-                { label: 'Chất xơ',  value: `${meal.nutrition.fiber}g`,    color: '#34C759' },
-                { label: 'Natri',    value: `${meal.nutrition.sodium}mg`,  color: '#8B5CF6' },
-                { label: 'Calo',     value: `${meal.calories}kcal`,        color: '#FF6535' },
+                { label: 'Chất đạm (g)', value: `${meal.nutrition.protein}`, color: '#007AFF' },
+                { label: 'Chất béo (g)', value: `${meal.nutrition.fat}`, color: '#FF3B30' },
+                { label: 'Chất bột đường (g)', value: `${meal.nutrition.carbs}`, color: '#FF9500' },
+                { label: 'Chất xơ (g)', value: `${meal.nutrition.fiber}`, color: '#34C759' },
+                { label: 'Canxi (mg)', value: `${meal.nutrition.calcium}`, color: '#8B5CF6' },
+                { label: 'Sắt (mg)', value: `${meal.nutrition.iron}`, color: '#FF6535' },
+                { label: 'Kẽm (mg)', value: `${meal.nutrition.zinc}`, color: '#00A6A6' },
+                { label: 'Vitamin A (ug)', value: `${meal.nutrition.vitaminA}`, color: '#E7A900' },
               ].map((item) => (
                 <View key={item.label} style={[styles.nutriItem, { backgroundColor: item.color + '12' }]}>
                   <Text style={[styles.nutriValue, { color: item.color }]}>{item.value}</Text>
@@ -371,13 +384,14 @@ const styles = StyleSheet.create({
     width: '30%',
     flex: 1,
     minWidth: '28%',
+    minHeight: 72,
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',
     gap: 2,
   },
   nutriValue: { fontSize: 16, fontFamily: 'Inter_700Bold' },
-  nutriLabel: { fontSize: 10, fontFamily: 'Inter_400Regular' },
+  nutriLabel: { fontSize: 10, lineHeight: 14, fontFamily: 'Inter_400Regular', textAlign: 'center' },
 
   /* Sample retention */
   sampleStatusRow: {
