@@ -3,6 +3,8 @@ modules = ["nodejs-20", "web", "bash"]
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
+run = ["bash", "-lc", "pnpm --filter @workspace/api-server run start"]
+build = ["bash", "-lc", "pnpm --filter @workspace/checkee-fnb exec expo export -p web --output-dir dist && pnpm --filter @workspace/api-server run build"]
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]

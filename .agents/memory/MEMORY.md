@@ -2,4 +2,5 @@
 - [Expo package.json drift](expo-package-drift.md) — a dep listed in an Expo app's package.json but missing from node_modules crashes Metro at startup; run `pnpm exec expo install <pkg>` inside the artifact dir to fix.
 - [Expo port 5000 detection trick](expo-port5000-trick.md) — verifyAndReplaceDotReplit must precede WorkflowsRestart for port 5000 to be detected in webview workflows.
 - [Expo web export + express.static dotfiles trap](expo-web-static-dotfiles.md) — Expo web fonts nested under `.pnpm` dirs silently 404-fallback to index.html unless `dotfiles:"allow"` is set.
+- [Metro image-size override](metro-image-size-override.md) — keep the workspace security floor and adapt Metro's worker input to bytes; runtime preload patches miss asset transforms.
 - [Imported Expo workspace startup](imported-expo-workspace-startup.md) — fresh pnpm imports may need filtered installs and compatible transitive updates before Expo's managed workflow can start.
