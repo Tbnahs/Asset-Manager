@@ -1,0 +1,30 @@
+App CHECKEE F&B (artifacts/checkee-fnb, Expo SDK 57). Có 2 việc, làm theo thứ tự.
+
+=== VIỆC 1: SỬA CHỨC NĂNG "HÌNH ẢNH THỰC TẾ" ===
+
+Hiện tại ở màn Thực đơn (tab Thực đơn) có nút "Hình ảnh thực tế" nằm riêng ở cấp ngày, tách khỏi các buổi. Cần chuyển nó vào trong chi tiết của từng buổi (Sáng/Trưa/Chiều/Phụ).
+
+Yêu cầu:
+1. Gỡ nút/chip "Hình ảnh thực tế" khỏi phần đầu danh sách của ngày (giữ lại "Tổng hợp dinh dưỡng").
+2. Trong mỗi thẻ buổi ăn (ví dụ "Trưa - Cơm tấm sườn bì", "Chiều - Xoài & Ổi") và trong màn chi tiết món/buổi (meal/[id].tsx), thêm mục "Hình ảnh thực tế" riêng cho từng buổi, gồm:
+   - Ảnh khay lưu mẫu của đúng buổi đó (có thể nhiều ảnh, dạng carousel hoặc lưới nhỏ, bấm để phóng to).
+   - Thời gian lưu mẫu đầy đủ: giờ:phút, ngày/tháng/năm (ví dụ 10:30, 15/10/2026).
+   - Nhãn buổi (Trưa/Chiều) và tên món.
+   - Trạng thái lưu mẫu (ví dụ "Đang theo dõi (đến 18/10/2026)").
+3. Dữ liệu ảnh gắn theo từng buổi (mealId + ngày), không dùng chung cho cả ngày. Nếu một buổi chưa có ảnh thì hiện "Chưa có hình ảnh lưu mẫu" thay vì để trống.
+4. Trên thẻ buổi ở danh sách, hiện badge số ảnh (ví dụ "2 ảnh") để biết buổi đó có hình khay lưu mẫu.
+5. Giữ liên kết với màn Lưu mẫu (sample-retention) để xem cùng một dữ liệu, không tạo dữ liệu trùng lặp.
+6. Giữ nguyên style hiện tại (màu cam, bo góc, font), không đổi các chức năng khác.
+
+=== VIỆC 2: DEPLOY BẢN WEB CÔNG KHAI ===
+
+Hiện app đang deploy dạng trang QR "Preview on your phone" cho Expo Go; khách không có tài khoản Expo của tôi nên không mở được trên iPhone.
+
+1. Dùng `expo export -p web` build bản web (output dist).
+2. Deploy dist thành website công khai tại đường dẫn gốc "/", không cần đăng nhập, không cần Expo Go.
+3. Hỗ trợ routing expo-router (refresh hoặc mở trực tiếp /meal/1, /traceability... không bị 404; fallback index.html).
+4. Hiển thị tốt trên Safari iPhone (viewport mobile).
+5. Thư viện không hỗ trợ web (expo-glass-effect, expo-symbols, react-native-keyboard-controller...) thì thêm fallback để không trắng màn hình.
+6. Giữ nguyên API server hiện có. Không đổi phiên bản package (đã đồng bộ SDK 57).
+
+Sau khi xong, cho tôi link public và hướng dẫn Republish.
