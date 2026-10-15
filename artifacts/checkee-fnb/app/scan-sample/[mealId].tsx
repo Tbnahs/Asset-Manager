@@ -125,7 +125,7 @@ export default function ScanSampleScreen() {
   const [saving, setSaving]                 = useState(false);
   const [done, setDone]                     = useState(false);
   const [expiresAt, setExpiresAt]           = useState<number | null>(null);
-  const [sampleImage, setSampleImage]       = useState<string | null>(null);
+  const [sampleImages, setSampleImages]     = useState<string[]>([]);
 
   const pickFromLibrary = async () => {
     if (Platform.OS !== 'web') {
@@ -137,10 +137,20 @@ export default function ScanSampleScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
+      quality: 0.75,
+      base64: Platform.OS === 'web',
+      allowsMultipleSelection: true,
+      selectionLimit: 4,
     });
-    if (!result.canceled && result.assets[0]) {
-      setSampleImage(result.assets[0].uri);
+    if (!result.canceled && result.assets.length) {
+      setSampleImages((current) => [
+        ...current,
+        ...result.assets.map((asset) =>
+          Platform.OS === 'web' && asset.base64
+            ? `data:image/jpeg;base64,${asset.base64}`
+            : asset.uri,
+        ),
+      ]);
     }
   };
 
@@ -155,22 +165,31 @@ export default function ScanSampleScreen() {
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      base64: Platform.OS === 'web',
     });
     if (!result.canceled && result.assets[0]) {
-      setSampleImage(result.assets[0].uri);
+      const asset = result.assets[0];
+      const uri = Platform.OS === 'web' && asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : asset.uri;
+      setSampleImages((current) => [...current, uri]);
     }
   };
 
   const handleChangePhoto = () => {
     const options: { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }[] = [
       { text: 'Chụp ảnh mới', onPress: takePhoto },
-      { text: 'Chọn từ thư viện', onPress: pickFromLibrary },
+      { text: 'Chọn ảnh từ thư viện', onPress: pickFromLibrary },
     ];
-    if (sampleImage) {
-      options.push({ text: 'Dùng lại ảnh gốc từ QR', onPress: () => setSampleImage(null) });
+    if (sampleImages.length) {
+      options.push({ text: 'Xóa ảnh đã chọn', onPress: () => setSampleImages([]), style: 'destructive' });
     }
-    options.push({ text: 'Huỷ', style: 'cancel' });
-    Alert.alert('Ảnh mẫu lưu', 'Bạn có thể giữ ảnh gốc quét từ QR hoặc thêm ảnh thực tế của mẫu lưu.', options);
+    options.push({ text: 'Hủy', style: 'cancel' });
+    Alert.alert(
+      'Ảnh khay lưu mẫu',
+      'Có thể chọn nhiều ảnh hoặc chụp thêm ảnh thực tế của mẫu lưu.',
+      options,
+    );
   };
 
   // Submit
@@ -194,7 +213,8 @@ export default function ScanSampleScreen() {
       signature:    signature.trim() || undefined,
       retentionHours,
       expiresAt:    expiry,
-      photoUri:     sampleImage ?? undefined,
+      photoUri:     sampleImages[0],
+      photoUris:    sampleImages.length ? sampleImages : undefined,
       // keep legacy fields for history display
       storageLocation: container.trim() || '-',
       sampleCount: 1,
@@ -301,13 +321,18 @@ export default function ScanSampleScreen() {
         <View style={[styles.mealCard, { backgroundColor: colors.card }]}>
           <TouchableOpacity onPress={handleChangePhoto} activeOpacity={0.8} style={styles.mealImageWrap}>
             <Image
-              source={sampleImage ? { uri: sampleImage } : meal.image}
+              source={sampleImages[0] ? { uri: sampleImages[0] } : meal.image}
               style={styles.mealImage}
               resizeMode="cover"
             />
             <View style={[styles.photoEditBadge, { backgroundColor: colors.primary }]}>
               <Feather name="camera" size={11} color="#fff" />
             </View>
+            {sampleImages.length > 1 && (
+              <View style={[styles.photoEditBadge, styles.photoCountBadge, { backgroundColor: colors.primary }]}>
+                <Text style={styles.photoCountText}>{sampleImages.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
           <View style={{ flex: 1, gap: 6 }}>
             <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={2}>{meal.name}</Text>
@@ -565,6 +590,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
   mealImage: { width: 60, height: 60, borderRadius: 10, backgroundColor: '#f0f0f0', flexShrink: 0 },
+  photoCountBadge: {
+    top: -5,
+    right: -5,
+    left: undefined,
+    bottom: undefined,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    padding: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoCountText: { color: '#fff', fontSize: 10, fontFamily: 'Inter_700Bold' },
   mealImageWrap: { position: 'relative', flexShrink: 0 },
   photoEditBadge: {
     position: 'absolute', bottom: -4, right: -4,

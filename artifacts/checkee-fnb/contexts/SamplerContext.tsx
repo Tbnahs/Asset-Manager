@@ -37,6 +37,7 @@ export interface SamplerRecord {
   notes?: string;
   // New detailed form fields (legacy — kept so old stored records keep typechecking)
   photoUri?: string;
+  photoUris?: string[];
   mealCode?: string;
   mealTypeLabel?: string;
   temperature?: string;

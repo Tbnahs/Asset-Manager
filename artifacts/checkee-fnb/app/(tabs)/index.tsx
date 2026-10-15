@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-  Image,
   Modal,
   Platform,
   ScrollView,
@@ -10,14 +9,15 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from 'react-native';
 
 import Header from '@/components/Header';
 import SummaryCard from '@/components/SummaryCard';
+import SamplePhotoGallery from '@/components/SamplePhotoGallery';
 import ZoomableImage from '@/components/ZoomableImage';
 import { getMonitoringTag } from '@/utils/monitoring';
 import { FEEDBACKS, MEALS, NOTIFICATIONS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import { SamplerRecord, useSampler } from '@/contexts/SamplerContext';
 import { useColors } from '@/hooks/useColors';
 import { useSelectedChild } from '@/hooks/useSelectedChild';
 import { Meal, MealSession } from '@/types';
@@ -42,12 +42,21 @@ const SESSIONS: { key: MealSession; label: string; color: string; bg: string }[]
 
 
 const VN_MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
-const TRAY_PHOTOS = [
-  { source: require('../../assets/images/feedback-photo-1.png'), caption: 'Khay thức ăn thực tế 1' },
-  { source: require('../../assets/images/feedback-photo-2.png'), caption: 'Khay thức ăn thực tế 2' },
-];
-
 /* ─── Helpers ────────────────────────────────────────────── */
+function toLocalDateISO(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function sampleDateISO(storedDate: string) {
+  const [day, month, year] = storedDate.split('/').map(Number);
+  return year && month && day
+    ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    : undefined;
+}
+
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -102,10 +111,11 @@ function buildCalendar(year: number, month: number): (Date | null)[] {
 }
 
 /* ─── Sub-components ──────────────────────────────────────── */
-function SessionRows({ dayMeals, colors, onMealPress }: {
+function SessionRows({ dayMeals, colors, date, samplerRecords }: {
   dayMeals: Meal[];
   colors: ReturnType<typeof useColors>;
-  onMealPress?: (meal: Meal) => void;
+  date: string;
+  samplerRecords: SamplerRecord[];
 }) {
   if (dayMeals.length === 0) {
     return (
@@ -129,44 +139,80 @@ function SessionRows({ dayMeals, colors, onMealPress }: {
               <Text style={[rStyles.sessionCount, { color: session.color }]}>{meals.length} món</Text>
             </View>
             <View style={rStyles.mealsCol}>
-              {meals.map((meal, i) => (
-                <TouchableOpacity
-                  key={meal.id}
-                  onPress={() => router.push(`/meal/${meal.id}` as any)}
-                  activeOpacity={0.72}
-                  style={[
-                    rStyles.mealRow,
-                    i < meals.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
-                  ]}
-                >
-                  <ZoomableImage source={meal.image} style={rStyles.mealImg} resizeMode="cover" />
-                  <View style={rStyles.mealInfo}>
-                    <Text style={[rStyles.mealName, { color: colors.text }]} numberOfLines={1}>
-                      {meal.name}
-                    </Text>
-                    <Text style={[rStyles.sampleDate, { color: colors.mutedForeground }]} numberOfLines={1}>
-                      {sampleLabel(SAMPLE_RETENTIONS.find((s) => s.mealId === meal.id))}
-                    </Text>
-                    {meal.isMonitored && (() => {
-                      const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === meal.id);
-                      const tag = getMonitoringTag(sample?.status);
-                      if (tag === null) return null;
-                      const active = tag === 'active';
-                      const bg = active ? colors.safeGreenLight : colors.muted;
-                      const fg = active ? colors.safeGreen : colors.mutedForeground;
-                      return (
-                        <View style={[rStyles.monitored, { backgroundColor: bg }]}>
-                          <View style={[rStyles.monDot, { backgroundColor: fg }]} />
-                          <Text style={[rStyles.monText, { color: fg }]}>
-                            {active ? 'Đang theo dõi' : 'Ngưng hoạt động'}
-                          </Text>
-                        </View>
-                      );
-                    })()}
+              {meals.map((meal, i) => {
+                const sample = SAMPLE_RETENTIONS.find(
+                  (item) => item.mealId === meal.id && sampleDateISO(item.storedDate) === date,
+                );
+                const mealRecords = samplerRecords.filter(
+                  (record) => record.mealId === meal.id && record.recordedDate === date,
+                );
+                const firstRecord = mealRecords[0];
+                const sampleText = firstRecord
+                  ? `Lưu mẫu: ${firstRecord.recordedAt}`
+                  : sampleLabel(sample);
+                const tag = getMonitoringTag(firstRecord
+                  ? firstRecord.expiresAt && firstRecord.expiresAt > Date.now() ? 'active' : 'expired'
+                  : sample?.status);
+                const active = tag === 'active';
+                return (
+                  <View
+                    key={`${meal.id}-${date}`}
+                    style={[
+                      rStyles.mealItem,
+                      i < meals.length - 1 && {
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <TouchableOpacity
+                      onPress={() => router.push({
+                        pathname: '/meal/[id]',
+                        params: { id: meal.id, date },
+                      } as any)}
+                      activeOpacity={0.72}
+                      style={rStyles.mealRow}
+                    >
+                      <ZoomableImage source={meal.image} style={rStyles.mealImg} resizeMode="cover" />
+                      <View style={rStyles.mealInfo}>
+                        <Text style={[rStyles.mealName, { color: colors.text }]} numberOfLines={1}>
+                          {meal.name}
+                        </Text>
+                        <Text style={[rStyles.sampleDate, { color: colors.mutedForeground }]} numberOfLines={1}>
+                          {sampleText}
+                        </Text>
+                        {meal.isMonitored && tag !== null && (
+                          <View style={[
+                            rStyles.monitored,
+                            { backgroundColor: active ? colors.safeGreenLight : colors.muted },
+                          ]}>
+                            <View style={[
+                              rStyles.monDot,
+                              { backgroundColor: active ? colors.safeGreen : colors.mutedForeground },
+                            ]} />
+                            <Text style={[
+                              rStyles.monText,
+                              { color: active ? colors.safeGreen : colors.mutedForeground },
+                            ]}>
+                              {active ? 'Đang theo dõi' : 'Ngưng hoạt động'}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+                    </TouchableOpacity>
+                    <SamplePhotoGallery
+                      compact
+                      mealId={meal.id}
+                      mealName={meal.name}
+                      session={meal.session}
+                      date={date}
+                      records={mealRecords}
+                      fallbackSample={sample}
+                    />
                   </View>
-                  <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
-                </TouchableOpacity>
-              ))}
+                );
+              })}
             </View>
           </View>
         );
@@ -179,6 +225,7 @@ const rStyles = StyleSheet.create({
   emptyBox: { alignItems: 'center', paddingVertical: 28, gap: 8, borderRadius: 14 },
   emptyTxt: { fontSize: 13, fontFamily: 'Inter_400Regular' },
   row: { flexDirection: 'row', borderRadius: 14, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, marginBottom: 8 },
+  mealItem: { paddingTop: 2 },
   sessionCol: { width: 58, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 4, gap: 2 },
   sessionLabel: { fontSize: 13, fontFamily: 'Inter_700Bold' },
   sessionCount: { fontSize: 10, fontFamily: 'Inter_400Regular' },
@@ -197,12 +244,10 @@ const rStyles = StyleSheet.create({
 export default function HomeScreen() {
   const colors = useColors();
   const isWeb = Platform.OS === 'web';
-  const { width: windowWidth } = useWindowDimensions();
   const { days, todayIndex, today } = useMemo(() => getWeekInfo(), []);
   const selectedChild = useSelectedChild();
-  const [photosVisible, setPhotosVisible] = useState(false);
-  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [nutritionSummaryVisible, setNutritionSummaryVisible] = useState(false);
+  const { records: samplerRecords } = useSampler();
 
   // Week view state
   const [selectedDay, setSelectedDay] = useState(todayIndex);
@@ -267,34 +312,13 @@ export default function HomeScreen() {
     else setCalMonth(m => m + 1);
   };
 
-  const openTrayPhotos = () => {
-    setSelectedPhotoIndex(0);
-    setPhotosVisible(true);
-  };
-
-  const trayPhotosButton = (mealCount: number) => mealCount > 0 ? (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityLabel="Xem hình ảnh thực tế khay đồ ăn"
-      onPress={openTrayPhotos}
-      activeOpacity={0.8}
-      style={[styles.trayPhotosButton, { backgroundColor: colors.card, borderColor: colors.border }]}
-    >
-      <Feather name="image" size={17} color={colors.primary} />
-      <Text style={[styles.trayPhotosButtonText, { color: colors.primary }]}>Hình ảnh thực tế</Text>
-      <View style={[styles.photoCountBadge, { backgroundColor: colors.accent }]}>
-        <Text style={[styles.photoCountText, { color: colors.primary }]}>{TRAY_PHOTOS.length} ảnh</Text>
-      </View>
-    </TouchableOpacity>
-  ) : null;
-
   const nutritionSummaryButton = (mealCount: number) => mealCount > 0 ? (
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel="Xem tổng hợp dinh dưỡng của thực đơn trong ngày"
       onPress={() => setNutritionSummaryVisible(true)}
       activeOpacity={0.8}
-      style={[styles.trayPhotosButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[styles.nutritionSummaryButton, { backgroundColor: colors.card, borderColor: colors.border }]}
     >
       <Feather name="activity" size={17} color={colors.primary} />
       <Text style={[styles.trayPhotosButtonText, { color: colors.primary }]}>Tổng hợp dinh dưỡng</Text>
@@ -379,10 +403,14 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.menuActionsRow}>
-              {trayPhotosButton(weekDayMeals.length)}
               {nutritionSummaryButton(weekDayMeals.length)}
             </View>
-            <SessionRows dayMeals={weekDayMeals} colors={colors} />
+            <SessionRows
+              dayMeals={weekDayMeals}
+              colors={colors}
+              date={toLocalDateISO(weekSelectedDate)}
+              samplerRecords={samplerRecords}
+            />
           </>
         )}
 
@@ -493,10 +521,14 @@ export default function HomeScreen() {
               )}
             </View>
             <View style={styles.menuActionsRow}>
-              {trayPhotosButton(monthDayMeals.length)}
               {nutritionSummaryButton(monthDayMeals.length)}
             </View>
-            <SessionRows dayMeals={monthDayMeals} colors={colors} />
+            <SessionRows
+              dayMeals={monthDayMeals}
+              colors={colors}
+              date={toLocalDateISO(selectedDate)}
+              samplerRecords={samplerRecords}
+            />
           </>
         )}
 
@@ -536,63 +568,6 @@ export default function HomeScreen() {
 
       </ScrollView>
       <Modal
-        visible={photosVisible}
-        animationType="fade"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setPhotosVisible(false)}
-      >
-        <View style={styles.photoViewer}>
-          <View style={styles.photoViewerHeader}>
-            <View style={styles.photoViewerHeading}>
-              <Text style={styles.photoViewerTitle}>Hình ảnh thực tế</Text>
-              <Text style={styles.photoViewerSubtitle}>Ảnh khay đồ ăn</Text>
-            </View>
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="Đóng hình ảnh"
-              onPress={() => setPhotosVisible(false)}
-              style={styles.photoViewerClose}
-            >
-              <Feather name="x" size={22} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(event) => {
-              const nextIndex = Math.round(event.nativeEvent.contentOffset.x / windowWidth);
-              setSelectedPhotoIndex(Math.min(Math.max(nextIndex, 0), TRAY_PHOTOS.length - 1));
-            }}
-          >
-            {TRAY_PHOTOS.map((photo, index) => (
-              <View key={photo.caption} style={[styles.photoSlide, { width: windowWidth }]}>
-                <Image
-                  source={photo.source}
-                  resizeMode="contain"
-                  style={[styles.trayPhoto, { width: windowWidth - 40, height: windowWidth - 40 }]}
-                />
-                <Text style={styles.photoCaption}>{photo.caption}</Text>
-                <Text style={styles.photoSwipeHint}>Vuốt ngang để xem ảnh tiếp theo</Text>
-              </View>
-            ))}
-          </ScrollView>
-          <View style={styles.photoPagination}>
-            <Text style={styles.photoPaginationText}>
-              {selectedPhotoIndex + 1} / {TRAY_PHOTOS.length}
-            </Text>
-            <View style={styles.photoDots}>
-              {TRAY_PHOTOS.map((photo, index) => (
-                <View
-                  key={photo.caption}
-                  style={[styles.photoDot, index === selectedPhotoIndex && styles.photoDotActive]}
-                />
-              ))}
-            </View>
-          </View>
-        </View>
-      </Modal>
-      <Modal
         visible={nutritionSummaryVisible}
         animationType="slide"
         presentationStyle="fullScreen"
@@ -600,7 +575,7 @@ export default function HomeScreen() {
       >
         <View style={[styles.nutritionViewer, { backgroundColor: colors.background }]}>
           <View style={styles.nutritionViewerHeader}>
-            <View style={styles.photoViewerHeading}>
+            <View style={styles.nutritionViewerHeading}>
               <Text style={[styles.nutritionViewerTitle, { color: colors.text }]}>Tổng hợp dinh dưỡng</Text>
               <Text style={[styles.nutritionViewerSubtitle, { color: colors.mutedForeground }]}>
                 {activeMenuDate.toLocaleDateString('vi-VN', {
@@ -615,7 +590,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Đóng tổng hợp dinh dưỡng"
               onPress={() => setNutritionSummaryVisible(false)}
-              style={styles.photoViewerClose}
+              style={styles.nutritionViewerClose}
             >
               <Feather name="x" size={22} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -711,7 +686,7 @@ const styles = StyleSheet.create({
   mealCountBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   mealCountText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
   menuActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  trayPhotosButton: {
+  nutritionSummaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -723,25 +698,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   trayPhotosButtonText: { fontSize: 12, fontFamily: 'Inter_600SemiBold' },
-  photoCountBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10 },
-  photoCountText: { fontSize: 10, fontFamily: 'Inter_600SemiBold' },
-  photoViewer: { flex: 1, backgroundColor: '#101114', justifyContent: 'space-between', paddingTop: 24, paddingBottom: 28 },
-  photoViewerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 12 },
-  photoViewerHeading: { flex: 1, gap: 3 },
-  photoViewerTitle: { color: '#FFFFFF', fontSize: 18, fontFamily: 'Inter_700Bold' },
-  photoViewerSubtitle: { color: '#B5B6BB', fontSize: 13, fontFamily: 'Inter_400Regular' },
-  photoViewerClose: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  photoSlide: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
-  trayPhoto: { maxHeight: '78%', borderRadius: 16 },
-  photoCaption: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Inter_600SemiBold', marginTop: 16 },
-  photoSwipeHint: { color: '#B5B6BB', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 6 },
-  photoPagination: { alignItems: 'center', gap: 10 },
-  photoPaginationText: { color: '#FFFFFF', fontSize: 12, fontFamily: 'Inter_500Medium' },
-  photoDots: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  photoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#66686F' },
-  photoDotActive: { width: 18, backgroundColor: '#FFFFFF' },
   nutritionViewer: { flex: 1, paddingTop: 24 },
+  nutritionViewerHeading: { flex: 1, gap: 3 },
   nutritionViewerHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 16 },
+  nutritionViewerClose: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   nutritionViewerTitle: { fontSize: 20, fontFamily: 'Inter_700Bold' },
   nutritionViewerSubtitle: { fontSize: 13, fontFamily: 'Inter_400Regular', marginTop: 3, textTransform: 'capitalize' },
   nutritionViewerContent: { paddingHorizontal: 16, paddingBottom: 32, gap: 14 },

@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, router, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -21,6 +22,12 @@ import { SamplerProvider } from "@/contexts/SamplerContext";
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+function KeyboardProviderCompat({ children }: { children: React.ReactNode }) {
+  return Platform.OS === "web"
+    ? <>{children}</>
+    : <KeyboardProvider>{children}</KeyboardProvider>;
+}
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -95,7 +102,7 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView>
-            <KeyboardProvider>
+            <KeyboardProviderCompat>
               <AuthProvider>
                 <SamplerProvider>
                   <NotificationsProvider>
@@ -103,7 +110,7 @@ export default function RootLayout() {
                   </NotificationsProvider>
                 </SamplerProvider>
               </AuthProvider>
-            </KeyboardProvider>
+            </KeyboardProviderCompat>
           </GestureHandlerRootView>
         </QueryClientProvider>
       </ErrorBoundary>

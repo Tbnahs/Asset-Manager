@@ -13,9 +13,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MEALS, SAMPLE_RETENTIONS, TRACEABILITY_RECORDS } from '@/data/mockData';
+import { SamplerRecord, useSampler } from '@/contexts/SamplerContext';
 import { getMonitoringTag } from '@/utils/monitoring';
 import { useColors } from '@/hooks/useColors';
+import SamplePhotoGallery from '@/components/SamplePhotoGallery';
 import ZoomableImage from '@/components/ZoomableImage';
+import { Meal, SampleRetention } from '@/types';
 
 const SAFETY_CONFIG = {
   safe: { label: 'Đạt chuẩn an toàn', icon: 'check-circle', color: '#34C759', bg: '#E8F9ED' },
@@ -36,15 +39,70 @@ const SUPPLIER_BY_INGREDIENT: Record<string, string> = Object.fromEntries(
   ),
 );
 
+function toLocalDateISO(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getMenuDate(meal: Meal, requestedDate?: string) {
+  if (requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) return requestedDate;
+  if (meal.date) return meal.date;
+  const today = new Date();
+  const daysFromMonday = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysFromMonday);
+  monday.setDate(monday.getDate() + meal.dayIndex);
+  return toLocalDateISO(monday);
+}
+
+function sampleDateISO(storedDate: string) {
+  const [day, month, year] = storedDate.split('/').map(Number);
+  return year && month && day
+    ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    : undefined;
+}
+
+function getRecordSample(record: SamplerRecord): SampleRetention {
+  const recordedDate = record.recordedAt.slice(0, 10);
+  const expires = record.expiresAt ? new Date(record.expiresAt) : undefined;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const expiryDate = expires
+    ? `${pad(expires.getDate())}/${pad(expires.getMonth() + 1)}/${expires.getFullYear()}`
+    : '—';
+  const expiryTime = expires ? `${pad(expires.getHours())}:${pad(expires.getMinutes())}` : '—';
+  return {
+    id: record.id,
+    mealId: record.mealId,
+    mealName: record.mealName,
+    image: record.mealImage,
+    storedDate: recordedDate.slice(0, 10),
+    storedTime: record.recordedAt.slice(-5),
+    expiryDate,
+    expiryTime,
+    status: expires && expires.getTime() <= Date.now() ? 'expired' : 'active',
+    storageLocation: record.storageLocation ?? '—',
+    sampleCount: record.sampleCount ?? 1,
+    isOnMenu: true,
+  };
+}
+
 export default function MealDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, date: requestedDate } = useLocalSearchParams<{ id: string; date?: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
+  const { records } = useSampler();
 
   const meal = MEALS.find((m) => m.id === id);
   const traceRecord = TRACEABILITY_RECORDS.find((r) => r.mealId === id);
-  const sampleRecord = SAMPLE_RETENTIONS.find((s) => s.mealId === id);
+  const menuDate = meal ? getMenuDate(meal, requestedDate) : requestedDate ?? '';
+  const mealRecords = records.filter(
+    (record) => record.mealId === id && record.recordedDate === menuDate,
+  );
+  const matchingSample = SAMPLE_RETENTIONS.find(
+    (sample) => sample.mealId === id && sampleDateISO(sample.storedDate) === menuDate,
+  );
+  const sampleRecord = mealRecords[0]
+    ? getRecordSample(mealRecords[0])
+    : matchingSample;
 
   if (!meal) {
     return (
@@ -106,6 +164,16 @@ export default function MealDetailScreen() {
               <Text style={[styles.safetyLabel, { color: safety.color }]}>{safety.label}</Text>
             </View>
           </View>
+
+          <SamplePhotoGallery
+            mealId={meal.id}
+            mealName={meal.name}
+            session={meal.session}
+            date={menuDate}
+            records={mealRecords}
+            fallbackSample={matchingSample}
+            showRetentionLink
+          />
 
           {/* Monitoring badge */}
           {meal.isMonitored && (() => {

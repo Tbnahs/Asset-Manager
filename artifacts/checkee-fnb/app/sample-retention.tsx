@@ -13,8 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import DateRangeFilter, { DateRange, parseVNDate } from '@/components/DateRangeFilter';
 import ZoomableImage from '@/components/ZoomableImage';
-import { SAMPLE_RETENTIONS } from '@/data/mockData';
+import SamplePhotoGallery from '@/components/SamplePhotoGallery';
+import { SamplerRecord, useSampler } from '@/contexts/SamplerContext';
+import { MEALS, SAMPLE_RETENTIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+import { MealSession, SampleRetention } from '@/types';
 
 const STATUS_CONFIG = {
   active:   { label: 'Đang bảo quản', color: '#34C759', bg: '#E8F9ED', icon: 'shield'         as const },
@@ -23,30 +26,84 @@ const STATUS_CONFIG = {
   future:   { label: 'Chưa lấy mẫu',  color: '#8E8E93', bg: '#F5F6FA', icon: 'clock'          as const },
 };
 
+const SESSION_BY_MEAL = new Map(MEALS.map((meal) => [meal.id, meal.session]));
+
+function toSampleDateISO(storedDate: string) {
+  const [day, month, year] = storedDate.split('/').map(Number);
+  return year && month && day
+    ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    : undefined;
+}
+
+function recordToSample(record: SamplerRecord): SampleRetention {
+  const expiresAt = record.expiresAt ? new Date(record.expiresAt) : undefined;
+  const formatDate = (date: Date) =>
+    `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+  return {
+    id: record.id,
+    mealId: record.mealId,
+    mealName: record.mealName,
+    image: record.mealImage,
+    storedDate: record.recordedAt.slice(0, 10),
+    storedTime: record.recordedAt.slice(-5),
+    expiryDate: expiresAt ? formatDate(expiresAt) : '—',
+    expiryTime: expiresAt
+      ? `${String(expiresAt.getHours()).padStart(2, '0')}:${String(expiresAt.getMinutes()).padStart(2, '0')}`
+      : '—',
+    status: expiresAt && expiresAt.getTime() <= Date.now() ? 'expired' : 'active',
+    storageLocation: record.storageLocation ?? '—',
+    sampleCount: record.sampleCount ?? 1,
+    isOnMenu: true,
+  };
+}
+
 export default function SampleRetentionScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
 
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
+  const { records } = useSampler();
 
-  const activeCount  = SAMPLE_RETENTIONS.filter((s) => s.status === 'active').length;
-  const expiredCount = SAMPLE_RETENTIONS.filter((s) => s.status === 'expired').length;
-  const futureCount  = SAMPLE_RETENTIONS.filter((s) => s.status === 'future').length;
+  const allSamples = useMemo(() => {
+    const matchedKeys = new Set<string>();
+    const mockBacked = SAMPLE_RETENTIONS.map((sample) => {
+      const date = toSampleDateISO(sample.storedDate);
+      const matchingRecords = date
+        ? records.filter((record) => record.mealId === sample.mealId && record.recordedDate === date)
+        : [];
+      if (date && matchingRecords.length) matchedKeys.add(`${sample.mealId}:${date}`);
+      return { sample, records: matchingRecords, date: date ?? '' };
+    });
+
+    const additionalRecords = records
+      .filter((record) => !matchedKeys.has(`${record.mealId}:${record.recordedDate}`))
+      .map((record) => ({
+        sample: recordToSample(record),
+        records: [record],
+        date: record.recordedDate,
+      }));
+
+    return [...mockBacked, ...additionalRecords];
+  }, [records]);
+
+  const activeCount  = allSamples.filter(({ sample }) => sample.status === 'active').length;
+  const expiredCount = allSamples.filter(({ sample }) => sample.status === 'expired').length;
+  const futureCount  = allSamples.filter(({ sample }) => sample.status === 'future').length;
 
   const filteredSamples = useMemo(() => {
-    if (!range.start) return SAMPLE_RETENTIONS;
+    if (!range.start) return allSamples;
     const from = range.start;
     const to = range.end ?? range.start;
     const lo = from <= to ? from : to;
     const hi = from <= to ? to : from;
-    return SAMPLE_RETENTIONS.filter((sample) => {
+    return allSamples.filter(({ sample }) => {
       const d = parseVNDate(sample.storedDate);
       if (!d) return false;
       return d >= new Date(lo.getFullYear(), lo.getMonth(), lo.getDate())
         && d <= new Date(hi.getFullYear(), hi.getMonth(), hi.getDate(), 23, 59, 59);
     });
-  }, [range]);
+  }, [allSamples, range]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -115,8 +172,9 @@ export default function SampleRetentionScreen() {
           </View>
         )}
 
-        {filteredSamples.map((sample) => {
+        {filteredSamples.map(({ sample, records: sampleRecords, date }) => {
           const status = STATUS_CONFIG[sample.status];
+          const session = SESSION_BY_MEAL.get(sample.mealId) as MealSession | undefined;
           return (
             <View key={sample.id} style={[styles.card, { backgroundColor: colors.card }]}>
               <View style={styles.cardTop}>
@@ -192,6 +250,17 @@ export default function SampleRetentionScreen() {
                   </View>
                 </View>
               </View>
+              {session && (
+                <SamplePhotoGallery
+                  compact
+                  mealId={sample.mealId}
+                  mealName={sample.mealName}
+                  session={session}
+                  date={date}
+                  records={sampleRecords}
+                  fallbackSample={sample}
+                />
+              )}
             </View>
           );
         })}

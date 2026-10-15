@@ -12,8 +12,17 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ZoomableImage from '@/components/ZoomableImage';
+import SamplePhotoGallery from '@/components/SamplePhotoGallery';
+import { SamplerRecord, useSampler } from '@/contexts/SamplerContext';
 import { MEALS, SAMPLE_RETENTIONS } from '@/data/mockData';
 import { useColors } from '@/hooks/useColors';
+
+function toISODate(storedDate: string) {
+  const [day, month, year] = storedDate.split('/').map(Number);
+  return year && month && day
+    ? `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    : undefined;
+}
 
 const STATUS_CONFIG = {
   active: {
@@ -50,13 +59,25 @@ const SESSION_LABEL: Record<string, string> = {
 };
 
 export default function SampleRetentionDetailScreen() {
-  const { mealId } = useLocalSearchParams<{ mealId: string }>();
+  const { mealId, date: requestedDate } = useLocalSearchParams<{ mealId: string; date?: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
+  const { records } = useSampler();
 
   const meal = MEALS.find((m) => m.id === mealId);
-  const sample = SAMPLE_RETENTIONS.find((s) => s.mealId === mealId);
+  const mealRecords = records
+    .filter((record) => record.mealId === mealId)
+    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+  const date = requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)
+    ? requestedDate
+    : mealRecords[0]?.recordedDate ?? '';
+  const recordsForDate: SamplerRecord[] = mealRecords.filter(
+    (record) => record.recordedDate === date,
+  );
+  const sample = SAMPLE_RETENTIONS.find(
+    (item) => item.mealId === mealId && (toISODate(item.storedDate) === date || item.status === 'future'),
+  ) ?? SAMPLE_RETENTIONS.find((item) => item.mealId === mealId);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -108,6 +129,17 @@ export default function SampleRetentionDetailScreen() {
             </View>
           </View>
         ) : null}
+
+        {meal && (
+          <SamplePhotoGallery
+            mealId={meal.id}
+            mealName={meal.name}
+            session={meal.session}
+            date={date}
+            records={recordsForDate}
+            fallbackSample={sample}
+          />
+        )}
 
         {/* ── Quy định box ── */}
         <View style={[styles.infoBox, { backgroundColor: colors.infoLight }]}>
